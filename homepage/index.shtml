@@ -99,14 +99,14 @@ The following boot devices are supported:
   <tr>
     <td>IDE</td>
     <td>Hard Disk/Compact Flash</td>
-    <td>FAT16, FAT32</td>
+    <td>FAT12, FAT16, FAT32</td>
     <td>working</td>
   <tr>
   <tr>
     <td>IDE</td>
     <td>CD-ROM</td>
     <td>ISO9660</td>
-    <td>not implemented</td>
+    <td>working</td>
   <tr>
 </table>
 
@@ -185,7 +185,6 @@ advertised:
 
 <ul>
   <li> Loading of xDRIVE.BIN has not been implemented yet.
-  <li> CD-ROM support has not been implemented yet.
   <li> The floppy code has not been implemented yet.
 </ul>
 
