@@ -41,7 +41,7 @@ INCS = \
 	ide.i
 
 
-all: bigboot.bin boot232.bin
+all: bigboot.bin boot232.bin testflash.bin
 
 bigboot.bin: $(OBJS) $(INCS)
 	$(LD) -C $(CFG) -m bigboot.map -o $@ $(OBJS)
@@ -51,6 +51,12 @@ boot232.bin: rs232boot.o rs232boot_reloc.o debug.o buffers.o vectors.o version.o
 
 testkbd.bin: testkbd.o debug.o buffers.o vectors.o version.o
 	$(LD) -C $(CFG) -m testkbd.map -o $@ $^
+
+test1280.bin: test1280.o buffers.o vectors.o version.o graphics.o
+	$(LD) -C $(CFG) -m test1280.map -o $@ $^
+
+testflash.bin: testflash.o  debug.o buffers.o vectors.o version.o timestamp.o
+	$(LD) -C $(CFG) -m boot232.map -o $@ $^
 
 .PHONY: timestamp.s
 timestamp.s:
