@@ -379,6 +379,16 @@ iso_stat:
 	cpy #14
 	bne :-
 
+	ldy #32			; return name length in y
+	lda (dirptr),y
+	tay
+
+	ldax dirptr		; return pointer to name in a/x
+	clc
+	adc #33
+	bcc :+
+	inx
+:
 	clc
 	rts
 

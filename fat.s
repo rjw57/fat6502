@@ -69,6 +69,7 @@ fat12fatflag:	.res 1	; flag that tells us to read the next fat sector
 volnamelen:	.res 1	; length of volume name
 volname:	.res 12	; volume name
 rctemp:		.res 1	; ugly, ugly fat16
+statname:	.res 12	; name buffer for stat
 
 
 	.code
@@ -138,6 +139,39 @@ stat:
 	dey
 	dex
 	bpl @copylength
+
+	ldx #0			; copy name
+	ldy #0
+@copyname:
+	lda (dirptr),y
+	cmp #' '
+	beq @ext
+	sta statname,x
+	inx
+	iny
+	cpy #8
+	bne @copyname
+@ext:
+	ldy #8
+	lda (dirptr),y
+	cmp #' '
+	beq @done
+	lda #'.'
+	sta statname,x
+	inx
+@copyext:
+	lda (dirptr),y
+	cmp #' '
+	beq @done
+	sta statname,x
+	inx
+	iny
+	cpy #11
+	bne @copyext
+@done:
+	txa			; return name length in y
+	tay
+	ldax #statname		; return ptr to name
 
 	clc
 	rts
