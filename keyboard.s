@@ -36,6 +36,8 @@ select_config:
 	sec
 	rts
 @done:
+:	lka			; flush keyboard queue
+	bcc :-
 	lda asciicodes,x
 	clc
 	rts
