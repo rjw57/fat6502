@@ -123,8 +123,9 @@ newround:
 	jsr drawball
 	lda spacectr
 	sta wait
-:	jsr delay
+:	jsr waitvbl
 	jsr moveplayers
+	jsr waitscreen
 	inc random
 	lda spacectr
 	cmp wait
@@ -132,8 +133,8 @@ newround:
 	jsr setballdelta
 
 pongmain:
+	jsr waitvbl
 	jsr moveplayers
-	jsr delay
 	jsr moveplayers
 
 	jsr eraseball
@@ -163,7 +164,7 @@ pongmain:
 @draw:
 	jsr drawball
 
-	jsr delay
+	jsr waitscreen
 	jmp pongmain
 
 @p1bounce:
@@ -210,12 +211,15 @@ pongmain:
 	jmp *
 
 
-delay:
-	ldy #10
-	ldx #0
-:	inx
-	bne :-
-	dey
+waitvbl:
+:	zin $f5
+	and #1
+	beq :-
+	rts
+
+waitscreen:
+:	zin $f5
+	and #1
 	bne :-
 	rts
 
