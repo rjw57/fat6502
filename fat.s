@@ -35,6 +35,7 @@
 
 	.import debug_puts
 	.import debug_putdigit
+;	.import debug_puthex		; fixme - remove this after debugging
 	.import debug_crlf
 
 
@@ -55,7 +56,11 @@ scount:		.res 1	; number of sectors to read
 sectorbuf:	.res 512
 fatbuf:		.res 512
 fatcache:	.res 4	; 32-bit currently cached fat sector
-
+fat12tmp:	.res 2	; work area to compute fat 12 sectors
+fat12half:	.res 1	; flag that tells us if we should start with the
+			; high nybble ($80) or low nybble ($00)
+fat12byte:	.res 1	; temporary storage for current fat 12 byte
+fat12cluster:	.res 1  ; more temporary storage
 
 	.rodata
 
@@ -330,23 +335,236 @@ next_dir_entry:
 	rts
 
 
-fat12_next_clust:
-	inc cluster		; fixme. badly.
+fat12_next_byte:
+	ldx fat12tmp
+	lda fat12tmp+1
+	bne @upperhalf
+
+	lda fatbuf,x		; get byte from lower half of FAT sector
+	jmp @getnext
+
+@upperhalf:
+	lda fatbuf + 256,x	; get byte from upper half of FAT sector
+
+@getnext:
+	sta fat12byte
+	inc fat12tmp		; increment our byte offset to the FAT
 	bne @done
-	inc cluster+1
-	bne @done
-	inc cluster+2
-	bne @done
-	inc cluster+3
+	inc fat12tmp+1
+	lda fat12tmp+1
+	cmp #$02		; check if we're past the end of the sector
+	bcc @done
+	
+	inc lba			; we're past it so read in the next sector
+	bne @skiplb1
+	inc lba+1
+@skiplb1:
+	lda #<fatbuf		; repeating a bit of code here - maybe this
+	sta sectorptr           ; should be a subroutine
+	lda #>fatbuf
+	sta sectorptr+1
+
+	jsr dev_read_sector
+	bcs @error
+
+	ldx #3			; mark this sector as cached
+:	lda lba,x
+	sta fatcache,x
+	dex
+	bpl :-
+	
 @done:
+	lda fat12byte
 	clc
+	rts
+
+@error:
+;	ldax msg_diedf12nb	; fixme.  for debugging only
+;	jsr debug_puts
+;	jsr debug_crlf
+	
+;	lda part_num
+;	jsr debug_putdigit
+;	jsr debug_crlf
+
+	sec
+	rts
+
+;printtemp:	.byte $00	; fixme - debug!
+;printhex:
+;	pha
+;	txa
+;	pha
+;	tya
+;	pha
+;	
+;	lda printtemp
+;	jsr debug_puthex
+;	
+;	pla
+;	tay
+;	pla
+;	tax
+;	pla
+;	rts
+
+
+fat12_next_clust:
+;	inc cluster		; fixme. badly.
+;	bne @done
+;	inc cluster+1
+;	bne @done
+;	inc cluster+2
+;	bne @done
+;	inc cluster+3
+;@done:
+;	clc
+;	rts
+	
+	
+;	ldax msg_fat12_next	; fixme.  for debugging only
+;	jsr debug_puts
+;	lda cluster+1
+;	jsr debug_puthex
+;	lda cluster
+;	jsr debug_puthex
+;	jsr debug_crlf
+
+				; We have to multiply the cluster number
+				; Times 1.5 to get a byte offset into the FAT
+	clc
+	lda cluster+1
+	lsr			; Divide by two first
+	sta fat12tmp+1
+	lda cluster
+	ror
+	sta fat12tmp
+	lda #$00
+	ror
+	sta fat12half		; Set our flag to know if we have to start
+				; on the high nybble
+	;clc
+	lda cluster		; Add the result of the division by two to
+	adc fat12tmp		; the original cluster number and we get
+	sta fat12tmp		; cluster*1.5 + our 'half' flag
+	lda cluster+1
+	adc fat12tmp+1
+	sta fat12tmp+1		; We now have the full byte offset in fat12tmp
+	
+	lsr			; bits 15-9 contain our fat sector number
+	sta lba			; so shift them in place
+	lda #$00
+	sta lba+1
+	sta lba+2
+	sta lba+3
+
+;	ldax msg_offset		; debug - fixme - nukeme
+;	jsr debug_puts		;
+;	lda fat12tmp+1		;
+;	jsr debug_puthex	;
+;	lda fat12tmp		;
+;	jsr debug_puthex        ;
+;	ldax msg_flag		;
+;	jsr debug_puts		;
+;	lda fat12half		;
+;	jsr debug_puthex	;
+	
+	lda fat12tmp+1		; Strip the highest 7 bits and we get a
+	and #$01		; byte offset into the sector
+	sta fat12tmp+1			
+	
+	jsr addfatstart
+
+	jsr isfatcached
+	beq @iscached
+
+	lda #<fatbuf
+	sta sectorptr
+	lda #>fatbuf
+	sta sectorptr+1
+
+	jsr dev_read_sector
+	bcs @error
+
+	ldx #3			; mark this sector as cached
+:	lda lba,x
+	sta fatcache,x
+	dex
+	bpl :-
+
+@iscached:
+	jsr fat12_next_byte	; Get the current byte from the FAT
+	bcs @error
+	sta fat12cluster
+	
+;	sta printtemp		; debug
+;	jsr printhex		;
+	
+	jsr fat12_next_byte	; Next byte
+	bcs @error
+	
+;	sta printtemp		; debug
+;	jsr printhex		;
+
+	bit fat12half		; test nybble flag
+	bmi @nybswap
+	and #$0f		; Flag not set so just mask out the 4
+	sta cluster+1		; high bits of the second byte
+	lda fat12cluster
+	sta cluster
+	jmp @checklast
+	
+@nybswap:
+	lsr
+	ror fat12cluster	; Flag set, so rotate things into place
+	lsr
+	ror fat12cluster
+	lsr
+	ror fat12cluster
+	lsr
+	ror fat12cluster
+	sta cluster+1
+	lda fat12cluster
+	sta cluster
+	
+@checklast:
+	lda cluster+1
+	cmp #$0f
+	bne @done
+	lda cluster
+	and #$f0
+	cmp #$f0
+	
+@done:
+;	php			;
+;	ldax msg_lba		; debug - fixme - nukeme
+;	jsr debug_puts		;
+;	lda cluster+1		;
+;	jsr debug_puthex	;
+;	lda cluster		;
+;	jsr debug_puthex	;
+;	jsr debug_crlf		;
+;	plp			;
+	
+	
+	clc
+	rts
+
+@error:
+;	ldax msg_diedf12nb	; fixme.  for debugging only
+;	jsr debug_puts
+;	jsr debug_crlf
+
+	sec
 	rts
 
 
 fat_next_clust:
 	lda vol_fstype
 	cmp #fs_fat12
-	beq fat12_next_clust
+	bne @testfat32
+	jmp fat12_next_clust	; We've got range
+@testfat32:
 	cmp #fs_fat32
 	beq fat32_next_clust
 
@@ -412,7 +630,7 @@ fat16_next_clust:
 	bne @done
 
 	lda cluster
-	and #$f0		; the 3 least significant bits are ignored
+	and #$f0		; the 4 least significant bits are ignored
 	cmp #$f0
 
 @done:
@@ -502,8 +720,8 @@ fat32_next_clust:
 	bne @done
 
 	lda cluster
-	and #$f8		; the 3 least significant bits are ignored
-	cmp #$f8
+	and #$f0		; the 4 least significant bits are ignored
+	cmp #$f0
 
 @done:
 	clc
@@ -961,3 +1179,17 @@ msg_foundfat16:
 	.byte "Found FAT16 partition number ",0
 msg_foundfat32:
 	.byte "Found FAT32 partition number ",0
+
+
+;msg_fat12_next:
+;	.byte "Trying to find next fat12 cluster for cluster ",0
+;msg_diedf12nb:
+;	.byte "Died trying to get next fat12 byte",0
+;msg_diedfat12:
+;	.byte "Died trying to get next cluster",0
+;msg_lba:
+;	.byte " - Returning LBA: ",0
+;msg_offset:
+;	.byte " offset: ",0
+;msg_flag:
+;	.byte " - flag: ",0
