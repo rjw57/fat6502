@@ -234,6 +234,7 @@ warmstart:
 	ldax msg_done
 	jsr debug_puts
 	jsr debug_done
+	jsr gfx_cls		; clear screen
 ;	lda #%00000010		; reset main CPU
 ;	ctl
 ;	nop
@@ -265,6 +266,7 @@ warmstart:
 failure:
 	ldax msg_allfailed	; now we're screwed
 	jsr debug_puts
+	jsr gfx_cls		; clear screen
 	rti
 ;	jmp *			; failure
 
