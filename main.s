@@ -5,6 +5,7 @@
 	.import bootconfig
 	.import select_config
 	.import boot
+	.import entermenu
 	.import dev_init
 	.importzp ptr
 	.import __BSS_RUN__
@@ -41,7 +42,6 @@
 
 currdev:	.res 1
 currctl:	.res 1
-entermenu:	.res 1
 
 
 	.segment "RELOC"
@@ -279,4 +279,4 @@ msg_allfailed:
 	.byte 0
 
 msg_bootromv:
-	.byte "BOOT ROM V",0
+	.byte "Boot ROM v",0

@@ -16,6 +16,7 @@
 	.export iso_isdrivebin
 	.export iso_stat
 	.export iso_firstnamechar
+	.export iso_isdesc
 
 	.import lba
 	.import cluster
@@ -222,6 +223,26 @@ returnconfig:
 	rts
 
 
+; check if dir entry is xDESC.TXT
+iso_isdesc:
+	ldy #32
+	lda (dirptr),y
+	cmp #11
+	beq @maybe
+	cmp #9
+	beq @maybe
+@no:
+	sec
+	rts
+@maybe:
+	ldax (descname-33)
+	stax nameptr
+	jsr comparedirname
+	bne @no
+	clc
+	rts
+
+
 ; check if dir entry is flash code
 iso_isflashbin:
 	ldy #32
@@ -379,6 +400,8 @@ flashbinname:
 	.byte "FLASH.BIN??"
 drivebinname:
 	.byte "?DRIVE.BIN??"
+descname:
+	.byte "?DESC.TXT??"
 
 cd001:
 	.byte 1,"CD001",1

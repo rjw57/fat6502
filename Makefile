@@ -32,7 +32,8 @@ OBJS = \
 	controller.o \
 	timestamp.o \
 	graphics.o \
-	version.o
+	version.o \
+	bootmenu.o
 
 INCS = \
 	drivecpu.i \

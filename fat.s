@@ -12,6 +12,7 @@
 	.export fat_isdrivebin
 	.export fat12_stat, fat16_stat, fat32_stat
 	.export fat_firstnamechar
+	.export fat_isdesc
 	.exportzp fs_fat12
 	.exportzp fs_fat16
 	.exportzp fs_fat32
@@ -170,6 +171,13 @@ fat_isdrivebin:
 ; check if it's a flash binary
 fat_isflashbin:
 	ldax flashname
+	stax nameptr
+	jmp compare
+
+
+; check if it's a description file
+fat_isdesc:
+	ldax descname
 	stax nameptr
 	jmp compare
 
@@ -1148,3 +1156,5 @@ flashname:
 	.byte "FLASH   ","BIN"
 drivename:
 	.byte "?DRIVE  ","BIN"
+descname:
+	.byte "?DESC   ","TXT"

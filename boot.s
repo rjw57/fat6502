@@ -2,6 +2,9 @@
 
 	.export boot
 	.export bootconfig
+	.export entermenu
+
+	.import bootmenu
 
 	.import cluster
 	.import clusterbuf
@@ -55,6 +58,7 @@ fpgafound:		.res 1	; flag if fpga file found
 drivebinfound:		.res 1	; flag if drive bin found
 imagenum:		.res 1	; pointer to the image table
 bootconfig:		.res 1	; selected configuration (ASCII)
+entermenu:		.res 1	; non-0 if we should display boot menu
 
 
 	.code
@@ -115,8 +119,18 @@ boot:
 
 	lda bootconfig
 	cmp #'F'
-	bne @checkentry
+	bne @checkmenu
 	jmp bootflash		; load flash image instead
+
+@checkmenu:
+	lda entermenu
+	beq @checkentry
+
+	jsr bootmenu		; display boot menu
+	;bcs @error		; just try to boot instead
+	jsr vol_cdroot		; all over again
+	jsr vol_cdboot
+	jsr vol_dir_first
 
 @checkentry:
 	jsr vol_endofdir	; check for end of dir

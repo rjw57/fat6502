@@ -19,6 +19,7 @@
 	.export vol_isdrivebin
 	.export vol_stat
 	.export vol_firstnamechar
+	.export vol_isdesc
 
 	.export romaddr
 	.export stat_length
@@ -46,6 +47,7 @@
 	.import fat_isdrivebin
 	.import fat12_stat, fat16_stat, fat32_stat
 	.import fat_firstnamechar
+	.import fat_isdesc
 
 
 	.importzp fs_iso9660		; iso9660 support
@@ -64,6 +66,7 @@
 	.import iso_isdrivebin
 	.import iso_stat
 	.import iso_firstnamechar
+	.import iso_isdesc
 
 
 	.segment "VOLZP", zeropage
@@ -80,7 +83,7 @@ nameptr:	.res 2	; name pointer
 	.bss
 
 	.align 2
-vectablesize		= 14
+vectablesize		= 15
 vector_table:		.res vectablesize * 2
 vol_read_ptable_vector	= vector_table
 vol_cdboot_vector	= vector_table + 2
@@ -96,6 +99,7 @@ vol_isflashbin_vector	= vector_table + 20
 vol_isdrivebin_vector	= vector_table + 22
 vol_stat_vector		= vector_table + 24
 vol_firstnamechar_vector= vector_table + 26
+vol_isdesc_vector	= vector_table + 28
 
 
 	.segment "VOLVECTORS"
@@ -115,8 +119,10 @@ vol_isflashbin:		jmp (vol_isflashbin_vector)
 vol_isdrivebin:		jmp (vol_isdrivebin_vector)
 vol_stat:		jmp (vol_stat_vector)
 vol_firstnamechar:	jmp (vol_firstnamechar_vector)
+vol_isdesc:		jmp (vol_isdesc_vector)
 
-			.res 19
+			.res 16
+
 
 	.segment "VOLBSS"
 
@@ -145,6 +151,7 @@ fat12_vectors:
 	.word fat_isdrivebin
 	.word fat12_stat
 	.word fat_firstnamechar
+	.word fat_isdesc
 
 fat16_vectors:
 	.word fat_read_ptable
@@ -161,6 +168,7 @@ fat16_vectors:
 	.word fat_isdrivebin
 	.word fat16_stat
 	.word fat_firstnamechar
+	.word fat_isdesc
 
 fat32_vectors:
 	.word fat_read_ptable
@@ -177,6 +185,7 @@ fat32_vectors:
 	.word fat_isdrivebin
 	.word fat32_stat
 	.word fat_firstnamechar
+	.word fat_isdesc
 
 iso_vectors:
 	.word iso_read_ptable
@@ -193,6 +202,7 @@ iso_vectors:
 	.word iso_isdrivebin
 	.word iso_stat
 	.word iso_firstnamechar
+	.word iso_isdesc
 
 
 	.code
