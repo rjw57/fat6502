@@ -196,9 +196,19 @@ cpuspeed	= 2
 	.byte $03
 	.endmacro
 
-; set graphics cursor y position, bit 0
+; set graphics bank and bit 0 of cursor y position
 	.macro gab
 	.byte $07
+	.endmacro
+
+	.macro gab_even
+	lda #0
+	gab
+	.endmacro
+
+	.macro gab_odd
+	lda #1
+	gab
 	.endmacro
 
 ; write to graphics ram

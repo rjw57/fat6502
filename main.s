@@ -19,6 +19,7 @@
 
 	.import timestamp
 
+	.import gfx_drawlogo
 	.import gfx_cls
 
 	.import debug_init
@@ -76,6 +77,7 @@ reseth:
 	clf			; erase FPGA
 
 	jsr gfx_cls		; clear graphics screen
+	jsr gfx_drawlogo
 
 	lda #0
 	sta currctl

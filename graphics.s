@@ -1,6 +1,7 @@
 	.include "drivecpu.i"
 
 	.export gfx_cls
+	.export gfx_drawlogo
 	.export gfx_gotoxy
 	.export gfx_puts
 	.export gfx_putchar
@@ -37,17 +38,19 @@ doclr:
 
 ; clear screen
 gfx_cls:
-	lda #0
-	gab
+	gab_odd
 	jsr doclr
-	lda #1
-	gab
+	gab_even
 	jsr doclr
 	
 	lda #0
 	sta cursx
 	sta cursy
 
+	rts
+
+
+gfx_drawlogo:
 	ldax logo1		; draw C-ONE logo
 	stax gfxptr
 
@@ -90,7 +93,10 @@ gfx_cls:
 	ldax msg_cone3
 	jsr gfx_puts
 
-	rts
+	ldx #0
+	ldy #0
+
+	; fall through
 
 
 ; set cursor to x, y
