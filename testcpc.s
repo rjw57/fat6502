@@ -34,6 +34,9 @@
 	.import stat_type
 	.importzp type_file, type_dir, type_vol, type_lfn, type_other
 
+	.import dsk_load
+	.import dsk_save
+
 	.import debug_init
 	.import debug_done
 	.import debug_puts
@@ -181,6 +184,14 @@ listdir:
 	bpl :-
 
 	jsr debug_crlf		; newline
+
+	jsr vol_isfpgabin
+	bne @next
+
+	jsr dsk_load
+	jsr dsk_save
+
+	jmp @lastentry
 
 @next:
 	jsr vol_dir_next	; find the next dir entry
