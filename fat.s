@@ -28,6 +28,8 @@
 
 	.import stat_cluster
 	.import stat_length
+	.import stat_type
+	.importzp type_file, type_dir, type_vol, type_lfn, type_other
 
 	.import dev_read_sector
 	.import dev_write_sector
@@ -140,8 +142,44 @@ stat:
 	dex
 	bpl @copylength
 
+	ldy #11			; check entry type
+	lda (dirptr),y
+
+	ldx #type_lfn		; check if lfn entry
+	cmp #$0f
+	beq @gottype
+
+	and #$18		; discard ASHR bits
+
+	ldx #type_dir		; check if dir
+	cmp #$10
+	beq @gottype
+
+	ldx #type_vol		; check if volume label
+	cmp #$08
+	beq @gottype
+
+	ldx #type_file
+@gottype:
+	stx stat_type
+
+	cpx #type_vol		; volume label?
+	bne :+
+	ldax dirptr		; return without conversion
+	ldy #11
+	jmp @gotname
+:
 	ldx #0			; copy name
 	ldy #0
+	lda (dirptr),y		; check for . and ..
+	cmp #'.'
+	bne @copyname
+	iny
+	cmp #'.'
+	bne :+
+	iny
+:	ldax dirptr		; return without conversion
+	jmp @gotname
 @copyname:
 	lda (dirptr),y
 	cmp #' '
@@ -172,7 +210,7 @@ stat:
 	txa			; return name length in y
 	tay
 	ldax #statname		; return ptr to name
-
+@gotname:
 	clc
 	rts
 
