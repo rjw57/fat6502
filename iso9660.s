@@ -32,6 +32,7 @@
 
 	.import romaddr
 	.import vol_secperclus
+	.import vol_rleflag
 	.importzp dirptr
 	.importzp nameptr
 
@@ -228,7 +229,7 @@ iso_firstnamechar:
 	rts
 
 
-; check if dir entry is xFPGA.BIN
+; check if dir entry is xFPGA.BIN or xFPGA.RLE
 iso_isfpgabin:
 	ldy #32
 	lda (dirptr),y
@@ -237,10 +238,20 @@ iso_isfpgabin:
 	cmp #9
 	beq @maybe
 @no:
+	lda #0
+	sta vol_rleflag
 	sec
 	rts
 @maybe:
+	lda #0
+	sta vol_rleflag
 	ldax #fpgabinname-33
+	stax nameptr
+	jsr comparedirname
+	beq returnconfig
+
+	dec vol_rleflag
+	ldax #fpgarlename-33
 	stax nameptr
 	jsr comparedirname
 	bne @no
@@ -469,6 +480,8 @@ bootdirname:
 	.byte "BOOT"
 fpgabinname:
 	.byte "?FPGA.BIN??"
+fpgarlename:
+	.byte "?FPGA.RLE??"
 romname:
 	.byte "?R??????.BIN??"
 flashbinname:

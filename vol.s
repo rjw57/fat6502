@@ -29,6 +29,7 @@
 	.export stat_type
 	.export vol_fstype
 	.export vol_secperclus
+	.export vol_rleflag
 	.export cluster
 	.exportzp dirptr, nameptr, clusterptr
 
@@ -173,6 +174,7 @@ vol_fstype:		.res 1	; filesystem type
 vol_secperclus:		.res 1	; number of 512-byte sectors per cluster
 cluster:		.res 4	; 32-bit cluster address
 stat_type:		.res 1	; dir entry type
+vol_rleflag:		.res 1	; rle compression flag for isfpgabin
 
 
 	.rodata

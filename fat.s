@@ -43,6 +43,7 @@
 
 	.import vol_fstype
 	.import vol_secperclus
+	.import vol_rleflag
 	.import romaddr
 
 
@@ -219,14 +220,23 @@ stat:
 ; return config number in A
 ; does NOT verify that the first char is a digit!
 fat_isfpgabin:
+	lda #0
+	sta vol_rleflag
 	ldax #fpganame
+	stax nameptr
+	jsr comparedirname
+	beq returnconfig
+
+	dec vol_rleflag
+	ldax #fpgarlename
 	stax nameptr
 compare:
 	jsr comparedirname
-	beq @yes
+	beq returnconfig
+	lda #0
+	sta vol_rleflag
 	sec
 	rts
-@yes:
 returnconfig:
 	lda (dirptr),y
 	and #$0f
@@ -1158,6 +1168,8 @@ bootdirname:
 	.byte "BOOT    ","   "
 fpganame:
 	.byte "?FPGA   ","BIN"
+fpgarlename:
+	.byte "?FPGA   ","RLE"
 romname:
 	.byte "?R??????","BIN"
 flashname:

@@ -431,7 +431,8 @@ vol_secperclus		1f0f		; # of 512 byte sectors in one cluster
 cluster			1f10		; set before calling vol_read_clust
 					; or vol_next_clust
 stat_type		1f14		; dir entry type, set by vol_stat
-(reserved)		1f15-1f3f
+vol_rleflag		1f15		; rle compression flag for vol_isfpgabin
+(reserved)		1f16-1f3f
 lba			1f40		; set before calling dev_read_sector
 devtype			1f44		; current device type
 (reserved)		1f45-1fff
