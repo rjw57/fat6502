@@ -225,6 +225,18 @@ A16550BASE	= $3f20
 	plp
 	.endmacro
 
+; print 16-bit number
+	.macro dputnum16 address
+	php
+	pha
+	lda address+1
+	jsr debug_puthex
+	lda address
+	jsr debug_puthex
+	pla
+	plp
+	.endmacro
+
 ; print 32-bit number
 	.macro dputnum32 address
 	php
