@@ -90,15 +90,17 @@ _dsk_save:
 	;cmp stat_length+3
 	;bne @next
 
-	ldax #msg_savecluster
-	jsr debug_puts
-	ldx #3
-:	lda cluster,x
-	jsr debug_puthex
-	dex
-	bpl :-
-	jsr debug_crlf
+;	ldax #msg_savecluster
+;	jsr debug_puts
+;	ldx #3
+;:	lda cluster,x
+;	jsr debug_puthex
+;	dex
+;	bpl :-
+;	jsr debug_crlf
 
+	ldax #clusterbuf	; point to beginning of buffer
+	stax clusterptr
 	jmp vol_write_clust	; save last cluster
 
 @next:
@@ -113,15 +115,17 @@ _dsk_save:
 	cmp clusterptr+1
 	bne @save
 
-	ldax #msg_savecluster
-	jsr debug_puts
-	ldx #3
-:	lda cluster,x
-	jsr debug_puthex
-	dex
-	bpl :-
-	jsr debug_crlf
+;	ldax #msg_savecluster
+;	jsr debug_puts
+;	ldx #3
+;:	lda cluster,x
+;	jsr debug_puthex
+;	dex
+;	bpl :-
+;	jsr debug_crlf
 
+	ldax #clusterbuf	; point to beginning of buffer
+	stax clusterptr
 	jsr vol_write_clust
 	bcs @error
 
