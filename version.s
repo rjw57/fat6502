@@ -8,7 +8,7 @@
 
 ver_major:	.byte 0
 ver_minor:	.byte 9
-ver_rev:	.byte 1
+ver_rev:	.byte 2
 
 ver_str:
-	.byte "0.9.1", 0
+	.byte "0.9.2", 0

@@ -120,10 +120,10 @@ clusterbuf		4000-bfff	; used by vol_*
 
 system code		c000-feff	; reserved for system code
 jump table		ff00-ffdf	; system jump table
-ver_major		ffe0		; major version number
-ver_minor		ffe1		; minor version number
-ver_rev			ffe2		; revision number
-ver_str			ffe3-fff9	; 0 terminated version string
+ver_major		fff0		; major version number
+ver_minor		fff1		; minor version number
+ver_rev			fff2		; revision number
+ver_str			fff3-fff9	; 0 terminated version string
 irq vector		fffa-fffb	; CPU IRQ vector (not used)
 reset vector		fffc-fffd	; CPU reset vector
 nmi vector		fffe-ffff	; CPU NMI vector
