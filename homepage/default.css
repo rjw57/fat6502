@@ -33,3 +33,13 @@ th {
 	border: 1px solid #000000;
 	padding: 5px 15px;
 }
+.centered {
+	text-align: center;
+}
+.right {
+	float: right;
+}
+.hexaddr {
+	vertical-align: top;
+	font-family: monospace;
+}

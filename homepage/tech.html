@@ -1,20 +1,21 @@
-<html>
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>C-ONE BOOT - project homepage</title>
-<meta name="keywords" content="commodore, one, c1, c-one, boot">
-<meta name="description" content="Project homepage for the C-ONE boot ROM development">
-<meta name="author" content="Per Olofsson">
-<link rel="stylesheet" href="default.css" type="text/css">
+<meta name="keywords" content="commodore, one, c1, c-one, boot" />
+<meta name="description" content="Project homepage for the C-ONE boot ROM development" />
+<meta name="author" content="Per Olofsson" />
+<link rel="stylesheet" href="default.css" type="text/css" />
 </head>
 
 <body>
 
-<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=78686&type=1" border="0" alt="SourceForge.net Logo" align="right"></A>
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=78686&amp;type=1" border="0" alt="SourceForge.net Logo" align="right" /></a>
 <h1>C-ONE BOOT - technical details</h1>
 
-<p>
-
-<hr>
+<hr />
 
 <p align="center">
 
@@ -25,9 +26,7 @@ TECHNICAL |
 
 </p>
 
-<hr>
-
-</p>
+<hr />
 
 
 
@@ -46,30 +45,189 @@ baud, 8N1, and hardware flow control.
 
 
 
+<h2>CPC Boot Environment</h2>
+
+
+
+
 <h2>The Drive CPU</h2>
 
-The CPU core in the 1K30 is referred to as the drive CPU. When the
-main system is up and running, the 6502 core works as a coprocessor.
-Currently the core is running at around 2 MHz, but I have no idea if
-the instruction timings are identical to that of a real 6502. At the
-time of writing, the core differs from a genuine 6502 in the following
-ways:
+The CPC core in the 1K30 is referred to as the drive CPU. When the
+main system is up and running, the CPC core works as a coprocessor.
+Currently the RISC CPU core is running at 9 MHz, and the 6502
+emulation runs at roughly 1.5 MHz. At the time of writing, the 6502
+emulation differs from a genuine 6502 in the following ways:
 
 <ul>
-  <li> There are no IRQs
-  <li> A number of custom instructions have been added.
-  <li> The lda/sta (zp,x) addressing mode has been removed (I think).
+  <li> There are no IRQs</li>
+  <li> A number of custom instructions have been added.</li>
 </ul>
 
 
 
-<h2>Memory Map</h2>
+<h2>RISC CPU Memory Map</h2>
+
+<table>
+
+  <tr>
+    <td class="hexaddr"><tt>$00000..$3ffff</tt></td>
+    <td>
+      Miscellaneous use:
+      <ul>
+	<li>temporary memory for XModem transfers</li>
+	<li>disk images for CPC mode</li>
+	<li>temporary space during flash procedure</li>
+      </ul>
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$40000..$7ffff</tt></td>
+    <td>
+      DK'tronics memory expansion for Amstrad computer mode (256KBytes)
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$80000..$8ffff</tt></td>
+    <td>
+      CPU emulation code (Z80 and 6502)
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$90000..$93fff</tt></td>
+    <td>
+      Amstrad OS (lowrom)
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$94000..$9bfff</tt></td>
+    <td>
+      memory for shadowed Z80 (Amstrad floppy emulation)
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$9c000..$9ffff</tt></td>
+    <td>
+      rom routines for floppy emulation
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$a0000..$abfff</tt></td>
+    <td>
+      6502 memory. This memory is the 'standard' memory for the 6502
+      processor. There are special commands that can access any other
+      memory address for easy signalling between the CPUs and to give
+      BigBoot the ability to load ROMs.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$ac000..$affff</tt></td>
+    <td>
+      6502 boot code.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$b0000..$bbfff</tt></td>
+    <td>
+      48K memory for Z80 emulation. This memory is CPC memory (by
+      nature). There are special Z80 commands that give access to any
+      other memory address for easy signalling between CPUs and to
+      give access to ROM clones and the DK'tronics memory expansion.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$bc000..$bffff</tt></td>
+    <td>
+      16K memory shared between Z80 and the Amstrad video controller.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$c0000..$fffff</tt></td>
+    <td>
+      CPC rom expansion box (available as highrom in the upper 16K
+      area). There are 16 slots for ROM modules. The real CPC
+      expansion used 27128 eprom sockets that could be filled by the
+      user. The slots are arranged linearly in this area, so the 16K
+      area starting at $c0000 is slot 0.
+    </td>
+  </tr>
+
+</table>
+
+
+
+<h2>Flash ROM contents</h2>
+
+<table>
+
+  <tr>
+    <td class="hexaddr"><tt>$00000..$0ffff</tt></td>
+    <td rowspan="4">
+      Reserved for future use (probably romfs with default 1k100
+      config and bootrom backup).
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$10000..$1ffff</tt></td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$20000..$2ffff</tt></td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$30000..$3ffff</tt></td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$40000..$4ffff</tt></td>
+    <td>
+      Z80 and 6502 emulation code, copied to $80000 at power on.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$50000..$5ffff</tt></td>
+    <td>
+      Amstrad ROMs, copied to $90000 at power on.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$60000..$6ffff</tt></td>
+    <td>
+      1k30 core.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr"><tt>$70000..$7ffff</tt></td>
+    <td>
+      6502 boot code.
+    </td>
+  </tr>
+
+</table>
+
+
+
+<h2>6502 Memory Map</h2>
 
 There are two free memory ranges in the address space, $0080-$00bf,
 and $2000-$3eff. If you call any provided routines from your code,
 these are the only areas that are guaranteed not to be overwritten.
 The cluster buffer ($4000-$bfff) is free to be used, but some routines
-overwrite it (notably the vol_dir_* routines).
+overwrite it (notably the vol_* routines).
 
 
 <pre><b>LORAM AREA</b>
@@ -107,6 +265,8 @@ flashbuf		2000-3eff	; reserved for flash code or
 
 <b>MEMORY MAPPED I/O AREA</b>
 
+Time will tell.
+<!--
 ROML			3f00-3f0f	; cartridge port chip select
 I/O2			3f10-3f1f	; cartridge port chip select
 clock port 1		3f20-3f2f	; clock port 1 is mapped here
@@ -126,7 +286,7 @@ flash data reg 2	3f6e		; data register for $40000 - $5ffff
 flash data reg 3	3f6f		; data register for $60000 - $7ffff
 SID 2			3f70-3f7f	; only 16 registers, can't use SID
 (reserved)		3f80-3fff
-
+-->
 
 <b>HIRAM AREA</b>
 
@@ -192,17 +352,17 @@ gfx_puthex		ff95		; print hex byte
 </pre>
 
 
-
+<!--
 <h2>How to program the Flash ROM</h2>
 
 For a detailed article on how to use the flash programming registers,
 see <a href="c1flash.shtml">Flashing the C-One Flash ROM</a>.
-
+-->
 
 
 <h2>Custom Instructions</h2>
 
-Common to all the instructions is that they don't set the processor
+Common to all the instructions are that they don't set the processor
 flags. E.g. you can't use
 
 <pre>
@@ -248,22 +408,17 @@ is trashed.
 Stores A and X to the currently selected IDE register, see ILD.
 
 
-<h3>SAB, system address bank</h3>
-<h3>SAU, system address upper</h3>
-<h3>SAL, system address lower</h3>
+<h3>LAM, load accumulator from memory</h3>
 
-SAB/SAU/SAL are used to select an address in the main CPU RAM. SAB sets
-bits 16-23 from A, SAU sets bits 8-15 from A, SAL sets bits 0-7 from A.
-
-
-<h3>MLD, memory load</h3>
-
-MLD loads the byte pointed to by SAB/SAU/SAL from main CPU RAM into A.
+Loads A from the 24-bit RISC memory location pointed to by the 16-bit
+argument. This works like lda (zp), except the location is 24-bit and
+doesn't have to be stored in zeropage.
 
 
-<h3>MST, memory store</h3>
+<h3>SAM, store accumulator to memory</h3>
 
-MST stores the byte in A to the address pointed to by SAB/SAU/SAL.
+Store A to RISC memory, see LAM for a description of the addressing
+mode.
 
 
 <h3>SAF, store accumulator to FPGA</h3>
@@ -275,20 +430,6 @@ SAF sends the current value in A to the config port of the 1K100.
 
 LKA loads the next byte from the PS/2 keyboard FIFO into A. Carry is
 set if the FIFO is empty (and the contents of A invalid).
-
-
-<h3>GAX, set graphics address X</h3>
-<h3>GAY, set graphics address Y</h3>
-<h3>GAB, set graphics address bank</h3>
-<h3>GST, write pixels</h3>
-
-Set the graphics cursor address. The drive cpu can address a 640x512
-pixel screen, arranged as a monochrome planar bitmap. GAX sets the
-offset within a rasterline, 0..79. GAY sets bits 1..8 of the
-rasterline. Bit 0 is controlled by the lowest bit in GAB. This
-slightly strange arrangement is meant to accelerate text printing by
-only drawing every other rasterline. GST stores the byte in A as 8
-pixels at the location pointed to by GAX/GAY/GAB.
 
 
 </body>
