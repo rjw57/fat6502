@@ -57,18 +57,6 @@ io_get		= real_io_get
 	.endif
 
 
-	.segment "VOLZP" : zeropage
-	.segment "DEVZP" : zeropage
-	.segment "VOLBSS"
-	.segment "DEVBSS"
-	.segment "VOLVECTORS"
-	.segment "DEVVECTORS"
-	.segment "CTLVECTORS"
-	.segment "DBGVECTORS"
-	.segment "GFXVECTORS"
-	.segment "RELOC"
-
-
 	.zeropage
 
 addr:	.res 3
