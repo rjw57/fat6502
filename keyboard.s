@@ -56,7 +56,29 @@ asciicodes:
 	.code
 
 mrt:
-	ldax #clusterbuf
+	lda #%10010000		; set lores mode
+	zout $7f
+
+	lda #$0c		; reset screenbase, lo
+	zout $bc
+	lda #$30
+	zout $bd
+
+	lda #$0d		; hi
+	zout $bc
+	lda #$0
+	zout $bd
+
+	ldx #$0f		; copy palette
+:	txa
+	zout $7f
+	lda clusterbuf + 0x3ff0,x
+	ora #$40
+	zout $7f
+	dex
+	bpl :-
+
+	ldax #$8000
 	stax ptr
 	lda #0
 	sta ptr3
