@@ -52,7 +52,7 @@ _gfx_quickcls:
 	dex
 	bpl :-
 	iny
-	cpy #240
+	cpy #224
 	bne @nextline
 	rts
 

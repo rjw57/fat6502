@@ -25,13 +25,16 @@ bar_curr:	.res 4		; current value
 lastpos:	.res 1		; last character printed
 
 
+progbarline	= 26
+
+
 	.code
 
 bar_init:
 	lda #0
 	sta lastpos
 	ldx #8
-	ldy #28
+	ldy #progbarline
 	jsr gfx_gotoxy
 	lda #$82		; 50% dither
 	ldx #64
@@ -43,7 +46,7 @@ bar_init:
 
 bar_done:
 	ldx #8
-	ldy #28
+	ldy #progbarline
 	jsr gfx_gotoxy
 	lda #' '
 	ldx #64
@@ -65,7 +68,7 @@ bar_update:
 	clc
 	adc #8
 	tax
-	ldy #28
+	ldy #progbarline
 	jsr gfx_gotoxy
 	pla
 	tax
