@@ -616,6 +616,7 @@ checkkbd:
 	rts
 
 @break:
+	and #$7f		; break codes have the msb set
 	ldx #3
 :	cmp keytab,x
 	beq @broke
