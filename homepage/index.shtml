@@ -145,7 +145,17 @@ It should be noted that on FAT and ISO9660 drives, only the 8.3
 filename is used. VFAT, Joliet, and other extensions are silently
 ignored.
 
-<p>
+
+    </td>
+    <td class="noborder">&nbsp;</td>
+    <td align="left" valign="top" class="small" width="150">
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=78686&type=1" border="0" alt="SourceForge.net Logo" align="right"></A>
+<h2>News</h2>
+
+<!--#include virtual="news.inc" -->
+    </td>
+  </tr>
+</table>
 
 As an example, this is what the C64 mode configuration files would be
 called if they were on an MS-DOS drive mounted as D:
@@ -164,17 +174,6 @@ of two things happen. If an xDRIVE.BIN file was found, it's loaded and
 executed. If no such file was found, the /DMA line of the 65816 is set
 high (allowing it to start), and the drive CPU sits in an endless
 loop.
-
-    </td>
-    <td class="noborder">&nbsp;</td>
-    <td align="left" valign="top" class="small" width="150">
-<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=78686&type=1" border="0" alt="SourceForge.net Logo" align="right"></A>
-<h2>News</h2>
-
-<!--#include virtual="news.inc" -->
-    </td>
-  </tr>
-</table>
 
 
 <h2>Known Bugs</h2>
