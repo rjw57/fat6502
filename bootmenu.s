@@ -7,7 +7,7 @@
 	.import bootconfig
 	.import entermenu
 
-	.import init232boot
+	;.import init232boot
 
 	.import mrt, pong
 
@@ -406,7 +406,8 @@ selectconfig:
 	rts
 
 @rs232:
-	jmp init232boot		; download rom
+	rts
+	;jmp init232boot		; download rom
 
 @mrt:
 	jmp mrt

@@ -48,7 +48,7 @@
 	.import relocate
 	.import checkaltrom
 
-	.import init232boot
+	;.import init232boot
 
 
 	.bss
@@ -108,9 +108,9 @@ warmstart:
 	jmp @debuginit
 	bcs @default		; is holding a config key?
 
-	cmp #'S'
-	bne @checkflash
-	jmp init232boot		; download rom
+	;cmp #'S'
+	;bne @checkflash
+	;jmp init232boot	; download rom
 
 @checkflash:
 	cmp #'F'

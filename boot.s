@@ -821,7 +821,9 @@ loadimage:
 	ldy #0
 @upload:
 	lda (loadptr),y		; grab a byte
+	trc $00
 	sam loadaddress		; store it in system ram
+	trc $01
 
 	inc loadaddress		; increment our byte counter
 	bne @skip3

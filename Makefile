@@ -38,13 +38,13 @@ OBJS = \
 	version.o \
 	bootmenu.o \
 	progressbar.o \
-	rs232boot_reloc.o \
-	init232boot.o \
-	relocate.o \
 	checksum.o \
+	relocate.o \
 	alternaterom.o \
 	dsk.o \
 	supportcore.o
+#	rs232boot_reloc.o \
+#	init232boot.o \
 
 INCS = \
 	drivecpu.i \
