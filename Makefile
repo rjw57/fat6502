@@ -47,7 +47,7 @@ bigboot.bin: $(OBJS) $(INCS)
 boot232.bin: rs232boot.o rs232boot_reloc.o debug.o buffers.o vectors.o version.o timestamp.o
 	$(LD) -C $(CFG) -m boot232.map -o $@ $^
 
-testkbd.bin: testkbd.o debug.o buffers.o vectors.o
+testkbd.bin: testkbd.o debug.o buffers.o vectors.o version.o
 	$(LD) -C $(CFG) -m testkbd.map -o $@ $^
 
 .PHONY: timestamp.s
