@@ -49,7 +49,8 @@ atemp:	.res 1
 	ldx #dev_clk2
 	lda #flash_clear
 	sca
-	ild
+	ldx #dev_release
+	sca
 	pla
 	tax
 	pla
@@ -62,7 +63,8 @@ atemp:	.res 1
 	ldx #dev_clk2
 	lda #flash_inc
 	sca
-	ild
+	ldx #dev_release
+	sca
 	pla
 	tax
 	pla
@@ -75,7 +77,8 @@ atemp:	.res 1
 	ldx #dev_clk2
 	lda #flash_shift
 	sca
-	ild
+	ldx #dev_release
+	sca
 	pla
 	tax
 	pla
@@ -87,9 +90,11 @@ atemp:	.res 1
 	lda #flash_data
 	sca
 	ild
-	pha
+	ldx #dev_release
+	sca
+;	pha
 	ldx xtemp
-	pla
+;	pla
 	.endmacro
 
 	.macro lda_flash_data_y
@@ -102,9 +107,11 @@ atemp:	.res 1
 	plp
 	sca
 	ild
-	pha
+	ldx #dev_release
+	sca
+;	pha
 	ldx xtemp
-	pla
+;	pla
 	.endmacro
 
 	.macro sta_flash_data
@@ -116,6 +123,8 @@ atemp:	.res 1
 	sca
 	pla
 	ist
+	ldx #dev_release
+	sca
 	ldx xtemp
 	plp
 	.endmacro
@@ -131,6 +140,8 @@ atemp:	.res 1
 	sca
 	pla
 	ist
+	ldx #dev_release
+	sca
 	ldx xtemp
 	plp
 	.endmacro
