@@ -38,11 +38,6 @@
 	.import debug_puthex
 	.import debug_putdigit
 	.import debug_crlf
-	.import dstr_crlf
-	.import dstr_dircluster
-	.import dstr_foundfat12
-	.import dstr_foundfat16
-	.import dstr_foundfat32
 
 
 fs_fat12	= $12
@@ -294,10 +289,6 @@ checkdotbin:
 
 ; find the first dir entry
 fat_dir_first:
-	;dputs dstr_dircluster
-	;dputnum32 cluster
-	;dputs dstr_crlf
-
 	jsr fat_read_clust	; load dir cluster into buffer
 	bcc fat_dir_ok
 
@@ -721,10 +712,11 @@ foundfat12:
 	inx
 	stx part_num
 
-	dputs dstr_foundfat12
-	txa
-	dputdigit
-	dputs dstr_crlf
+	ldax msg_foundfat12
+	jsr debug_puts
+	lda part_num
+	jsr debug_putdigit
+	jsr debug_crlf
 
 	lda #fs_fat12		; store partition type
 	sta vol_fstype
@@ -735,10 +727,11 @@ foundfat16:
 	inx
 	stx part_num		; save partition number
 
-	dputs dstr_foundfat16
-	txa
-	dputdigit
-	dputs dstr_crlf
+	ldax msg_foundfat16
+	jsr debug_puts
+	lda part_num
+	jsr debug_putdigit
+	jsr debug_crlf
 
 	lda #fs_fat16		; store partition type
 	sta vol_fstype
@@ -803,10 +796,11 @@ foundfat32:
 	inx
 	stx part_num		; save partition number
 
-	dputs dstr_foundfat32
-	txa
-	dputdigit
-	dputs dstr_crlf
+	ldax msg_foundfat32
+	jsr debug_puts
+	lda part_num
+	jsr debug_putdigit
+	jsr debug_crlf
 
 	lda #fs_fat32		; store partition type
 	sta vol_fstype
@@ -963,3 +957,13 @@ check_signature:
 @error:
 	sec
 	rts
+
+
+	.rodata
+
+msg_foundfat12:
+	.byte "Found FAT12 partition number ",0
+msg_foundfat16:
+	.byte "Found FAT16 partition number ",0
+msg_foundfat32:
+	.byte "Found FAT32 partition number ",0

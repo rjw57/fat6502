@@ -14,30 +14,6 @@
 	.export debug_putdigit
 	.export debug_crlf
 
-	.export dstr_crlf
-	.export dstr_cdroot
-	.export dstr_cdboot
-	.export dstr_readingdir
-	.export dstr_foundfpgabin
-	.export dstr_foundrom
-	.export dstr_loadingfpga
-	.export dstr_loadingrom
-	.export dstr_imagenum
-	.export dstr_romtoaddr
-	.export dstr_romcluster
-	.export dstr_readcluster
-	.export dstr_loadaddress
-	.export dstr_dircluster
-	.export dstr_foundfat12
-	.export dstr_foundfat16
-	.export dstr_foundfat32
-	.export dstr_loadfailed
-	.export dstr_loaddone
-	.export dstr_loadingroms
-	.export dstr_notend
-	.export dstr_end
-	.export dstr_writingbyte
-
 
 A16550BASE	= $3f20
 fifo_rxd	= A16550BASE + 0	; (r)
@@ -296,51 +272,3 @@ debug_putdigit:
 
 hextoascii:
 	.byte "0123456789abcdef"
-
-
-dstr_cdroot:
-	.byte "cd /"
-dstr_crlf:
-	.byte 13,10,0
-dstr_cdboot:
-	.byte "cd boot/",13,10,0
-dstr_readingdir:
-	.byte "Reading directory",13,10,0
-dstr_foundfpgabin:
-	.byte "Found FPGA config file",13,10,0
-dstr_foundrom:
-	.byte "Found ROM image: ",0
-dstr_loadingfpga:
-	.byte "Uploading FPGA config",13,10,0
-dstr_loadingrom:
-	.byte "Uploading ROM image from ",0
-dstr_imagenum:
-	.byte "imagenum is now: ",0
-dstr_romtoaddr:
-	.byte " to ",0
-dstr_romcluster:
-	.byte " from cluster ",0
-dstr_readcluster:
-	.byte "Reading cluster: ",0
-dstr_loadaddress:
-	.byte "Loaded byte ",0
-dstr_dircluster:
-	.byte "Loading dir cluster ",0
-dstr_foundfat12:
-	.byte "Found FAT12 partition number ",0
-dstr_foundfat16:
-	.byte "Found FAT16 partition number ",0
-dstr_foundfat32:
-	.byte "Found FAT32 partition number ",0
-dstr_loadfailed:
-	.byte "Load failed",13,10,0
-dstr_loaddone:
-	.byte "Load done",13,10,0
-dstr_loadingroms:
-	.byte "Loading ROM images",13,10,0
-dstr_notend:
-	.byte "and that was fun",13,10,0
-dstr_end:
-	.byte "and that's the end",13,10,0
-dstr_writingbyte:
-	.byte "writing byte ",0

@@ -24,26 +24,8 @@
 	.import stat_cluster
 
 	.import debug_puts
+	.import debug_crlf
 	.import debug_puthex
-	.import dstr_cdroot
-	.import dstr_cdboot
-	.import dstr_readingdir
-	.import dstr_foundfpgabin
-	.import dstr_foundrom
-	.import dstr_loadingfpga
-	.import dstr_loadingrom
-	.import dstr_imagenum
-	.import dstr_crlf
-	.import dstr_romtoaddr
-	.import dstr_romcluster
-	.import dstr_readcluster
-	.import dstr_loadaddress
-	.import dstr_loadfailed
-	.import dstr_loaddone
-	.import dstr_loadingroms
-	.import dstr_notend
-	.import dstr_end
-	.import dstr_writingbyte
 
 
 	.bss
@@ -106,10 +88,12 @@ boot:
 	sta imagenum
 	sta fpgafound
 
-	dputs dstr_cdroot
+	ldax msg_cdroot
+	jsr debug_puts
 	jsr vol_cdroot		; start in the root dir
 
-	dputs dstr_cdboot
+	ldax msg_cdboot
+	jsr debug_puts
 	jsr vol_cdboot		; change directory
 	bcs @error		; no boot directory? fux0red
 
@@ -158,8 +142,10 @@ boot:
 	ldx imagenum		; check list of found images
 	beq @done
 
-	dputs dstr_loadingroms
+	ldax msg_loadingroms
+	jsr debug_puts
 
+	ldx imagenum
 @copynext:
 	dex			; copy the relevant entry
 	ldy #3
@@ -192,7 +178,8 @@ boot:
 	rts
 
 @foundfpgabin:
-	dputs dstr_foundfpgabin
+	ldax msg_foundfpgabin
+	jsr debug_puts
 	jsr vol_stat
 	ldx #3
 :	lda stat_cluster,x
@@ -206,7 +193,8 @@ boot:
 
 
 @foundimage:
-	dputs dstr_foundrom
+	ldax msg_foundrom
+	jsr debug_puts
 	ldx imagenum			; convert hex filename to load address
 	ldy #5				; there is no error checking here!
 @convertaddr:
@@ -229,12 +217,12 @@ boot:
 	sta imageaddress,x
 
 	lda imageaddress-1,x
-	dputnum
+	jsr debug_puthex
 	lda imageaddress-2,x
-	dputnum
+	jsr debug_puthex
 	lda imageaddress-3,x
-	dputnum
-	dputs dstr_crlf
+	jsr debug_puthex
+	jsr debug_crlf
 
 	jsr vol_stat
 
@@ -268,7 +256,8 @@ asciitohex:
 
 ; load fpga config
 loadfpga:
-	dputs dstr_loadingfpga
+	ldax msg_loadingfpga
+	jsr debug_puts
 	ldx #3		; copy pointers
 @copy:
 	lda fpgacluster,x
@@ -309,29 +298,31 @@ loadimage:
 	lda #>storeimage
 	sta storevector+1
 
-	dputs dstr_loadingrom
+	ldax msg_loadingrom
+	jsr debug_puts
 
 	lda loadaddress+3
-	dputnum
+	jsr debug_puthex
 	lda loadaddress+2
-	dputnum
+	jsr debug_puthex
 	lda loadaddress+1
-	dputnum
+	jsr debug_puthex
 	lda loadaddress
-	dputnum
+	jsr debug_puthex
 
-	dputs dstr_romtoaddr
+	ldax msg_romtoaddr
+	jsr debug_puts
 
 	lda loadend+3
-	dputnum
+	jsr debug_puthex
 	lda loadend+2
-	dputnum
+	jsr debug_puthex
 	lda loadend+1
-	dputnum
+	jsr debug_puthex
 	lda loadend
-	dputnum
+	jsr debug_puthex
 
-	;dputs dstr_romcluster
+	;dputs msg_romcluster
 	;lda cluster+3
 	;dputnum
 	;lda cluster+2
@@ -341,7 +332,7 @@ loadimage:
 	;lda cluster
 	;dputnum
 
-	dputs dstr_crlf
+	jsr debug_crlf
 
 	;jmp load
 
@@ -349,7 +340,7 @@ loadimage:
 ; load routine for loadimage/loadfpga
 load:
 @nextcluster:
-	;dputs dstr_readcluster
+	;dputs msg_readcluster
 	;lda cluster+3
 	;dputnum
 	;lda cluster+2
@@ -358,14 +349,14 @@ load:
 	;dputnum
 	;lda cluster
 	;dputnum
-	;dputs dstr_crlf
+	;dputs msg_crlf
 
 	jsr vol_read_clust	; read the first cluster
 	bcc @ok
 
 	jmp @error
 
-@ok:	;dputs dstr_loadaddress
+@ok:	;dputs msg_loadaddress
 	;lda loadaddress+3
 	;dputnum
 	;lda loadaddress+2
@@ -374,7 +365,7 @@ load:
 	;dputnum
 	;lda loadaddress
 	;dputnum
-	;dputs dstr_crlf
+	;dputs msg_crlf
 
 	lda #<clusterbuf	; point to the buffer
 	sta loadptr
@@ -407,7 +398,7 @@ load:
 	;cmp loadend+3
 	;bne @next
 
-	;dputs dstr_loaddone
+	;dputs msg_loaddone
 
 	clc
 	rts
@@ -433,7 +424,8 @@ load:
 	jmp @nextcluster
 
 @error:
-	dputs dstr_loadfailed
+	ldax msg_loadfailed
+	jsr debug_puts
 
 	sec
 	rts
@@ -443,9 +435,9 @@ storefpga:
 	lda (loadptr),y		; grab a byte
 	saf		; feed the fpga
 			; simple enough, eh?
-	;dputs dstr_writingbyte
+	;dputs msg_writingbyte
 	;dputnum32 loadaddress
-	;dputs dstr_crlf
+	;dputs msg_crlf
 	rts
 
 storeimage:
@@ -457,6 +449,28 @@ storeimage:
 	sab
 	lda (loadptr),y		; grab a byte
 	mst		; store it in system ram
-	;dputs dstr_writingbyte
+	;dputs msg_writingbyte
 	;dputnum32 loadaddress
 	rts
+
+
+	.rodata
+
+msg_loadfailed:
+	.byte "Load failed",13,10,0
+msg_romtoaddr:
+	.byte " to ",0
+msg_loadingroms:
+	.byte "Loading ROM images",13,10,0
+msg_loadingrom:
+	.byte "Uploading ROM image from ",0
+msg_loadingfpga:
+	.byte "Uploading FPGA config",13,10,0
+msg_foundfpgabin:
+	.byte "Found FPGA config file",13,10,0
+msg_foundrom:
+	.byte "Found ROM image: ",0
+msg_cdroot:
+	.byte "cd /",13,10,0
+msg_cdboot:
+	.byte "cd boot/",13,10,0
