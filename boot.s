@@ -3,8 +3,6 @@
 	.export boot
 	.export bootconfig, part_secperclus
 
-	.importzp dirptr, loadptr
-
 	.import cluster
 	.import clusterbuf
 	.import vol_cdboot
@@ -26,6 +24,11 @@
 	.import debug_puts
 	.import debug_crlf
 	.import debug_puthex
+
+
+	.zeropage
+
+loadptr:	.res 2	; load pointer
 
 
 	.bss

@@ -22,6 +22,7 @@
 	.export stat_length
 	.export stat_cluster
 	.export vol_fstype
+	.exportzp dirptr, nameptr
 
 	.importzp fs_fat12		; fat12/16/32 support
 	.importzp fs_fat16
@@ -55,6 +56,12 @@
 	.import iso_isrom
 	.import iso_stat
 	.import iso_firstnamechar
+
+
+	.zeropage
+
+dirptr:		.res 2	; directory pointer
+nameptr:	.res 2	; name pointer
 
 
 	.bss
