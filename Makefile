@@ -43,7 +43,7 @@ INCS = \
 	ide.i
 
 
-all: bigboot.bin boot232.bin testflash.bin bootflash.bin
+all: bigboot.bin boot232.bin bootflash.bin
 
 bigboot.bin: $(OBJS) $(INCS)
 	$(LD) -C $(CFG) -m bigboot.map -o $@ $(OBJS)
