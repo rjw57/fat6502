@@ -1,5 +1,6 @@
 	.export resetvector
 	.export warmstartvector
+	.export irqvector
 
 	.import reseth
 	.import warmstart
