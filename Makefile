@@ -38,7 +38,6 @@ OBJS = \
 	rs232boot_reloc.o \
 	init232boot.o \
 	relocate.o \
-	crc32.o \
 	checksum.o \
 	alternaterom.o \
 	dsk.o
@@ -56,7 +55,7 @@ bigboot.bin: $(OBJS) $(INCS)
 boot232.bin: rs232boot.o rs232boot_reloc.o init232boot.o relocate.o debug.o buffers.o vectors.o version.o timestamp.o checksum.o
 	$(LD) -C $(CFG) -m boot232.map -o $@ $^
 
-bootflash.bin: bootflash.o graphics.o debug.o buffers.o vectors.o version.o timestamp.o checksum.o
+bootflash.bin: bootflash.o graphics.o debug.o buffers.o vectors.o version.o timestamp.o checksum.o crc32.o
 	$(LD) -C $(CFG) -m bootflash.map -o $@ $^
 
 testcpc.bin: testcpc.o debug.o buffers.o vectors.o version.o checksum.o controller.o dev.o vol.o fat.o ide.o iso9660.o floppy.o zeropage.o dsk.o

@@ -5,27 +5,30 @@
 	.include "drivecpu.i"
 
 
-	.export makecrctables
-	.export resetcrc
-	.export updatecrc
+	.export crc_init
+	.export crc_reset
+	.export crc_update
 	.exportzp crc
-
-
-	.import clusterbuf
 
 
 	.zeropage
 
 crc:	.res 4
-crct0	= clusterbuf
-crct1	= clusterbuf + $100
-crct2	= clusterbuf + $200
-crct3	= clusterbuf + $300
+xtemp:	.res 1
 
 
-	.segment "RELOC"
+	.bss
 
-makecrctables:
+	.align 256
+crct0:	.res 256
+crct1:	.res 256
+crct2:	.res 256
+crct3:	.res 256
+
+
+	.code
+
+crc_init:
 	ldx #0		; x counts from 0 to 255
 @byteloop:
 	lda #0		; a contains the high byte of the crc-32
@@ -66,7 +69,7 @@ makecrctables:
 	rts
 
 
-resetcrc:
+crc_reset:
 	lda #$ff
 	sta crc
 	sta crc+1
@@ -75,7 +78,8 @@ resetcrc:
 	rts
 
 
-updatecrc:
+crc_update:
+	stx xtemp
 	eor crc		; quick crc computation with lookup tables
 	tax
 	lda crc+1
@@ -89,4 +93,5 @@ updatecrc:
 	sta crc+2
 	lda crct3,x
 	sta crc+3
+	ldx xtemp
 	rts
