@@ -38,8 +38,10 @@
 	.import debug_puthex
 
 	.import gfx_gotoxy
+	.import gfx_putchar
 	.import gfx_puts
 	.import gfx_drawicon
+	.import gfx_puthex
 	.import devicon
 	.import devtype
 
@@ -68,6 +70,7 @@ loadaddress:		.res 4	; 32-bit load address
 loadlength:		.res 4	; 32-bit file length
 loadend:		.res 4	; 32-bit load address + file length
 loadleft:		.res 4	; load counter
+loadstart:		.res 4	; image load address
 storevector:		.res 2	; jump vector for indirect store
 fpgafound:		.res 1	; flag if fpga file found
 drivebinfound:		.res 1	; flag if drive bin found
@@ -174,8 +177,6 @@ boot:
 @foundlast:
 	lda fpgafound		; did we find an fpga config?
 	beq @error
-	jsr loadfpga		; upload it
-	bcs @error
 
 	ldx imagenum		; check list of found images
 	beq @doneimg
@@ -212,6 +213,9 @@ boot:
 	bne @copynext
 
 @doneimg:
+	jsr loadfpga		; upload it
+	bcs @error
+
 	lda drivebinfound
 	beq @done
 
@@ -552,19 +556,41 @@ loadfpga:
 
 ; load a memory image to system ram
 loadimage:
-	ldx #0			; address + length = end
+	jsr bar_init		; initialize empty progress bar
+
+	ldx #40 - 14
+	ldy #26
+	jsr gfx_gotoxy
+	ldax msg_bootrom
+	jsr gfx_puts
+	lda loadaddress + 2
+	jsr gfx_puthex
+	lda loadaddress + 1
+	jsr gfx_puthex
+	lda loadaddress
+	jsr gfx_puthex
+	lda #')'
+	jsr gfx_putchar
+
+	ldx #3
+:	lda loadaddress,x
+	sta loadstart,x
+	dex
+	bpl :-
+
 	clc
-	php
-@add:
-	plp
-	lda loadaddress,x
-	adc loadlength,x
-	sta loadend,x
-	php
-	inx
-	cpx #4
-	bne @add
-	plp
+	lda loadlength
+	sta bar_max
+	adc loadaddress
+	sta loadend
+	lda loadlength + 1
+	sta bar_max + 1
+	adc loadaddress + 1
+	sta loadend + 1
+	lda loadlength + 2
+	sta bar_max + 2
+	adc loadaddress + 2
+	sta loadend + 2
 
 	ldax msg_loadingrom
 	jsr debug_puts
@@ -604,6 +630,18 @@ loadimage:
 
 ; load routine for loadimage
 @nextcluster:
+	sec
+	lda loadaddress
+	sbc loadstart
+	sta bar_curr
+	lda loadaddress + 1
+	sbc loadstart + 1
+	sta bar_curr + 1
+	lda loadaddress + 2
+	sbc loadstart + 2
+	sta bar_curr + 2
+	jsr bar_update
+
 	ldax clusterbuf
 	stax clusterptr
 	jsr vol_read_clust	; read the first cluster
@@ -646,6 +684,14 @@ loadimage:
 	;lda loadaddress+3	; uncomment for 32-bit loads
 	;cmp loadend+3
 	;bne @next
+
+	jsr bar_done		; erase progress bar
+
+	ldx #40 - 14		; erase message
+	ldy #26
+	jsr gfx_gotoxy
+	ldax msg_bootnone
+	jsr gfx_puts
 
 	clc
 	rts
