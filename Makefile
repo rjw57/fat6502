@@ -38,7 +38,9 @@ OBJS = \
 	rs232boot_reloc.o \
 	init232boot.o \
 	relocate.o \
-	crc32.o
+	crc32.o \
+	checksum.o \
+	alternaterom.o
 
 INCS = \
 	drivecpu.i \
