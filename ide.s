@@ -631,8 +631,7 @@ atapi_read_sector:
 ; 400 ns delay
 delay_400ns:
 	ldx #10 * cpuspeed
-:	dex
-	nop
+:	nop
 	bit $ea
 	nop
 	bit $ea
@@ -646,5 +645,6 @@ delay_400ns:
 	bit $ea
 	nop
 	bit $ea
+	dex
 	bne :-			; 40*x - 1
 	rts
