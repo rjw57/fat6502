@@ -199,6 +199,8 @@ iso_isfpgabin:
 	lda (dirptr),y
 	cmp #11
 	beq @maybe
+	cmp #9
+	beq @maybe
 @no:
 	sec
 	rts
@@ -206,7 +208,8 @@ iso_isfpgabin:
 	ldax (fpgabinname-33)
 	stax nameptr
 	jsr comparedirname
-	cpy #43				; we should fail at the version number
+	beq returnconfig
+	cpy #43				; we could fail at the version number
 	bne @no
 returnconfig:
 	ldy #33
@@ -221,6 +224,8 @@ iso_isrom:
 	ldy #32
 	lda (dirptr),y
 	cmp #14
+	beq @maybe
+	cmp #12
 	beq @maybe
 @no:
 	sec
