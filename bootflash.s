@@ -13,6 +13,11 @@
 	.import __RELOC_RUN__
 	.import __RELOC_LOAD__
 
+	.import crc_init
+	.import crc_reset
+	.import crc_update
+	.importzp crc
+
 	.import debug_init
 	.import debug_puts
 	.import debug_puthex
@@ -40,6 +45,7 @@ ctr1:	.res 1
 ctr2: 	.res 1
 xtemp:	.res 1
 atemp:	.res 1
+page:	.res 1
 
 
 	.macro bit_flash_clear
@@ -164,6 +170,8 @@ warmstart:
 	ldax #initmsg
 	jsr debug_puts
 
+	jsr crc_init
+
 	ldax #flashidmsg
 	jsr debug_puts
 	lda #$aa
@@ -187,53 +195,70 @@ warmstart:
 	jsr write5555quick
 
 restart:
-	ldax #flashormemmsg
+	ldax #mainmenumsg
 	jsr debug_puts
 @select:
-	jsr debug_get
-	cmp #'f'
-	beq programflash
-	cmp #'F'
-	beq programflash
+	;jsr debug_get
+	jsr kbd_get
+
+	cmp #'p'
+	bne :+
+	jmp programsector
+:
+	cmp #'e'
+	bne :+
+	jmp erasesector
+:
+	cmp #'d'
+	bne :+
+	jmp dumpsector
+:
 	cmp #'m'
+	bne :+
+	jmp viewflash
+:
+	cmp #'c'
+	bne :+
+	jmp calccrc
+:
+	cmp #'q'
 	bne @select
 
-	jmp viewflash
+	rti
+	jmp *
 
 
-programflash:
-	ldax #addrmsg
+dumpsector:
+	jmp restart
+
+
+erasesector:
+	ldax #selectbankmsg
 	jsr debug_puts
-	lda #6
+	lda #1
 	jsr gethex
 	jsr debug_crlf
-	ldx #2
-:	lda hexbuf,x
-	sta addr,x
-	dex
-	bpl :-
-	lda addr+2
+
+	lda hexbuf + 2
+	lsr
+	lsr
+	lsr
+	lsr
 	lsr
 	sta bank
 
-	ldax #lengthmsg
-	jsr debug_puts
-	lda #4
-	jsr gethex
-	jsr debug_crlf
-	lda hexbuf+1
-	sta len
-	lda hexbuf+2
-	sta len+1
-
 	ldax #warningmsg
 	jsr debug_puts
-	jsr debug_get
+	;jsr debug_get
+	jsr kbd_get
 	cmp #' '
 	beq :+
 	jmp restart
-:
+:	jsr erase
+	jmp restart
 
+
+erase:
 	ldax #erasemsg
 	jsr debug_puts
 
@@ -265,6 +290,44 @@ programflash:
 	cmp #$ff
 	bne :-
 
+	rts
+
+
+programsector:
+	ldax #addrmsg
+	jsr debug_puts
+	lda #6
+	jsr gethex
+	jsr debug_crlf
+	ldx #2
+:	lda hexbuf,x
+	sta addr,x
+	dex
+	bpl :-
+	lda addr+2
+	lsr
+	sta bank
+
+	ldax #lengthmsg
+	jsr debug_puts
+	lda #4
+	jsr gethex
+	jsr debug_crlf
+	lda hexbuf+1
+	sta len
+	lda hexbuf+2
+	sta len+1
+
+	ldax #warningmsg
+	jsr debug_puts
+	;jsr debug_get
+	jsr kbd_get
+	cmp #' '
+	beq :+
+	jmp restart
+:
+	jsr erase
+
 	ldax #waitmsg
 	jsr debug_puts
 
@@ -273,8 +336,8 @@ flash:
 
 	ldx #0
 @getbyte:
-	jsr debug_get
-	;txa
+	;jsr debug_get
+	txa
 	sta flashbuf,x
 	inx
 	bne @getbyte
@@ -367,6 +430,66 @@ programpage:
 	rts
 
 
+calccrc:
+	ldax #crcmsg
+	jsr debug_puts
+
+	lda #0
+	sta bank
+@nextbank:
+	ldax #bankmsg
+	jsr debug_puts
+	lda bank
+	jsr debug_putdigit
+	ldax #colonmsg
+	jsr debug_puts
+
+	jsr crc_reset
+
+	bit_flash_clear
+	lda bank
+	lsr
+	bcc :+
+	bit_flash_inc
+:
+	ldx #16
+:	bit_flash_shift
+	dex
+	bne :-
+
+	lda bank
+	lsr
+	tay
+
+	lda #0
+	sta page
+	tax
+:	lda_flash_data_y
+	jsr crc_update
+	bit_flash_inc
+	inx
+	bne :-
+	inc page
+	bne :-
+
+	ldx #0
+:	lda crc,x
+	jsr debug_puthex
+	inx
+	cpx #4
+	bne :-
+	jsr debug_crlf
+
+	inc bank
+	lda bank
+	cmp #8
+	beq @done
+	jmp @nextbank
+@done:
+	jsr debug_crlf
+	jmp restart
+
+
 write5555:
 	bit_flash_clear
 	bit_flash_inc
@@ -443,11 +566,12 @@ gethex:
 	lda #0
 	sta hexlen
 @getkey:
-	jsr debug_get
-	;jsr kbd_get
+	;jsr debug_get
+	jsr kbd_get
 	cmp #8
 	bne :+
 
+	jsr debug_put
 	lda hexlen
 	beq @getkey
 	dec hexlen
@@ -505,32 +629,20 @@ asciitohex:
 kbd_get:
 :	lka			; get byte from kbdfifo
 	bcs :-			; carry = empty
-
-	cmp #$f0		; break code?
-	bne @make
-@break:
-:	lka			; eat next key
-	bcs :-
-	bcc kbd_get
-@make:
-	cmp #$e0		; cursor keys are extended codes
-	beq @extended
+	bmi :-			; neg = break code
+	bvs @extended		; overflow = extended
 
 	ldx #0
 :	cmp scantable,x
 	beq :+
 	inx
 	bne :-
+	ldx #0
 :	lda scantoasc,x
 	clc
 	rts
 
 @extended:
-:	lka			; eat next key
-	bcs :-
-	cmp #$f0
-	beq @break
-
 	lda #0			; no extended codes
 	clc
 	rts
@@ -640,12 +752,12 @@ scantable:
 	.byte 0
 	.byte $45,$16,$1e,$26,$25,$2e,$36,$3d,$3e,$46
 	.byte $1c,$32,$21,$23,$24,$2b
-	.byte $2d,$1d,$2b,$3a
+	.byte $2d,$1d,$2b,$3a,$15,$29
 	.byte $66,$5a
 scantoasc:
 	.byte 0,"0123456789"
 	.byte "abcdef"
-	.byte "rwfm"
+	.byte "rwfmq "
 	.byte 8,10
 exttable:
 	.byte 0
@@ -666,6 +778,9 @@ addrmsg:
 lengthmsg:
 	.byte "16-bit length: $",0
 
+selectbankmsg:
+	.byte "Select bank: ",0
+
 erasemsg:
 	.byte "Erasing sector...",13,10,0
 
@@ -684,5 +799,20 @@ errormsg:
 flashidmsg:
 	.byte "Flash ID: ",0
 
-flashormemmsg:
-	.byte "F to program a flash, M to view flash contents",13,10,0
+bankmsg:
+	.byte "bank ",0
+
+colonmsg:
+	.byte ": ",0
+
+crcmsg:
+	.byte 13, 10, "Calculating CRC checksums...", 13, 10, 0
+
+mainmenumsg:
+	.byte "  P  program sector", 13, 10
+	.byte "  E  erase sector", 13, 10
+	.byte "  D  dump sector", 13, 10
+	.byte "  M  view memory", 13, 10
+	.byte "  C  calc crc32", 13, 10
+	.byte "  Q  quit", 13, 10
+	.byte 0
