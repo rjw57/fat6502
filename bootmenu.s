@@ -438,7 +438,7 @@ selectconfig:
 
 ; wait a little while
 waitvbl:
-	ldy #10
+	ldy #33
 	ldx #0
 :	inx
 	bne :-

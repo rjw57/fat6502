@@ -43,7 +43,7 @@ line:		.res 1
 
 _gfx_quickcls:
 	lda #0
-	ldy #24
+	ldy #32
 @nextline:
 	gay
 	ldx #79
@@ -52,7 +52,7 @@ _gfx_quickcls:
 	dex
 	bpl :-
 	iny
-	cpy #248
+	cpy #240
 	bne @nextline
 	rts
 
