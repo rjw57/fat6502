@@ -179,3 +179,15 @@ cpuspeed	= 2
 	pla
 	plp
 	.endmacro
+
+; util
+	.macro ldax address
+	lda #<address
+	ldx #>address
+	.endmacro
+
+	.macro stax dest
+	sta dest
+	stx dest+1
+	.endmacro
+
