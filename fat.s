@@ -1,10 +1,10 @@
 	.include "drivecpu.i"
 
-	.export fat12_cdroot, fat16_cdroot, fat32_cdroot
+	.export fat_cdroot
 	.export fat_cdboot
 	.export fat_dir_first, fat_dir_next
 	.export fat12_next_clust, fat16_next_clust, fat32_next_clust
-	.export fat_read_clust, fat_read_ptable
+	.export fat_read_clust, fat_read_volid
 	.export fat_endofdir
 	.export fat_isfpgabin
 	.export fat_isrom
@@ -13,6 +13,8 @@
 	.export fat12_stat, fat16_stat, fat32_stat
 	.export fat_firstnamechar
 	.export fat_isdesc
+	.export fat_volname
+
 	.exportzp fs_fat12
 	.exportzp fs_fat16
 	.exportzp fs_fat32
@@ -32,6 +34,8 @@
 
 	.import lba
 	.import cluster
+	.import clusterbuf
+	.import volsector
 
 	.import vol_fstype
 	.import vol_secperclus
@@ -46,7 +50,7 @@
 fs_fat12	= $12
 fs_fat16	= $16
 fs_fat32	= $32
-ptable		= sectorbuf + 446
+ptable		= clusterbuf + 446
 
 
 	.bss
@@ -54,10 +58,9 @@ ptable		= sectorbuf + 446
 part_fat:	.res 4	; 32-bit start of fat
 part_cstart:	.res 4	; 32-bit start of clusters
 part_num:	.res 1	; partition number
-part_start:	.res 4	; 32-bit LBA start address of active partition
 part_rootdir:	.res 4	; 32-bit root directory address
+part_rootdirstart:	.res 4	; start sector for FAT12/FAT16 root directory
 scount:		.res 1	; number of sectors to read
-sectorbuf:	.res 512
 fatbuf:		.res 512
 fatcache:	.res 4	; 32-bit currently cached fat sector
 fat12tmp:	.res 2	; work area to compute fat 12 sectors
@@ -66,21 +69,21 @@ fat12half:	.res 1	; flag that tells us if we should start with the
 fat12byte:	.res 1	; temporary storage for current fat 12 byte
 fat12cluster:	.res 1  ; more temporary storage
 fat12fatflag:	.res 1	; flag that tells us to read the next fat sector
+volnamelen:	.res 1	; length of volume name
+volname:	.res 12	; volume name
+
 
 	.code
 
-; load the root directory
-fat12_cdroot:
-fat16_cdroot:
-	lda #0
-	sta cluster
-	sta cluster+1
-	sta cluster+2
-	sta cluster+3
-	clc
+; return pointer and length to volume name
+fat_volname:
+	ldy volnamelen
+	ldax volname
 	rts
 
-fat32_cdroot:
+
+; load the root directory
+fat_cdroot:
 	lda part_rootdir
 	sta cluster
 	lda part_rootdir+1
@@ -742,13 +745,13 @@ fat_read_clust:
 	cmp #fs_fat32
 	beq @notclusterzero
 
-	lda part_rootdir	; fat12/16 
+	lda part_rootdirstart	; fat12/16 
 	sta lba
-	lda part_rootdir+1
+	lda part_rootdirstart+1
 	sta lba+1
-	lda part_rootdir+2
+	lda part_rootdirstart+2
 	sta lba+2
-	lda part_rootdir+3
+	lda part_rootdirstart+3
 	sta lba+3
 
 	lda #16			; assuming 512 rootdir entries for FAT16. ugly, ugly
@@ -819,216 +822,119 @@ fat_read_clust:
 	rts
 
 
-; reads the partition table and finds the first FAT32 partition
-fat_read_ptable:
-	lda #0		; we'll find the partition
-	sta lba		; table in sector 0
-	sta lba+1
-	sta lba+2
-	sta lba+3
-
-	lda #<sectorbuf
+; read the volume ID
+fat_read_volid:
+	ldx #3
+:	lda volsector,x
+	sta lba,x
+	dex
+	bpl :-
+	lda #<clusterbuf
 	sta sectorptr
-	lda #>sectorbuf
+	lda #>clusterbuf
 	sta sectorptr+1
 
 	jsr dev_read_sector
-	bcs @error
-
+	bcc @checksig
+@error:
+	sec
+	rts
+@checksig:
 	jsr check_signature
 	bcs @error
 
-	lda #<ptable		; pointer to the partition table
-	sta ptr
-	lda #>ptable
-	sta ptr+1
-	ldx #0
-
-	ldy #4
-@checktype:
-	lda (ptr),y		; check file system type
-	cmp #$01
-	beq foundfat12		; fat12 uses $01
-	cmp #$04		; fat16 uses $04, $06, or $0e
-	beq foundfat16
-	cmp #$06
-	beq foundfat16
-	cmp #$0e
-	beq foundfat16
-	cmp #$0b		; fat32 uses $0b or $0c
-	beq _foundfat32
-	cmp #$0c
-	beq _foundfat32
-
-	lda ptr
-	clc
-	adc #16
-	sta ptr
-
-	inx
-	cpx #4
-	bne @checktype
-
-	lda #0			; maybe it's a floppy?
-	sta part_num
-	lda #fs_fat12		; store partition type
-	sta vol_fstype
-	jmp checkvolid		; jump straight to volid check
-
-@error:
-	sec
-	rts
-
-_foundfat32:
-	jmp foundfat32		; branch range. bah.
-
-
-foundfat12:
-	inx
-	stx part_num
-
-	ldax msg_foundfat12
-	jsr debug_puts
-	lda part_num
-	jsr debug_putdigit
-	jsr debug_crlf
-
-	lda #fs_fat12		; store partition type
-	sta vol_fstype
-
-	jmp cont12		; continue as if FAT16
-
-foundfat16:
-	inx
-	stx part_num		; save partition number
-
-	ldax msg_foundfat16
-	jsr debug_puts
-	lda part_num
-	jsr debug_putdigit
-	jsr debug_crlf
-
-	lda #fs_fat16		; store partition type
-	sta vol_fstype
-
-cont12:
-	jsr loadvolid
-	bcc checkvolid
-
-@error:
-	sec
-	rts
-checkvolid:
-	jsr checkgeom
-	beq @ok
-@error:
-	sec
-	rts
-@ok:
-	jsr findfatstart
-
-	asl sectorbuf + $16	; multiply fatsize by two
-	rol sectorbuf + $17	; possible overflow?
-	bcs @error
-
-	;clc
-	lda part_fat		; skip fats to find rootdir *sector*
-	adc sectorbuf + $16
-	sta part_rootdir
-	lda part_fat + 1
-	adc sectorbuf + $17
-	sta part_rootdir + 1
-	lda part_fat + 2
-	adc #0
-	sta part_rootdir + 2
-	lda part_fat + 3
-	adc #0
-	sta part_rootdir + 3
-
-	ldx #4		; divide rootdirentries by 16 to
-@div16:
-	lsr sectorbuf + $12	; get the number of blocks
-	ror sectorbuf + $11
-	dex
-	bne @div16
-	bcs @error
-
-	;clc
-	lda part_rootdir	; skip rootdir to find start of
-	adc sectorbuf + $11	; clusters
-	sta part_cstart
-	lda part_rootdir + 1
-	adc sectorbuf + $12
-	sta part_cstart + 1
-	lda part_rootdir + 2
-	adc #0
-	sta part_cstart + 2
-	lda part_rootdir + 3
-	adc #0
-	sta part_cstart + 3
-
-	jmp subcluster
-
-
-foundfat32:
-	inx
-	stx part_num		; save partition number
-
-	ldax msg_foundfat32
-	jsr debug_puts
-	lda part_num
-	jsr debug_putdigit
-	jsr debug_crlf
-
-	lda #fs_fat32		; store partition type
-	sta vol_fstype
-
-	jsr loadvolid
-	bcc @noerror
-
-@error:
-	sec
-	rts
-@noerror:
 	jsr checkgeom
 	bne @error
 
 	jsr findfatstart
 
-	lda sectorbuf + $2c	; store address of root directory
+	lda vol_fstype
+	cmp #fs_fat32
+	beq @fat32
+
+	asl clusterbuf + $16	; multiply fatsize by two
+	rol clusterbuf + $17	; possible overflow?
+	bcs @error
+
+	;clc
+	lda part_fat		; skip fats to find rootdir *sector*
+	adc clusterbuf + $16
+	sta part_rootdirstart
+	lda part_fat + 1
+	adc clusterbuf + $17
+	sta part_rootdirstart + 1
+	lda part_fat + 2
+	adc #0
+	sta part_rootdirstart + 2
+	lda part_fat + 3
+	adc #0
+	sta part_rootdirstart + 3
+
+	ldx #4		; divide rootdirentries by 16 to
+@div16:
+	lsr clusterbuf + $12	; get the number of blocks
+	ror clusterbuf + $11
+	dex
+	bne @div16
+	bcs @error
+
+	;clc
+	lda part_rootdirstart	; skip rootdir to find start of
+	adc clusterbuf + $11	; clusters
+	sta part_cstart
+	lda part_rootdirstart + 1
+	adc clusterbuf + $12
+	sta part_cstart + 1
+	lda part_rootdirstart + 2
+	adc #0
+	sta part_cstart + 2
+	lda part_rootdirstart + 3
+	adc #0
+	sta part_cstart + 3
+
+	ldx #3			; root directory is always at cluster 0
+	lda #0
+:	sta part_rootdir,x
+	dex
+	bpl :-
+
+	jmp subcluster
+
+
+@fat32:
+	lda clusterbuf + $2c	; store address of root directory
 	sta part_rootdir
-	lda sectorbuf + $2d
+	lda clusterbuf + $2d
 	sta part_rootdir+1
-	lda sectorbuf + $2e
+	lda clusterbuf + $2e
 	sta part_rootdir+2
-	lda sectorbuf + $2f
+	lda clusterbuf + $2f
 	sta part_rootdir+3
 
 	; find start of clusters
 
-	asl sectorbuf + $24	; multiply FAT size by two
-	rol sectorbuf + $25
-	rol sectorbuf + $26
-	rol sectorbuf + $27
+	asl clusterbuf + $24	; multiply FAT size by two
+	rol clusterbuf + $25
+	rol clusterbuf + $26
+	rol clusterbuf + $27
 
-	clc		; then skip them
+	clc			; then skip them
 	lda part_fat
-	adc sectorbuf + $24
+	adc clusterbuf + $24
 	sta part_cstart
 	lda part_fat+1
-	adc sectorbuf + $25
+	adc clusterbuf + $25
 	sta part_cstart+1
 	lda part_fat+2
-	adc sectorbuf + $26
+	adc clusterbuf + $26
 	sta part_cstart+2
 	lda part_fat+3
-	adc sectorbuf + $27
+	adc clusterbuf + $27
 	sta part_cstart+3
 
 subcluster:
-	ldx #2		; subtract two clusters to compensate
-@subcluster:
-	sec		; for reserved values 0 and 1
+	ldx #2			; subtract two clusters to compensate
+:	sec			; for reserved values 0 and 1
 	lda part_cstart
 	sbc vol_secperclus
 	sta part_cstart
@@ -1042,56 +948,54 @@ subcluster:
 	sbc #0
 	sta part_cstart+3
 	dex
-	bne @subcluster
+	bne :-
 
-	; ok, we have now initialized everything we need
-	; to load files from the partition
+	; find and save volume name
 
+	lda #0
+	sta volnamelen
+
+	jsr fat_cdroot
+	jsr fat_dir_first
+@check:
+	jsr fat_endofdir
+	beq @end
+	ldy #11
+	lda (dirptr),y
+	cmp #8
+	bne @check
+
+	sty volnamelen
+	dey
+:	lda (dirptr),y
+	cmp #' '
+	bne @copy
+	dec volnamelen
+	dey
+	bpl :-
+	bmi @end		; empty name
+
+@copy:
+:	lda (dirptr),y
+	sta volname,y
+	dey
+	bpl :-
+
+@end:
+	ldy volnamelen		; terminating zero
+	lda #0
+	sta volname,y
 	clc
-	rts
-
-
-loadvolid:
-	ldy #8		; grab the address of the volume ID
-	lda (ptr),y
-	sta lba
-	sta part_start
-	iny
-	lda (ptr),y
-	sta lba+1
-	sta part_start+1
-	iny
-	lda (ptr),y
-	sta lba+2
-	sta part_start+2
-	iny
-	lda (ptr),y
-	sta lba+3
-	sta part_start+3
-
-	lda #<sectorbuf
-	sta sectorptr
-	lda #>sectorbuf
-	sta sectorptr+1
-
-	jsr dev_read_sector
-	bcs @error
-
-	jsr check_signature	; check for $aa55
-	bcs @error
-
-	clc
-@error:
 	rts
 
 
 findfatstart:
-	clc		; first skip reserved sectors
+	clc			; first skip reserved sectors
 	lda lba
-	adc sectorbuf + $0e
+	adc clusterbuf + $0e
 	sta part_fat
 	lda lba+1
-	adc sectorbuf + $0f
+	adc clusterbuf + $0f
 	sta part_fat+1
 	lda lba+2
 	adc #0
@@ -1103,17 +1007,17 @@ findfatstart:
 
 
 checkgeom:
-	lda sectorbuf + $0b	; make sure sector size is 512
+	lda clusterbuf + $0b	; make sure sector size is 512
 	bne @checkfail
-	lda sectorbuf + $0c
+	lda clusterbuf + $0c
 	cmp #2
 	bne @checkfail
 
-	lda sectorbuf + $10	; make sure there are 2 FATs
+	lda clusterbuf + $10	; make sure there are 2 FATs
 	cmp #2
 	bne @checkfail
 
-	lda sectorbuf + $0d	; number of sectors per cluster
+	lda clusterbuf + $0d	; number of sectors per cluster
 	sta vol_secperclus
 	and #$80		; we can't handle 64K clusters
 @checkfail:
@@ -1122,11 +1026,11 @@ checkgeom:
 
 ; check for signature bytes
 check_signature:
-	lda sectorbuf + $1fe
+	lda clusterbuf + $1fe
 	cmp #$55
 	bne @error
 
-	lda sectorbuf + $1ff
+	lda clusterbuf + $1ff
 	cmp #$aa
 	bne @error
 
