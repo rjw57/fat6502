@@ -40,7 +40,8 @@ OBJS = \
 	relocate.o \
 	crc32.o \
 	checksum.o \
-	alternaterom.o
+	alternaterom.o \
+	dsk.o
 
 INCS = \
 	drivecpu.i \
