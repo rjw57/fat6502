@@ -167,6 +167,14 @@ listdir:
 	dex
 	bne :-
 
+	lda stat_type		; print type
+	asl
+	tay
+	lda type_tab+1,y
+	tax
+	lda type_tab,y
+	jsr debug_puts
+
 	ldx #3			; print length
 :	lda stat_length,x
 	jsr debug_puthex
@@ -185,13 +193,13 @@ listdir:
 
 	jsr debug_crlf		; newline
 
-	jsr vol_isfpgabin
-	bne @next
+	jmp @next
 
-	jsr dsk_load
-	jsr dsk_save
-
-	jmp @lastentry
+;	jsr vol_isfpgabin
+;	bne @next
+;	jsr dsk_load
+;	jsr dsk_save
+;	jmp @lastentry
 
 @next:
 	jsr vol_dir_next	; find the next dir entry
@@ -208,6 +216,23 @@ msg_hello:
 msg_bootingfrom:
 	.byte "listing files on device ",0
 msg_allfailed:
-	.byte 13,10
-	.byte "All done.",13,10
+	.byte 13, 10
+	.byte "All done.", 13, 10
 	.byte 0
+msg_type_other:
+	.byte "????  ", 0
+msg_type_file:
+	.byte "file  ", 0
+msg_type_dir:
+	.byte "dir   ", 0
+msg_type_vol:
+	.byte "vol   ", 0
+msg_type_lfn:
+	.byte "lfn   ", 0
+
+type_tab:
+	.word msg_type_other
+	.word msg_type_file
+	.word msg_type_dir
+	.word msg_type_vol
+	.word msg_type_lfn
