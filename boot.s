@@ -14,6 +14,8 @@
 	.import vol_stat
 	.import vol_isrom
 	.import vol_isfpgabin
+	.import vol_isdrivebin
+;	.import vol_isflashbin
 	.import vol_firstnamechar
 	.import vol_endofdir
 
@@ -21,6 +23,8 @@
 	.import stat_length
 	.import stat_cluster
 	.import vol_secperclus
+
+	.importzp clusterptr
 
 	.import debug_puts
 	.import debug_crlf
@@ -38,6 +42,8 @@ loadptr:	.res 2	; load pointer
 imagecluster:		.res 64	; 16 * 32-bit image cluster addresses
 imageaddress:		.res 64	; 16 * 32-bit load addresses
 imagelength:		.res 64	; 16 * 32-bit image lengths
+drivebincluster:	.res 4	; 32-bit drive bin cluster address
+drivebinlength:		.res 4	; 32-bit drive bin length
 fpgacluster:		.res 4	; 32-bit fpga cluster address
 fpgalength:		.res 4	; 32-bit fpga length
 loadaddress:		.res 4	; 32-bit load address
@@ -45,6 +51,7 @@ loadlength:		.res 4	; 32-bit file length
 loadend:		.res 4	; 32-bit load address + file length
 storevector:		.res 2	; jump vector for indirect store
 fpgafound:		.res 1	; flag if fpga file found
+drivebinfound:		.res 1	; flag if drive bin found
 imagenum:		.res 1	; pointer to the image table
 bootconfig:		.res 1	; selected configuration
 
@@ -85,11 +92,14 @@ boot:
 @clearfpga:
 	sta fpgacluster,x
 	sta fpgalength,x
+	sta drivebincluster,x
+	sta drivebinlength,x
 	dex
 	bpl @clearfpga
 
 	sta imagenum
 	sta fpgafound
+	sta drivebinfound
 
 	ldax msg_cdroot
 	jsr debug_puts
@@ -112,6 +122,11 @@ boot:
 	cmp bootconfig
 	bne @next
 
+	jsr vol_isdrivebin	; check if it's xDRIVE.BIN
+	bcs @notdrivebin
+	jsr @founddrivebin
+	jmp @next
+@notdrivebin:
 	jsr vol_isfpgabin	; check if it's xFPGA.BIN
 	bcs @notfpgabin
 	jsr @foundfpgabin
@@ -125,14 +140,11 @@ boot:
 
 @next:
 	jsr vol_dir_next	; find the next dir entry
-	bcc @noerror		; premature end of dir
+	bcc @checkentry		; premature end of dir
 
 @error:
 	sec
 	rts
-@noerror:
-
-	jmp @checkentry
 
 	; ok, we have found all the config files
 
@@ -143,7 +155,7 @@ boot:
 	bcs @error
 
 	ldx imagenum		; check list of found images
-	beq @done
+	beq @doneimg
 
 	ldax msg_loadingroms
 	jsr debug_puts
@@ -176,6 +188,11 @@ boot:
 	ldx imagenum
 	bne @copynext
 
+@doneimg:
+	lda drivebinfound
+	beq @done
+
+	jsr loaddrivebin	; too late to fail anyway
 @done:
 	clc
 	rts
@@ -194,6 +211,19 @@ boot:
 	inc fpgafound		; mark it as found
 	rts
 
+@founddrivebin:
+	ldax msg_founddrivebin
+	jsr debug_puts
+	jsr vol_stat
+	ldx #3
+:	lda stat_cluster,x
+	sta drivebincluster,x
+	lda stat_length,x
+	sta drivebinlength,x
+	dex
+	bpl :-
+	inc drivebinfound	; mark it as found
+	rts
 
 @foundimage:
 	ldax msg_foundrom
@@ -255,6 +285,41 @@ asciitohex:
 	sbc #7
 @skip:
 	rts
+
+
+; load drive code to clusterbuf and execute
+loaddrivebin:
+	ldax msg_loadingdrivebin
+	jsr debug_puts
+	ldx #3
+:	lda drivebincluster,x
+	sta cluster,x
+	dex
+	bpl :-
+
+	lsr drivebinlength+2	; divide by 2
+	ror drivebinlength+1	; gives us the number of 512 byte sectors in dbl+1
+
+	lda vol_secperclus	; divide by number of sectors per cluster
+:	lsr
+	bcs :+
+	lsr drivebinlength+1
+	jmp :-
+:
+
+	ldax clusterbuf
+	stax clusterptr
+@load:
+	jsr vol_read_clust
+	bcs @fail
+	dec drivebinlength+1
+	beq @done
+	jsr vol_next_clust
+	bcc @load
+@fail:
+	rts
+@done:
+	jmp clusterbuf		; point of no return
 
 
 ; load fpga config
@@ -346,34 +411,14 @@ loadimage:
 ; load routine for loadimage/loadfpga
 load:
 @nextcluster:
-	;dputs msg_readcluster
-	;lda cluster+3
-	;dputnum
-	;lda cluster+2
-	;dputnum
-	;lda cluster+1
-	;dputnum
-	;lda cluster
-	;dputnum
-	;dputs msg_crlf
-
+	ldax clusterbuf
+	stax clusterptr
 	jsr vol_read_clust	; read the first cluster
 	bcc @ok
 
 	jmp @error
 
-@ok:	;dputs msg_loadaddress
-	;lda loadaddress+3
-	;dputnum
-	;lda loadaddress+2
-	;dputnum
-	;lda loadaddress+1
-	;dputnum
-	;lda loadaddress
-	;dputnum
-	;dputs msg_crlf
-
-	lda #<clusterbuf	; point to the buffer
+@ok:	lda #<clusterbuf	; point to the buffer
 	sta loadptr
 	lda #>clusterbuf
 	sta loadptr+1
@@ -404,8 +449,6 @@ load:
 	;cmp loadend+3
 	;bne @next
 
-	;dputs msg_loaddone
-
 	clc
 	rts
 
@@ -426,7 +469,7 @@ load:
 
 	jsr vol_next_clust	; find next cluster in chain
 	bcs @error
-	beq @error		; premature end of file
+	beq @eoferror		; premature end of file
 	jmp @nextcluster
 
 @error:
@@ -436,14 +479,54 @@ load:
 	sec
 	rts
 
+@eoferror:
+	ldax msg_faileof
+	jsr debug_puts
+
+	ldax msg_loadaddr
+	jsr debug_puts
+	lda loadaddress+3
+	jsr debug_puthex
+	lda loadaddress+2
+	jsr debug_puthex
+	lda loadaddress+1
+	jsr debug_puthex
+	lda loadaddress
+	jsr debug_puthex
+	jsr debug_crlf
+
+	ldax msg_loadend
+	jsr debug_puts
+	lda loadend+3
+	jsr debug_puthex
+	lda loadend+2
+	jsr debug_puthex
+	lda loadend+1
+	jsr debug_puthex
+	lda loadend
+	jsr debug_puthex
+	jsr debug_crlf
+
+	ldax msg_endcluster
+	jsr debug_puts
+	lda cluster+3
+	jsr debug_puthex
+	lda cluster+2
+	jsr debug_puthex
+	lda cluster+1
+	jsr debug_puthex
+	lda cluster
+	jsr debug_puthex
+	jsr debug_crlf
+
+	sec
+	rts
+
 
 storefpga:
 	lda (loadptr),y		; grab a byte
 	saf			; feed the fpga
 				; simple enough, eh?
-	;dputs msg_writingbyte
-	;dputnum32 loadaddress
-	;dputs msg_crlf
 	rts
 
 storeimage:
@@ -455,8 +538,6 @@ storeimage:
 	sab
 	lda (loadptr),y		; grab a byte
 	mst			; store it in system ram
-	;dputs msg_writingbyte
-	;dputnum32 loadaddress
 	rts
 
 
@@ -472,11 +553,23 @@ msg_loadingrom:
 	.byte "Uploading ROM image from ",0
 msg_loadingfpga:
 	.byte "Uploading FPGA config",13,10,0
+msg_loadingdrivebin:
+	.byte "Loading drive code",13,10,0
 msg_foundfpgabin:
 	.byte "Found FPGA config file",13,10,0
 msg_foundrom:
 	.byte "Found ROM image: ",0
+msg_founddrivebin:
+	.byte "Found drive code binary",13,10,0
 msg_cdroot:
 	.byte "cd /",13,10,0
 msg_cdboot:
 	.byte "cd boot/",13,10,0
+msg_faileof:
+	.byte "Premature end of file",13,10,0
+msg_loadaddr:
+	.byte "Load address: ",0
+msg_loadend:
+	.byte "Load end:     ",0
+msg_endcluster:
+	.byte "End cluster:  ",0
