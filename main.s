@@ -311,18 +311,21 @@ devicon_none:	.incbin "devtype_none.bin"
 devicon_hd:	.incbin "devtype_hd.bin"
 devicon_cd:	.incbin "devtype_cd.bin"
 devicon_floppy:	.incbin "devtype_floppy.bin"
+devicon_rom:	.incbin "devtype_rom.bin"
 
 devicon:
 	.word devicon_none
 	.word devicon_hd
 	.word devicon_cd
 	.word devicon_floppy
+	.word devicon_rom
 
 devchar:
 	.byte 0, 0
 	.byte $8d, $8e
 	.byte $8f, $90
 	.byte $91, $92
+	.byte $93, $94
 
 msg_init1:
 	.byte "C-ONE boot rom v",0
