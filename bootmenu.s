@@ -364,8 +364,7 @@ selectconfig:
 	ldx #$ff		; disable timer
 	stx seconds
 
-;	bvs @extended		; extended
-	bvc @extended		; bug in current core
+	bvs @extended		; extended
 
 	cmp #$5a		; enter
 	beq @enter
