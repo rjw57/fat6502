@@ -140,6 +140,9 @@ _debug_init:
 
 
 _debug_puts:
+	bit sspresent
+	bpl @done
+
 	sta debug_ptr
 	stx debug_ptr+1
 	ldy #0
