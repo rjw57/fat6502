@@ -33,7 +33,8 @@ OBJS = \
 	timestamp.o \
 	graphics.o \
 	version.o \
-	bootmenu.o
+	bootmenu.o \
+	progressbar.o
 
 INCS = \
 	drivecpu.i \

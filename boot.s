@@ -43,6 +43,12 @@
 	.import devicon
 	.import devtype
 
+	.import bar_init
+	.import bar_done
+	.import bar_update
+	.import bar_max
+	.import bar_curr
+
 	.zeropage
 
 loadptr:	.res 2	; load pointer
@@ -437,6 +443,14 @@ loadclusters:
 
 ; load fpga config
 loadfpga:
+	jsr bar_init		; initialize empty progress bar
+
+	ldx #40 - 8
+	ldy #26
+	jsr gfx_gotoxy
+	ldax msg_bootfpga
+	jsr gfx_puts
+
 	ldax msg_loadingfpga
 	jsr debug_puts
 	ldx #3			; copy pointers
@@ -445,6 +459,7 @@ loadfpga:
 	sta cluster,x
 	lda fpgalength,x
 	sta loadleft,x
+	sta bar_max,x		; max value for progress bar
 	dex
 	bpl @copy
 
@@ -452,6 +467,20 @@ loadfpga:
 	ctl
 
 @nextcluster:
+	sec			; update progress bar display
+	lda fpgalength
+	sbc loadleft
+	sta bar_curr
+	lda fpgalength + 1
+	sbc loadleft + 1
+	sta bar_curr + 1
+	lda fpgalength + 2
+	sbc loadleft + 2
+	sta bar_curr + 3
+	lda #0			; 24-bit for now
+	sta bar_curr
+	jsr bar_update
+
 	ldax clusterbuf
 	stax clusterptr
 	jsr vol_read_clust	; read the first cluster
@@ -508,6 +537,14 @@ loadfpga:
 	cpy loadleft
 	bne :-
 @done:
+	jsr bar_done
+
+	ldx #40 - 14
+	ldy #26
+	jsr gfx_gotoxy
+	ldax msg_bootnone
+	jsr gfx_puts
+
 	clc			; all done
 	rts
 
@@ -718,3 +755,9 @@ msg_endcluster:
 
 msg_bootingfrom:
 	.byte "        Booting...       ",0
+msg_bootfpga:
+	.byte "Configuring FPGA",0
+msg_bootrom:
+	.byte "Uploading ROM image (",0
+msg_bootnone:
+	.byte "                            ",0
