@@ -94,7 +94,7 @@ checkentry:
 	beq @foundlast
 
 	jsr vol_isdesc		; check if it's ?DESC.TXT
-	bcc @next
+	bcs @next
 
 	jsr vol_firstnamechar	; yes, grab first char
 	sec			; assume it's a number
@@ -350,7 +350,7 @@ erasecursor:
 selectconfig:
 	lda #10
 	sta seconds
-	lda #50
+	lda #60
 	sta vbl
 	lda #$ff
 	sta erased
@@ -364,7 +364,8 @@ selectconfig:
 	ldx #$ff		; disable timer
 	stx seconds
 
-	bvs @extended		; extended
+;	bvs @extended		; extended
+	bvc @extended		; bug in current core
 
 	cmp #$5a		; enter
 	beq @enter
@@ -379,6 +380,8 @@ selectconfig:
 
 	bne @update
 @extended:
+	cmp #$5a		; numpad enter
+	beq @enter
 	cmp #$75		; up
 	beq @up
 	cmp #$72		; down
