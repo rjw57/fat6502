@@ -12,6 +12,8 @@
 	.export iso_endofdir
 	.export iso_isfpgabin
 	.export iso_isrom
+	.export iso_isflashbin
+	.export iso_isdrivebin
 	.export iso_stat
 	.export iso_firstnamechar
 
@@ -208,13 +210,32 @@ iso_isfpgabin:
 	ldax (fpgabinname-33)
 	stax nameptr
 	jsr comparedirname
-	beq returnconfig
-	cpy #43				; we could fail at the version number
 	bne @no
 returnconfig:
 	ldy #33
 	lda (dirptr),y
 	and #$0f
+	clc
+	rts
+
+
+; check if dir entry is flash code
+iso_isflashbin:
+	ldy #32
+	lda (dirptr),y
+	cmp #11
+	beq @maybe
+	cmp #9
+	beq @maybe
+@no:
+	sec
+	rts
+@maybe:
+	ldax (flashbinname-33)
+	stax nameptr
+	jsr comparedirname
+	bne @no
+@return:
 	clc
 	rts
 
@@ -231,18 +252,10 @@ iso_isrom:
 	sec
 	rts
 @maybe:
-	ldy #34
-	lda (dirptr),y
-	cmp #'R'
+	ldax (romname-33)
+	stax nameptr
+	jsr comparedirname
 	bne @no
-
-	ldy #41
-:	lda dotbinname-41,y
-	cmp (dirptr),y
-	bne @no
-	iny
-	cpy #43
-	bne :-
 
 	ldy #40
 	ldx #5
@@ -255,19 +268,43 @@ iso_isrom:
 	jmp returnconfig
 
 
+iso_isdrivebin:
+	ldy #32
+	lda (dirptr),y
+	cmp #12
+	beq @maybe
+	cmp #10
+	beq @maybe
+@no:
+	sec
+	rts
+@maybe:
+	ldax (drivebinname-33)
+	stax nameptr
+	jsr comparedirname
+	bne @no
+@return:
+	clc
+	rts
+
+
+
 ; compare dir entry name
 ; set nameptr to name - 33!
 comparedirname:
 	ldy #32
 	lda (dirptr),y
 	tax
-@compare:
+comparedirname_start:			; call here with x and y set up
 	iny
-	lda (dirptr),y
-	cmp (nameptr),y
+	lda (nameptr),y
+	cmp #'?'			; any char matches
+	beq @any
+	cmp (dirptr),y
 	bne @return
+@any:
 	dex
-	bne @compare
+	bne comparedirname_start
 @return:
 	rts
 
@@ -323,9 +360,13 @@ iso_read_clust:
 bootdirname:
 	.byte "BOOT"
 fpgabinname:
-	.byte "0FPGA.BIN;x"
-dotbinname:
-	.byte ".BIN"
+	.byte "?FPGA.BIN??"
+romname:
+	.byte "?R??????.BIN??"
+flashbinname:
+	.byte "FLASH.BIN??"
+drivebinname:
+	.byte "?DRIVE.BIN??"
 
 cd001:
 	.byte 1,"CD001",1

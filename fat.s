@@ -8,6 +8,8 @@
 	.export fat_endofdir
 	.export fat_isfpgabin
 	.export fat_isrom
+	.export fat_isflashbin
+	.export fat_isdrivebin
 	.export fat12_stat, fat16_stat, fat32_stat
 	.export fat_firstnamechar
 	.exportzp fs_fat12
@@ -61,13 +63,6 @@ fat12half:	.res 1	; flag that tells us if we should start with the
 			; high nybble ($80) or low nybble ($00)
 fat12byte:	.res 1	; temporary storage for current fat 12 byte
 fat12cluster:	.res 1  ; more temporary storage
-
-	.rodata
-
-bootdirname:
-	.byte "BOOT    ","   "
-fpganame:
-	.byte "xFPGA   ","BIN"
 
 
 	.code
@@ -151,7 +146,7 @@ stat:
 fat_isfpgabin:
 	ldax fpganame
 	stax nameptr
-	ldy #10
+compare:
 	jsr comparedirname
 	cpy #0
 	beq @yes
@@ -166,17 +161,29 @@ returnconfig:
 	rts
 
 
+; check if it's a drive binary
+fat_isdrivebin:
+	ldax drivename
+	stax nameptr
+	jmp compare
+
+
+; check if it's a flash binary
+fat_isflashbin:
+	ldax flashname
+	stax nameptr
+	jmp compare
+
+
 ; check if the dir entry pointed to by dirptr is a ROM image file
 ; copy ascii image address to romaddr and return config number in A
 ; does NOT verify that the first char is a digit!
 fat_isrom:
-	jsr checkdotbin		; check if it ends with .BIN
-	bne @no
-	ldy #1			; check if it's an image file
-	lda (dirptr),y
-	cmp #'R'	
+	ldax romname
+	stax nameptr
+	jsr comparedirname
 	beq @yes
-@no:
+
 	sec
 	rts
 @yes:
@@ -215,8 +222,7 @@ fat_cdboot:
 	and #$10		; bit 4 is the dir flag
 	beq @next
 
-	dey			; compare name
-	jsr comparedirname
+	jsr comparedirname	; compare name
 	beq @founddir
 
 @next:
@@ -258,10 +264,14 @@ fat_cdboot:
 
 ; compare two strings at dirptr and nameptr
 comparedirname:
+	ldy #10
 @compare:
-	lda (dirptr),y
-	cmp (nameptr),y
+	lda (nameptr),y
+	cmp #'?'
+	beq @any
+	cmp (dirptr),y
 	bne @exit
+@any:
 	dey
 	bpl @compare
 	lda #0
@@ -379,57 +389,11 @@ fat12_next_byte:
 	rts
 
 @error:
-;	ldax msg_diedf12nb	; fixme.  for debugging only
-;	jsr debug_puts
-;	jsr debug_crlf
-	
-;	lda part_num
-;	jsr debug_putdigit
-;	jsr debug_crlf
-
 	sec
 	rts
 
-;printtemp:	.byte $00	; fixme - debug!
-;printhex:
-;	pha
-;	txa
-;	pha
-;	tya
-;	pha
-;	
-;	lda printtemp
-;	jsr debug_puthex
-;	
-;	pla
-;	tay
-;	pla
-;	tax
-;	pla
-;	rts
-
 
 fat12_next_clust:
-;	inc cluster		; fixme. badly.
-;	bne @done
-;	inc cluster+1
-;	bne @done
-;	inc cluster+2
-;	bne @done
-;	inc cluster+3
-;@done:
-;	clc
-;	rts
-	
-	
-;	ldax msg_fat12_next	; fixme.  for debugging only
-;	jsr debug_puts
-;	lda cluster+1
-;	jsr debug_puthex
-;	lda cluster
-;	jsr debug_puthex
-;	jsr debug_crlf
-
 				; We have to multiply the cluster number
 				; Times 1.5 to get a byte offset into the FAT
 	clc
@@ -457,17 +421,6 @@ fat12_next_clust:
 	sta lba+1
 	sta lba+2
 	sta lba+3
-
-;	ldax msg_offset		; debug - fixme - nukeme
-;	jsr debug_puts		;
-;	lda fat12tmp+1		;
-;	jsr debug_puthex	;
-;	lda fat12tmp		;
-;	jsr debug_puthex        ;
-;	ldax msg_flag		;
-;	jsr debug_puts		;
-;	lda fat12half		;
-;	jsr debug_puthex	;
 	
 	lda fat12tmp+1		; Strip the highest 7 bits and we get a
 	and #$01		; byte offset into the sector
@@ -497,14 +450,8 @@ fat12_next_clust:
 	bcs @error
 	sta fat12cluster
 	
-;	sta printtemp		; debug
-;	jsr printhex		;
-	
 	jsr fat12_next_byte	; Next byte
 	bcs @error
-	
-;	sta printtemp		; debug
-;	jsr printhex		;
 
 	bit fat12half		; test nybble flag
 	bmi @nybswap
@@ -536,25 +483,10 @@ fat12_next_clust:
 	cmp #$f0
 	
 @done:
-;	php			;
-;	ldax msg_lba		; debug - fixme - nukeme
-;	jsr debug_puts		;
-;	lda cluster+1		;
-;	jsr debug_puthex	;
-;	lda cluster		;
-;	jsr debug_puthex	;
-;	jsr debug_crlf		;
-;	plp			;
-	
-	
 	clc
 	rts
 
 @error:
-;	ldax msg_diedf12nb	; fixme.  for debugging only
-;	jsr debug_puts
-;	jsr debug_crlf
-
 	sec
 	rts
 
@@ -1189,16 +1121,13 @@ msg_foundfat16:
 msg_foundfat32:
 	.byte "Found FAT32 partition number ",0
 
-
-;msg_fat12_next:
-;	.byte "Trying to find next fat12 cluster for cluster ",0
-;msg_diedf12nb:
-;	.byte "Died trying to get next fat12 byte",0
-;msg_diedfat12:
-;	.byte "Died trying to get next cluster",0
-;msg_lba:
-;	.byte " - Returning LBA: ",0
-;msg_offset:
-;	.byte " offset: ",0
-;msg_flag:
-;	.byte " - flag: ",0
+bootdirname:
+	.byte "BOOT    ","   "
+fpganame:
+	.byte "?FPGA   ","BIN"
+romname:
+	.byte "?R??????","BIN"
+flashname:
+	.byte "FLASH   ","BIN"
+drivename:
+	.byte "?DRIVE  ","BIN"

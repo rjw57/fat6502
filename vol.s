@@ -15,6 +15,8 @@
 	.export vol_endofdir
 	.export vol_isfpgabin
 	.export vol_isrom
+	.export vol_isflashbin
+	.export vol_isdrivebin
 	.export vol_stat
 	.export vol_firstnamechar
 
@@ -40,6 +42,8 @@
 	.import fat_endofdir
 	.import fat_isfpgabin
 	.import fat_isrom
+	.import fat_isflashbin
+	.import fat_isdrivebin
 	.import fat12_stat, fat16_stat, fat32_stat
 	.import fat_firstnamechar
 
@@ -56,6 +60,8 @@
 	.import iso_endofdir
 	.import iso_isfpgabin
 	.import iso_isrom
+	.import iso_isflashbin
+	.import iso_isdrivebin
 	.import iso_stat
 	.import iso_firstnamechar
 
@@ -69,7 +75,7 @@ nameptr:	.res 2	; name pointer
 	.bss
 
 	.align 2
-vectablesize		= 12
+vectablesize		= 14
 vector_table:		.res vectablesize * 2
 vol_read_ptable_vector	= vector_table
 vol_cdboot_vector	= vector_table + 2
@@ -81,8 +87,10 @@ vol_read_clust_vector	= vector_table + 12
 vol_endofdir_vector	= vector_table + 14
 vol_isfpgabin_vector	= vector_table + 16
 vol_isrom_vector	= vector_table + 18
-vol_stat_vector		= vector_table + 20
-vol_firstnamechar_vector= vector_table + 22
+vol_isflashbin_vector	= vector_table + 20
+vol_isdrivebin_vector	= vector_table + 22
+vol_stat_vector		= vector_table + 24
+vol_firstnamechar_vector= vector_table + 26
 
 romaddr:		.res 6
 stat_length:		.res 4
@@ -105,6 +113,8 @@ fat12_vectors:
 	.word fat_endofdir
 	.word fat_isfpgabin
 	.word fat_isrom
+	.word fat_isflashbin
+	.word fat_isdrivebin
 	.word fat12_stat
 	.word fat_firstnamechar
 
@@ -119,6 +129,8 @@ fat16_vectors:
 	.word fat_endofdir
 	.word fat_isfpgabin
 	.word fat_isrom
+	.word fat_isflashbin
+	.word fat_isdrivebin
 	.word fat16_stat
 	.word fat_firstnamechar
 
@@ -133,6 +145,8 @@ fat32_vectors:
 	.word fat_endofdir
 	.word fat_isfpgabin
 	.word fat_isrom
+	.word fat_isflashbin
+	.word fat_isdrivebin
 	.word fat32_stat
 	.word fat_firstnamechar
 
@@ -147,6 +161,8 @@ iso_vectors:
 	.word iso_endofdir
 	.word iso_isfpgabin
 	.word iso_isrom
+	.word iso_isflashbin
+	.word iso_isdrivebin
 	.word iso_stat
 	.word iso_firstnamechar
 
@@ -163,6 +179,8 @@ vol_read_clust:		jmp (vol_read_clust_vector)
 vol_endofdir:		jmp (vol_endofdir_vector)
 vol_isfpgabin:		jmp (vol_isfpgabin_vector)
 vol_isrom:		jmp (vol_isrom_vector)
+vol_isflashbin:		jmp (vol_isflashbin_vector)
+vol_isdrivebin:		jmp (vol_isdrivebin_vector)
 vol_stat:		jmp (vol_stat_vector)
 vol_firstnamechar:	jmp (vol_firstnamechar_vector)
 
