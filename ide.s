@@ -32,6 +32,8 @@
 	.exportzp devtype_hd
 	.exportzp devtype_cd
 
+	.import risc_read_256_words
+
 	.import debug_puts
 	.import debug_puthex
 	.import debug_putdigit
@@ -344,10 +346,14 @@ ide_read_256_words:
 
 	ldy #0			; store data at sectorptr
 @next:
-	;jsr ide_read_data	; inlined
 	lda #ide_status
 	ora ide_channel
 	csa
+ .ifndef NORISCOPT
+	jsr risc_read_256_words
+	inc sectorptr+1
+	inc sectorptr+1
+ .else
 @checkstatus:
 	ild
 	and #$08		; check that DRQ is set
@@ -355,18 +361,17 @@ ide_read_256_words:
 	lda ide_channel
 	csa
 	ild
-	;rts
 	sta (sectorptr),y
 	iny
 	txa
 	sta (sectorptr),y
 	iny
 	bne @next
-
 	inc sectorptr+1
 
 	dec pagecount
 	bne @next
+ .endif
 
 	clc
 @timeout:
