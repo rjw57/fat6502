@@ -129,6 +129,10 @@ reseth:
 	jmp @nextctl
 
 failure:
+	lda #<msg_allfailed
+	ldx #>msg_allfailed
+	jsr debug_puts
+
 	inc $d020		; fix me
 	jmp *-3
 
@@ -151,3 +155,14 @@ msg_failed:
 	.byte "Failure",13,10,0
 msg_bootingfrom:
 	.byte "Booting from device ",0
+msg_allfailed:
+	.byte 13,10
+	.byte "I, I've been lonely",13,10
+	.byte "And I, I've been blind",13,10
+	.byte "And I, I've learned nothing",13,10
+	.byte "So my hands are firmly tied",13,10
+	.byte "To the sinking",13,10
+	.byte "  leadweight",13,10
+	.byte "  of failure",13,10
+	.byte 0
+
