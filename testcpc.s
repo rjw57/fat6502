@@ -16,6 +16,7 @@
 	.import vol_isfpgabin
 	.import vol_isdrivebin
 	.import vol_isflashbin
+	.import vol_isdesc
 	.import vol_firstnamechar
 	.import vol_endofdir
 	.import vol_volname
@@ -191,6 +192,12 @@ listdir:
 	dex
 	bpl :-
 
+	lda #' '		; spaces
+	jsr debug_put
+	jsr debug_put
+
+	jsr specialtest
+
 	jsr debug_crlf		; newline
 
 	jmp @next
@@ -209,6 +216,35 @@ listdir:
 	rts
 
 
+specialtest:
+	jsr vol_isfpgabin	; check for xFPGA.BIN
+	bcs :+
+	ldax #msg_isfpga
+	jsr debug_puts
+:
+	jsr vol_isrom		; check for xRxxxxxx.BIN
+	bcs :+
+	ldax #msg_isrom
+	jsr debug_puts
+:
+	jsr vol_isflashbin	; check for FLASH.BIN
+	bcs :+
+	ldax #msg_isflash
+	jsr debug_puts
+:
+	jsr vol_isdrivebin	; check for xDRIVE.BIN
+	bcs :+
+	ldax #msg_isdrive
+	jsr debug_puts
+:
+	jsr vol_isdesc		; check for xDESC.BIN
+	bcs :+
+	ldax #msg_isdesc
+	jsr debug_puts
+:
+	rts
+
+
 	.rodata
 
 msg_hello:
@@ -219,6 +255,17 @@ msg_allfailed:
 	.byte 13, 10
 	.byte "All done.", 13, 10
 	.byte 0
+msg_isfpga:
+	.byte "FPGA file ", 0
+msg_isrom:
+	.byte "ROM file ", 0
+msg_isflash:
+	.byte "FLASH program ", 0
+msg_isdrive:
+	.byte "DRIVE program ", 0
+msg_isdesc:
+	.byte "DESC file ", 0
+
 msg_type_other:
 	.byte "????  ", 0
 msg_type_file:
