@@ -4,10 +4,30 @@ cpuspeed	= 2
 
 ; --- Flash ROM ---
 
-flash_clear	= $3f60
-flash_shift	= $3f66
-flash_inc	= $3f68
-flash_data	= $3f6c
+flash_clear	= $00
+flash_shift	= $06
+flash_inc	= $08
+flash_data	= $0c
+
+
+; --- device map ---
+
+dev_roml	= $f0
+dev_io2		= $f1
+dev_clk1	= $f2
+dev_sid1	= $f3
+dev_romh	= $f4
+dev_io1		= $f5
+dev_clk2	= $f6
+dev_sid2	= $f7
+dev_sregbuf	= $f8
+dev_pdata	= $f9
+dev_pddr	= $fa
+dev_serial	= $fb
+dev_pcigrntres	= $fc
+dev_pci0grntset	= $fd
+dev_pci1grntset	= $fe
+dev_release	= $ff
 
 
 ; --- RS-232 ---
