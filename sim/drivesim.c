@@ -318,8 +318,9 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	    C1IO.idereg[C1IO.ide_channel][7] = 0x08;
 	    sbufctr = 0;
 	    sbufsize = 512;
-	    for (i = 0; i < 512; ++i) {
-	      sectorbuf[i] = ident_hd[i];
+	    for (i = 0; i < 512; i+=2) {
+	      sectorbuf[i] = ident_hd[i+1];
+	      sectorbuf[i+1] = ident_hd[i];
 	    }
 	  } else {
 	    if (!silent) printf("!IDE identify device on unsupported device\n");
@@ -352,8 +353,9 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	    C1IO.idereg[C1IO.ide_channel][7] = 0x08;
 	    sbufctr = 0;
 	    sbufsize = 512;
-	    for (i = 0; i < 512; ++i) {
-	      sectorbuf[i] = ident_cd[i];
+	    for (i = 0; i < 512; i+=2) {
+	      sectorbuf[i] = ident_cd[i+1];
+	      sectorbuf[i+1] = ident_cd[i];
 	    }
 	  } else {
 	    if (!silent) printf("!IDE identify packet device on unsupported device\n");
@@ -470,16 +472,13 @@ byte Patch6502(register byte Op,register M6502 *R) {
   case 0xff: /* trc */
     l = Op6502(R->PC.W++);
     //silent = 0;
-    R->Trace = 1; /* enter monitor */
-    printf("!TRC %02x %08x\n", l, tracereg);
-    /*
     if (l == 0xff || l == 0xfe) {
       if (!silent) printf("Execution done at %04x\n", R->PC.W);
       exitnow = 1;
     } else {
-      l = waitkey();
+      R->Trace = 1; /* enter monitor */
+      printf("!TRC %02x %08x\n", l, tracereg);
     }
-    */
     break;
 
   defalt:

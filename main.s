@@ -140,6 +140,7 @@ reseth:
 	nop
 	lda #%01110000		; start 65816
 	csa_unsafe
+	trc $ff			; success
 	jmp *
 
 
@@ -164,6 +165,7 @@ failure:
 	ldax msg_allfailed
 	jsr debug_puts
 
+	trc $fe			; fail
 	inc $d020		; fix me
 	jmp *-3
 
