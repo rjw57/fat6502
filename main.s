@@ -6,6 +6,9 @@
 	.import select_config
 	.import boot
 	.import dev_init
+	.importzp ptr
+	.import __BSS_RUN__
+	.import __BSS_SIZE__
 
 	.import ctl_select
 	.import ctl_select_dev
@@ -13,6 +16,8 @@
 	.importzp fs_fat32
 	.import vol_set_fs
 	.import vol_read_ptable
+
+	.import timestamp
 
 	.import debug_init
 	.import debug_done
@@ -40,9 +45,26 @@ reseth:
 	lda #%01100000		; initalize csa reg
 	csa_unsafe
 
+	ldx #0			; clear zp and stack
+	txa
+:	sta $00,x
+	sta $0100,x
+	inx
+	bne :-
+
+	jsr clrbss		; clear BSS segment
+
 	jsr debug_init
 
-	dputs msg_init
+	lda #<msg_init1
+	ldx #>msg_init1
+	jsr debug_puts
+	lda #<timestamp
+	ldx #>timestamp
+	jsr debug_puts
+	lda #<msg_init2
+	ldx #>msg_init2
+	jsr debug_puts
 
 	dputs msg_erasefpga
 	clf			; erase FPGA
@@ -139,8 +161,43 @@ failure:
 	jmp *-3
 
 
-msg_init:
-	.byte "C-ONE boot rom initializing",13,10,0
+; clear BSS segment
+clrbss:
+	lda #<__BSS_RUN__
+	sta ptr
+	lda #>__BSS_RUN__
+	sta ptr+1
+
+	ldy #0
+
+	ldx #>__BSS_SIZE__
+	beq @donehi
+
+@clrhi:
+	lda #0
+:	sta (ptr),y
+	iny
+	bne :-
+	inc ptr+1
+	dex
+	bne @clrhi
+@donehi:
+	ldx #<__BSS_SIZE__
+	beq @donelo
+
+	lda #0
+:	sta (ptr),y
+	iny
+	dex
+	bne :-
+@donelo:
+	rts
+
+
+msg_init1:
+	.byte "C-ONE boot rom (",0
+msg_init2:
+	.byte ") initializing",13,10,0
 msg_erasefpga:
 	.byte "Erasing FPGA",13,10,0
 msg_ideinit:
