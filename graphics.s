@@ -7,6 +7,7 @@
 	.export gfx_putchar
 	.export gfx_quickcls
 	.export gfx_drawicon
+	.export gfx_puthex
 
 
 	.segment "GFXVECTORS"
@@ -18,6 +19,7 @@ gfx_puts:		jmp _gfx_puts
 gfx_putchar:		jmp _gfx_putchar
 gfx_quickcls:		jmp _gfx_quickcls
 gfx_drawicon:		jmp _gfx_drawicon
+gfx_puthex:		jmp _gfx_puthex
 
 
 	.zeropage
@@ -358,6 +360,28 @@ _gfx_drawicon:
 	rts
 
 
+_gfx_puthex:
+	pha
+	stx @xtemp
+	lsr
+	lsr
+	lsr
+	lsr
+	tax
+	lda hextoascii,x
+	jsr _gfx_putchar
+	pla
+	and #$0f
+	tax
+	lda hextoascii,x
+	ldx @xtemp
+	jmp _gfx_putchar
+
+	.bss
+
+@xtemp:	.res 1
+
+
 	.rodata
 
 	.align 256
@@ -370,3 +394,6 @@ font_az		= bootfont + 768
 
 bootlogo:
 	.incbin "bootlogo.bin"
+
+hextoascii:
+	.byte "0123456789abcdef"
