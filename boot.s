@@ -476,7 +476,7 @@ loadfpga:
 	sta bar_curr + 1
 	lda fpgalength + 2
 	sbc loadleft + 2
-	sta bar_curr + 3
+	sta bar_curr + 2
 	lda #0			; 24-bit for now
 	sta bar_curr
 	jsr bar_update
