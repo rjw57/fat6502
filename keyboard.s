@@ -11,7 +11,6 @@
 	.import gfx_putchar
 	.import gfx_gotoxy
 	.import gfx_cls
-	.import gfx_x
 
 
 	.code
@@ -49,6 +48,24 @@ numbercodes:
 	.byte $45, $16, $1e, $26, $25, $2e, $36, $3d, $3e, $46, $1b, $2b
 asciicodes:
 	.byte '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'S', 'F'
+
+
+; 7-sept-2004 macros for CPC gfx hack:
+
+; set graphics cursor x position
+        .macro gax
+        stx gfx_x
+        .endmacro
+
+; set graphics cursor y position, bits 1..8
+        .macro gay
+        sty gfx_y
+        .endmacro
+
+; write to graphics ram
+        .macro gst
+        jsr gfx_gst
+        .endmacro
 
 
 	.code
@@ -577,6 +594,76 @@ checkkbd:
 	rts
 
 
+; 07-sept-2004 add CPC gfx hack
+
+; entry point and parameter storage for CPC gfx hack
+
+; gst routine here... no separate label
+
+gfx_gst:
+; gfx_x_gst:
+        sta gfx_x_data
+
+;save everything
+
+        php
+        txa
+        pha
+        tya
+        pha
+
+	lda #$0b
+	sta gfx_addr_hi
+
+	;80 = 16 * 5
+	lda #0
+	sta gfx_addr_mid
+	lda gfx_y
+	lsr
+	lsr
+	lsr
+	sta gfx_addr_lo
+	asl
+	asl
+	;clc
+	adc gfx_addr_lo
+	asl
+	rol gfx_addr_mid
+	asl
+	rol gfx_addr_mid
+	asl
+	rol gfx_addr_mid
+	asl
+	rol gfx_addr_mid
+	;clc
+	adc gfx_x
+	sta gfx_addr_lo
+	bcc :+
+	inc gfx_addr_mid
+:
+	lda gfx_y
+	and #7
+	asl
+	asl
+	asl
+	ora #$c0
+	ora gfx_addr_mid
+	sta gfx_addr_mid
+
+        lda gfx_x_data
+        sam gfx_x_temp1
+
+; restore and exit
+
+        pla
+        tay
+        pla
+        tax
+        lda gfx_x_data
+        plp
+        rts
+
+
 	.rodata
 
 p1up	= $1c
@@ -613,3 +700,25 @@ keys:		.res 1
 spacectr:	.res 1
 wait:		.res 1
 random:		.res 1
+
+gfx_x:
+        .res 1
+gfx_x_row:
+gfx_y:
+        .res 1
+gfx_x_bank:
+        .res 1
+gfx_x_data:
+        .res 1
+gfx_x_temp1:
+gfx_addr_lo:
+        .res 1
+gfx_x_temp2:
+gfx_addr_mid:
+        .res 1
+gfx_x_temp3:
+gfx_addr_hi:
+        .res 1
+gfx_x_temp4:
+        .res 1
+

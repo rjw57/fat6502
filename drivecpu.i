@@ -172,37 +172,6 @@ A16550BASE	= $3f20
 	.endmacro
 
 
-; --- Graphics ---
-;
-; gax => addr(9..2)
-; gab(0) => addr(10)
-; gay => addr(18..11)
-; gab(5..1) => addr(23..19)
-
-; 7-sept-2004 macros for CPC gfx hack:
-; add .import gfx_x or they won't work
-
-; set graphics cursor x position
-        .macro gax
-;       .byte $02
-        stx gfx_x       ;!!!!!!!
-	;stx $3f00
-        .endmacro
-
-; set graphics cursor y position, bits 1..8
-        .macro gay
-;       .byte $03
-        sty gfx_x+1     ;!!!!!!!
-	;sty $3f01
-        .endmacro
-
-; write to graphics ram
-        .macro gst
-;       .byte $04
-        jsr gfx_x+8 ;didn't want to export another label
-        .endmacro
-
-
 ; --- RS-232 Debugging ---
 
 ; print a string
