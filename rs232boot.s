@@ -34,7 +34,7 @@ reseth:
 	ldx #$ff
 	txs
 
-	lda #%01100000		; initalize csa reg
+	lda #%01110000		; initalize csa reg
 	csa_unsafe
 
 	jsr debug_init
