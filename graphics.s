@@ -76,6 +76,7 @@ gfx_x_temp4:
 
 ; gst routine here... no separate label
 
+gfx_gst:
 ; gfx_x_gst:
         sta gfx_x_data
 
