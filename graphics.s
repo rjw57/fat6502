@@ -8,7 +8,6 @@
 	.export gfx_quickcls
 	.export gfx_drawicon
 	.export gfx_puthex
-	.export gfx_x
 
 
 	.segment "GFXVECTORS"
@@ -48,99 +47,6 @@ fgcolor = 10		; yellow
 
 
 	.code
-
-; 07-sept-2004 add CPC gfx hack
-
-; entry point and parameter storage for CPC gfx hack
-
-gfx_x:
-        .res 1
-gfx_x_row:
-gfx_y:
-        .res 1
-gfx_x_bank:
-        .res 1
-gfx_x_data:
-        .res 1
-
-; temporary storage
-
-gfx_x_temp1:
-gfx_addr_lo:
-        .res 1
-gfx_x_temp2:
-gfx_addr_mid:
-        .res 1
-gfx_x_temp3:
-gfx_addr_hi:
-        .res 1
-gfx_x_temp4:
-        .res 1
-
-; gst routine here... no separate label
-
-gfx_gst:
-; gfx_x_gst:
-        sta gfx_x_data
-
-;save everything
-
-        php
-        txa
-        pha
-        tya
-        pha
-
-	lda #$0b
-	sta gfx_addr_hi
-
-	;80 = 16 * 5
-	lda #0
-	sta gfx_addr_mid
-	lda gfx_y
-	lsr
-	lsr
-	lsr
-	sta gfx_addr_lo
-	asl
-	asl
-	;clc
-	adc gfx_addr_lo
-	asl
-	rol gfx_addr_mid
-	asl
-	rol gfx_addr_mid
-	asl
-	rol gfx_addr_mid
-	asl
-	rol gfx_addr_mid
-	;clc
-	adc gfx_x
-	sta gfx_addr_lo
-	bcc :+
-	inc gfx_addr_mid
-:
-	lda gfx_y
-	and #7
-	asl
-	asl
-	asl
-	ora #$c0
-	ora gfx_addr_mid
-	sta gfx_addr_mid
-
-        lda gfx_x_data
-        sam gfx_x_temp1
-
-; restore and exit
-
-        pla
-        tay
-        pla
-        tax
-        lda gfx_x_data
-        plp
-        rts
 
 
 ; clear screen below logo
@@ -486,45 +392,52 @@ gfx_plotchar:
 
 ; draw 32x32 icon at cursor position
 _gfx_drawicon:
-	stax gfxptr
+	stax srcptr
 
-	lda cursx
-	clc
-	adc #4
-	sta tempx
+	lda cursptr
+	sta gfxptr
+	lda cursptr + 1
+	and #7
+	sta baseaddr
+	lda cursptr + 2
+	sta gfxptr + 2
 
-	lda cursy
-	asl
-	asl
-	asl
+	lda #2
 	sta line
-	tay
-	clc
-	adc #16
-	sta tempy
 @nextline:
-	gay
+	ldx #4
+@nextcol:
+	ldy #7
+:	lda rowmask,y
+	ora baseaddr
+	sta gfxptr + 1
+	lda (srcptr),y
+	sam gfxptr
+	dey
+	bpl :-
 
-	ldy #0
-	ldx cursx
-:	lda (gfxptr),y
-	gax
-	gst
-	iny
-	inx
-	cpx tempx
-	bne :-
+	lda srcptr
+	clc
+	adc #8
+	sta srcptr
+	bne :+
+	inc srcptr + 1
+:
+	inc gfxptr
+	bne :+
+	inc gfxptr + 1
+:
+	dex
+	bne @nextcol
 
 	lda gfxptr
 	clc
-	adc #8
+	adc #(80 - 4)
 	sta gfxptr
-	bcc :+
-	inc gfxptr+1
-:
-	inc line
-	ldy line
-	cpy tempy
+	; bcc :+
+	; inc gfxptr + 1
+
+	dec line
 	bne @nextline
 
 	rts
