@@ -18,6 +18,7 @@
 
 	.importzp dirptr
 	.importzp nameptr
+	.importzp clusterptr
 	.importzp ptr
 	.importzp sectorptr
 
@@ -148,9 +149,7 @@ fat_isfpgabin:
 	stax nameptr
 compare:
 	jsr comparedirname
-	cpy #0
 	beq @yes
-@no:
 	sec
 	rts
 @yes:
@@ -298,6 +297,8 @@ checkdotbin:
 
 ; find the first dir entry
 fat_dir_first:
+	ldax clusterbuf
+	stax clusterptr
 	jsr fat_read_clust	; load dir cluster into buffer
 	bcc fat_dir_ok
 
@@ -335,6 +336,8 @@ fat_dir_next:
 	jsr fat_next_clust	; next cluster in chain
 	beq fat_dir_error	; premature end of directory
 	bcs fat_dir_error
+	ldax clusterbuf
+	stax clusterptr
 	jsr fat_read_clust	; load cluster into buffer
 	bcc fat_dir_ok
 	bcs fat_dir_error
@@ -766,9 +769,9 @@ fat_read_clust:
 @readsectors:
 	sta scount
 
-	lda #<clusterbuf	; load to cluster buffer
+	lda clusterptr		; load to cluster buffer
 	sta sectorptr
-	lda #>clusterbuf
+	lda clusterptr+1
 	sta sectorptr+1
 
 @readnext:
@@ -785,6 +788,11 @@ fat_read_clust:
 @done:
 	dec scount
 	bne @readnext
+
+	lda sectorptr
+	sta clusterptr
+	lda sectorptr+1
+	sta clusterptr+1
 
 	clc
 	rts

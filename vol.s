@@ -26,7 +26,7 @@
 	.export vol_fstype
 	.export vol_secperclus
 	.export cluster
-	.exportzp dirptr, nameptr
+	.exportzp dirptr, nameptr, clusterptr
 
 	.importzp fs_fat12		; fat12/16/32 support
 	.importzp fs_fat16
@@ -70,6 +70,7 @@
 
 dirptr:		.res 2	; directory pointer
 nameptr:	.res 2	; name pointer
+clusterptr:	.res 2	; custer buffer
 
 
 	.bss

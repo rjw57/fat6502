@@ -20,6 +20,7 @@
 	.import lba
 	.import cluster
 	.importzp sectorptr
+	.importzp clusterptr
 
 	.import stat_cluster
 	.import stat_length
@@ -158,6 +159,8 @@ iso_cdboot:
 ; read the first sector into the buffer and point dirptr
 ; to the first entry
 iso_dir_first:
+	ldax clusterbuf
+	stax clusterptr
 	jsr iso_read_clust
 	bcc @ok
 	rts
@@ -345,14 +348,23 @@ iso_next_clust:
 
 ; read the sector in cluster
 iso_read_clust:
-	ldax clusterbuf
-	stax sectorptr
+	lda clusterptr
+	sta sectorptr
+	lda clusterptr+1
+	sta sectorptr+1
 	ldx #3
 :	lda cluster,x
 	sta lba,x
 	dex
 	bpl :-
-	jmp dev_read_sector
+	jsr dev_read_sector
+	bcc :+
+	rts
+:	lda sectorptr
+	sta clusterptr
+	lda sectorptr+1
+	sta clusterptr+1
+	rts
 
 
 	.rodata
