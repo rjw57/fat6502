@@ -180,6 +180,11 @@ cpuspeed	= 2
 
 
 ; --- Graphics ---
+;
+; gax => addr(9..2)
+; gab(0) => addr(10)
+; gay => addr(18..11)
+; gab(5..1) => addr(23..19)
 
 ; set graphics cursor x position
 	.macro gax
@@ -197,12 +202,12 @@ cpuspeed	= 2
 	.endmacro
 
 	.macro gab_even
-	lda #$10
+	lda #$02
 	gab
 	.endmacro
 
 	.macro gab_odd
-	lda #$11
+	lda #$03
 	gab
 	.endmacro
 
