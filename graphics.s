@@ -179,6 +179,19 @@ _gfx_quickcls:
 
 ; clear screen
 _gfx_cls:
+        lda #%10010010          ; set hires mode
+        zout $7f
+
+        lda #%00000000          ; select pen 0
+        zout $7f
+        lda #%01011000          ; select magenta
+        zout $7f
+
+        lda #%00000001          ; select pen 1
+        zout $7f
+        lda #%01000011          ; select pale yellow
+        zout $7f
+
 	lda #$0b
 	sta gfxptr + 2
 	lda #$c0
