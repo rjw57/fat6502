@@ -7,16 +7,6 @@
 
 	.import init232boot
 
-	.segment "VOLZP" : zeropage
-	.segment "DEVZP" : zeropage
-	.segment "VOLBSS"
-	.segment "DEVBSS"
-	.segment "VOLVECTORS"
-	.segment "DEVVECTORS"
-	.segment "CTLVECTORS"
-	.segment "DBGVECTORS"
-	.segment "GFXVECTORS"
-
 
 	.code
 

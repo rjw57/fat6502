@@ -17,22 +17,6 @@
 lastkey:	.res 1
 
 
-	.segment "VOLZP" : zeropage
-	.segment "DEVZP" : zeropage
-	.segment "VOLBSS"
-	.segment "DEVBSS"
-	.segment "VOLVECTORS"
-	.segment "DEVVECTORS"
-	.segment "CTLVECTORS"
-	.segment "DBGVECTORS"
-	.segment "GFXVECTORS"
-
-
-	.segment "RELOC"
-
-; this is a dummy segment just to suppress an ld65 warning
-
-
 	.bss
 
 gfxptr:	.res 3
