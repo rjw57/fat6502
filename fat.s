@@ -962,8 +962,8 @@ subcluster:
 	beq @end
 	ldy #11
 	lda (dirptr),y
-	cmp #8
-	bne @check
+	and #8
+	beq @end
 
 	sty volnamelen
 	dey
