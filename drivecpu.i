@@ -47,6 +47,20 @@ cpuspeed	= 2
 	.endmacro
 
 
+; --- Floppy ---
+
+; Floppy control, all active low
+; bit 0    direction
+; bit 1    step
+; bit 2    drv_sel_a
+; bit 3    drv_sel_b
+; bit 4    motor
+
+	.macro flp
+	.byte $0c
+	.endmacro
+
+
 ; --- System config ---
 
 ; System control

@@ -73,10 +73,10 @@ _ctl_select:
 	lda #fs_fat12		; kludge, fixme
 	jsr vol_set_fs		; gotta put fs detection in the right place
 
-	lda #devtype_floppy	; a single floppy drive
+	lda #devtype_floppy	; two floppy drives
 	sta devmap
-	lda #0
 	sta devmap + 1
+	lda #0
 	sta devmap + 2
 	sta devmap + 3
 	lda #1			; one device on this controller
