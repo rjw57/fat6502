@@ -4,7 +4,6 @@
 
 	.import bootconfig
 	.import select_config
-	.import fat_read_ptable
 	.import boot
 	.import dev_init
 
@@ -13,11 +12,14 @@
 
 	.importzp fs_fat32
 	.import vol_set_fs
+	.import vol_read_ptable
 
 	.import debug_init
 	.import debug_done
+	.import debug_put
 	.import debug_puts
 	.import debug_puthex
+	.import debug_putdigit
 	.import debug_crlf
 
 
@@ -71,14 +73,14 @@ reseth:
 	lda #<msg_bootingfrom
 	ldx #>msg_bootingfrom
 	jsr debug_puts
-	lda currdev		; secondary master
-	jsr debug_puthex
+	lda currdev
+	jsr debug_putdigit
 	jsr debug_crlf
 
 	lda #<msg_readptable
-	ldx #<msg_readptable
+	ldx #>msg_readptable
 	jsr debug_puts
-	jsr fat_read_ptable	; find the boot partition
+	jsr vol_read_ptable	; find the boot partition
 	bcs @nextfailed
 
 	lda #<msg_selectconfig
@@ -87,7 +89,7 @@ reseth:
 	jsr select_config	; check which config to boot (0-9)
 	bcs @nextfailed
 	sta bootconfig
-	jsr debug_puthex
+	jsr debug_putdigit
 	jsr debug_crlf
 
 	lda #<msg_boot
@@ -146,7 +148,7 @@ msg_ideinit:
 msg_readptable:
 	.byte "Reading partition table",13,10,0
 msg_selectconfig:
-	.byte "Selecting config: ",0
+	.byte "Selecting config ",0
 msg_boot:
 	.byte "Booting",13,10,0
 msg_done:

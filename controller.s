@@ -23,6 +23,7 @@
 
 	.import debug_puts
 	.import debug_puthex
+	.import debug_putdigit
 	.import debug_put
 
 
@@ -96,7 +97,7 @@ ctl_select:
 	jsr debug_puts
 
 	lda currdev
-	jsr debug_puthex
+	jsr debug_putdigit
 
 	lda currtype
 	cmp #devtype_cd
@@ -214,9 +215,7 @@ printsize:
 
 @foundnumber:
 :	lda sizestr,x
-	clc
-	adc #'0'
-	jsr debug_put
+	jsr debug_putdigit
 	inx
 	cpx #4
 	bne :-

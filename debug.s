@@ -8,6 +8,7 @@
 	.export debug_puts
 	.export debug_put
 	.export debug_puthex
+	.export debug_putdigit
 	.export debug_crlf
 
 	.export dstr_crlf
@@ -259,6 +260,17 @@ debug_puthex:
 	.bss
 
 @xtemp:	.res 1
+
+
+	.code
+
+debug_putdigit:
+	pha
+	clc
+	adc #'0'
+	jsr debug_put
+	pla
+	rts
 
 
 	.rodata

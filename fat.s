@@ -22,8 +22,11 @@
 	.import part_fstype
 	.import part_secperclus
 
+	.import debug_put
 	.import debug_puts
 	.import debug_puthex
+	.import debug_putdigit
+	.import debug_crlf
 	.import dstr_crlf
 	.import dstr_dircluster
 	.import dstr_foundfat16
@@ -565,7 +568,7 @@ foundfat16:
 
 	dputs dstr_foundfat16
 	txa
-	dputnum
+	dputdigit
 	dputs dstr_crlf
 
 	lda #fs_fat16		; store partition type
@@ -632,7 +635,7 @@ foundfat32:
 
 	dputs dstr_foundfat32
 	txa
-	dputnum
+	dputdigit
 	dputs dstr_crlf
 
 	lda #fs_fat32		; store partition type
