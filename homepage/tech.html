@@ -118,8 +118,6 @@ I/O1			3f50-3f5f	; cartridge port chip select
 clock port 2		3f60-3f6f	; clock port 2 is mapped here, and also
 					; the flash programming registers
 clear flash address	3f60		; set the flash address to $00000
-preset flash address 1	3f62		; set the flash address to $00555
-preset flash address 2	3f64		; set the flash address to $002aa
 shift flash address	3f66		; shift the flash address left
 incr. flash address	3f68		; increment flash address by one
 flash data reg 0	3f6c		; data register for $00000 - $1ffff
