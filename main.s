@@ -260,7 +260,7 @@ warmstart:
 @failedctl:
 	inc currctl		; all devs on controller failed
 	lda currctl
-	cmp #2
+	cmp #3
 	beq failure
 	jmp @nextctl
 
