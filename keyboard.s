@@ -11,6 +11,7 @@
 	.import gfx_putchar
 	.import gfx_gotoxy
 	.import gfx_cls
+	.import gfx_x
 
 
 	.code
@@ -60,21 +61,7 @@ mrt:
 @nextline:
 	gay
 
-	gab_odd
-
 	ldy #63
-	ldx #63
-:	lda (ptr),y
-	eor #$ff
-	gax
-	gst
-	dey
-	dex
-	bpl :-
-
-	gab_even
-
-	ldy #127
 	ldx #63
 :	lda (ptr),y
 	eor #$ff
@@ -331,8 +318,6 @@ moveplayers:
 
 drawboard:
 	jsr gfx_cls
-
-	gab_even
 
 	ldy #16
 	sty line

@@ -31,6 +31,7 @@
 	.import gfx_puts
 	.import gfx_quickcls
 	.import gfx_drawicon
+	.import gfx_x
 
 
 	.zeropage
@@ -215,10 +216,7 @@ menuypos	= 8
 menuxpos	= 26
 
 drawmenu:
-	gab_odd			; clear text screen
-	jsr gfx_quickcls
-	gab_even
-	jsr gfx_quickcls
+	jsr gfx_quickcls	; clear text screen
 
 	ldx #menuxpos
 	ldy #menuypos - 3
