@@ -93,8 +93,9 @@ reseth:
 
 @tryboot:
 	jsr ctl_select_dev
-	bcs @next
-
+	bcc @selected
+	jmp @next
+@selected:
 	lda currdev
 	jsr dev_init		; initialize IDE routines
 	bcs @next
@@ -122,13 +123,17 @@ reseth:
 
 	bit bootconfig		; no need to grab it twice
 	bpl @wehaveaconfig
+	jsr select_config	; check which config to boot (0-9)
+	sta bootconfig
+	bcs @default
 	ldax msg_selectconfig
 	jsr debug_puts
-	jsr select_config	; check which config to boot (0-9)
-	bcs @nextfailed
-	sta bootconfig
 	jsr debug_putdigit
 	jsr debug_crlf
+	jmp @wehaveaconfig
+@default:
+	ldax msg_defaultconfig
+	jsr debug_puts
 @wehaveaconfig:
 
 	ldax msg_boot
@@ -218,6 +223,8 @@ msg_readptable:
 	.byte "Reading partition table",13,10,0
 msg_selectconfig:
 	.byte "Selecting config ",0
+msg_defaultconfig:
+	.byte "Selecting default config",13,10,0
 msg_boot:
 	.byte "Booting",13,10,0
 msg_done:

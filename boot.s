@@ -53,7 +53,7 @@ storevector:		.res 2	; jump vector for indirect store
 fpgafound:		.res 1	; flag if fpga file found
 drivebinfound:		.res 1	; flag if drive bin found
 imagenum:		.res 1	; pointer to the image table
-bootconfig:		.res 1	; selected configuration
+bootconfig:		.res 1	; selected configuration (ASCII)
 
 
 	.code
@@ -117,8 +117,6 @@ boot:
 	beq @foundlast
 
 	jsr vol_firstnamechar	; check if it starts with the right number
-	sec
-	sbc #$30
 	cmp bootconfig
 	bne @next
 

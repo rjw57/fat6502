@@ -19,40 +19,30 @@
 ; select config 0..9, 0 is default
 select_config:
 	lka
-	cmp #$2b
-	beq flash
-	cmp #$1b
-	beq serial
 	cmp #$2c
 	beq mrt
 	cmp #$4d
 	beq pong
-	ldx #9
+	ldx #11
 @checknext:
 	cmp numbercodes,x
 	beq @done
 	dex
-	bne @checknext		; nope, we don't check for 0
-@done:
-
-	txa
-	clc
-	rts
-
-flash:
-	lda #'F'
-	.byte $2c
-serial:
-	lda #'S'
-
+	bpl @checknext
+	lda #'0'		; default to config 0
 	sec
 	rts
-
+@done:
+	lda asciicodes,x
+	clc
+	rts
 
 	.rodata
 
 numbercodes:
-	.byte $45, $16, $1e, $26, $25, $2e, $36, $3d, $3e, $46	; scan codes for 0..9
+	.byte $45, $16, $1e, $26, $25, $2e, $36, $3d, $3e, $46, $1b, $2b
+asciicodes:
+	.byte '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'S', 'F'
 
 
 	.code
