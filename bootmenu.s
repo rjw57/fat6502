@@ -6,8 +6,6 @@
 
 	.import bootconfig
 	.import entermenu
-	.import devicon
-	.import devtype
 
 	.import cluster
 	.import clusterbuf
@@ -71,18 +69,7 @@ bootmenu:
 	adc #$30
 	sta bootconfig		; and store
 
-	jsr gfx_quickcls	; clear screen
-
-	ldx #38			; redraw icon
-	ldy #14
-	jsr gfx_gotoxy
-	lda devtype
-	asl
-	tay
-	lda devicon+1,y
-	tax
-	lda devicon,y
-	jmp gfx_drawicon
+	jmp gfx_quickcls	; clear screen
 
 
 checkentry:

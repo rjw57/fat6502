@@ -34,6 +34,11 @@
 	.import debug_crlf
 	.import debug_puthex
 
+	.import gfx_gotoxy
+	.import gfx_puts
+	.import gfx_drawicon
+	.import devicon
+	.import devtype
 
 	.zeropage
 
@@ -124,13 +129,31 @@ boot:
 
 @checkmenu:
 	lda entermenu
-	beq @checkentry
+	beq @drawicon
 
 	jsr bootmenu		; display boot menu
 	;bcs @error		; just try to boot instead
 	jsr vol_cdroot		; all over again
 	jsr vol_cdboot
 	jsr vol_dir_first
+
+@drawicon:
+	ldx #36			; print booting
+	ldy #12
+	jsr gfx_gotoxy
+	ldax msg_bootingfrom
+	jsr gfx_puts
+
+	ldx #38			; redraw icon
+	ldy #14
+	jsr gfx_gotoxy
+	lda devtype
+	asl
+	tay
+	lda devicon+1,y
+	tax
+	lda devicon,y
+	jsr gfx_drawicon
 
 @checkentry:
 	jsr vol_endofdir	; check for end of dir
@@ -661,3 +684,6 @@ msg_loadend:
 	.byte "Load end:     ",0
 msg_endcluster:
 	.byte "End cluster:  ",0
+
+msg_bootingfrom:
+	.byte "Booting...",0
