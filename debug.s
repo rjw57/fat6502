@@ -15,6 +15,19 @@
 	.export debug_crlf
 
 
+	.segment "DBGVECTORS"
+
+debug_init:		jmp _debug_init
+debug_done:		jmp _debug_done
+debug_puts:		jmp _debug_puts
+debug_get:		jmp _debug_get
+debug_put:		jmp _debug_put
+debug_puthex:		jmp _debug_puthex
+debug_putdigit:		jmp _debug_putdigit
+debug_crlf:		jmp _debug_crlf
+
+
+
 A16550BASE	= $3f20
 fifo_rxd	= A16550BASE + 0	; (r)
 fifo_txd	= A16550BASE + 0	; (w)
@@ -74,7 +87,7 @@ baud_230400	= 13
 
 	.code
 
-debug_init:
+_debug_init:
 	lda #$55
 	sta fifo_scratch
 
@@ -126,7 +139,7 @@ debug_init:
 	.byte 13,10,"C-ONE debug init",13,10,0
 
 
-debug_puts:
+_debug_puts:
 	sta debug_ptr
 	stx debug_ptr+1
 	ldy #0
@@ -139,7 +152,7 @@ debug_puts:
 @done:	rts
 
 
-debug_done:
+_debug_done:
 	; disable nmi's from ssurfer
 	lda #0
 	sta fifo_ier
@@ -177,7 +190,7 @@ debug_setbaud:
 	rts
 
 
-debug_get:
+_debug_get:
 	bit sspresent
 	bpl @return
 
@@ -205,7 +218,7 @@ debug_get:
 	rts
 
 
-debug_put:
+_debug_put:
 	bit sspresent
 	bpl @return
 
@@ -228,7 +241,7 @@ debug_put:
 	rts
 
 
-debug_crlf:
+_debug_crlf:
 	pha
 	lda #13
 	jsr debug_put
@@ -238,7 +251,7 @@ debug_crlf:
 	rts
 
 
-debug_puthex:
+_debug_puthex:
 	pha
 	stx @xtemp
 	lsr
@@ -262,7 +275,7 @@ debug_puthex:
 
 	.code
 
-debug_putdigit:
+_debug_putdigit:
 	pha
 	clc
 	adc #'0'

@@ -23,6 +23,8 @@
 	.segment "VOLVECTORS"
 	.segment "DEVVECTORS"
 	.segment "CTLVECTORS"
+	.segment "DBGVECTORS"
+	.segment "GFXVECTORS"
 
 
 	.zeropage

@@ -69,8 +69,12 @@
 	.segment "VOLZP", zeropage
 
 dirptr:		.res 2	; directory pointer
-nameptr:	.res 2	; name pointer
 clusterptr:	.res 2	; custer buffer
+
+
+	.zeropage
+
+nameptr:	.res 2	; name pointer
 
 
 	.bss
@@ -92,6 +96,36 @@ vol_isflashbin_vector	= vector_table + 20
 vol_isdrivebin_vector	= vector_table + 22
 vol_stat_vector		= vector_table + 24
 vol_firstnamechar_vector= vector_table + 26
+
+
+	.segment "VOLVECTORS"
+
+vol_set_fs:		jmp _vol_set_fs
+vol_read_ptable:	jmp (vol_read_ptable_vector)
+vol_cdboot:		jmp (vol_cdboot_vector)
+vol_cdroot:		jmp (vol_cdroot_vector)
+vol_dir_first:		jmp (vol_dir_first_vector)
+vol_dir_next:		jmp (vol_dir_next_vector)
+vol_next_clust:		jmp (vol_next_clust_vector)
+vol_read_clust:		jmp (vol_read_clust_vector)
+vol_endofdir:		jmp (vol_endofdir_vector)
+vol_isfpgabin:		jmp (vol_isfpgabin_vector)
+vol_isrom:		jmp (vol_isrom_vector)
+vol_isflashbin:		jmp (vol_isflashbin_vector)
+vol_isdrivebin:		jmp (vol_isdrivebin_vector)
+vol_stat:		jmp (vol_stat_vector)
+vol_firstnamechar:	jmp (vol_firstnamechar_vector)
+
+			.res 19
+
+	.segment "VOLBSS"
+
+romaddr:		.res 6
+stat_length:		.res 4
+stat_cluster:		.res 4
+vol_fstype:		.res 1
+vol_secperclus:		.res 1	; number of 512-byte sectors per cluster
+cluster:		.res 4	; 32-bit cluster address
 
 
 	.rodata
@@ -161,39 +195,10 @@ iso_vectors:
 	.word iso_firstnamechar
 
 
-	.segment "VOLVECTORS"
-
-vol_read_ptable:	jmp (vol_read_ptable_vector)
-vol_cdboot:		jmp (vol_cdboot_vector)
-vol_cdroot:		jmp (vol_cdroot_vector)
-vol_dir_first:		jmp (vol_dir_first_vector)
-vol_dir_next:		jmp (vol_dir_next_vector)
-vol_next_clust:		jmp (vol_next_clust_vector)
-vol_read_clust:		jmp (vol_read_clust_vector)
-vol_endofdir:		jmp (vol_endofdir_vector)
-vol_isfpgabin:		jmp (vol_isfpgabin_vector)
-vol_isrom:		jmp (vol_isrom_vector)
-vol_isflashbin:		jmp (vol_isflashbin_vector)
-vol_isdrivebin:		jmp (vol_isdrivebin_vector)
-vol_stat:		jmp (vol_stat_vector)
-vol_firstnamechar:	jmp (vol_firstnamechar_vector)
-
-			.res 22
-
-	.segment "VOLBSS"
-
-romaddr:		.res 6
-stat_length:		.res 4
-stat_cluster:		.res 4
-vol_fstype:		.res 1
-vol_secperclus:		.res 1	; number of 512-byte sectors per cluster
-cluster:		.res 4	; 32-bit cluster address
-
-
 	.code
 
 ; call with filesystem identifier in A
-vol_set_fs:
+_vol_set_fs:
 	sta vol_fstype
 	cmp #fs_fat12
 	beq fat12

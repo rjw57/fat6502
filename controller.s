@@ -51,14 +51,14 @@ sizestr:	.res 5
 
 	; jump table at $ffxx
 
-_ctl_select:		jmp ctl_select
-_ctl_select_dev:	jmp ctl_select_dev
+ctl_select:		jmp _ctl_select
+ctl_select_dev:		jmp _ctl_select_dev
 
 
 	.code
 
 ; select controller. returns number of devices.
-ctl_select:
+_ctl_select:
 	cmp #0
 	beq @select_floppy
 	cmp #1
@@ -277,7 +277,7 @@ shift10bits:
 
 
 ; select a device on the currently active controller
-ctl_select_dev:
+_ctl_select_dev:
 	tax
 	lda devmap,x
 	bne :+

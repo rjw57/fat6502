@@ -23,6 +23,8 @@ lastkey:	.res 1
 	.segment "VOLVECTORS"
 	.segment "DEVVECTORS"
 	.segment "CTLVECTORS"
+	.segment "DBGVECTORS"
+	.segment "GFXVECTORS"
 
 
 	.segment "RELOC"

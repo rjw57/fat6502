@@ -7,6 +7,15 @@
 	.export gfx_putchar
 
 
+	.segment "GFXVECTORS"
+
+gfx_cls:		jmp _gfx_cls
+gfx_drawlogo:		jmp _gfx_drawlogo
+gfx_gotoxy:		jmp _gfx_gotoxy
+gfx_puts:		jmp _gfx_puts
+gfx_putchar:		jmp _gfx_putchar
+
+
 	.zeropage
 
 gfxptr:		.res 2
@@ -37,7 +46,7 @@ doclr:
 
 
 ; clear screen
-gfx_cls:
+_gfx_cls:
 	gab_odd
 	jsr doclr
 	gab_even
@@ -50,7 +59,7 @@ gfx_cls:
 	rts
 
 
-gfx_drawlogo:
+_gfx_drawlogo:
 	ldax logo1		; draw C-ONE logo
 	stax gfxptr
 
@@ -94,19 +103,19 @@ gfx_drawlogo:
 	jsr gfx_puts
 
 	ldx #0
-	ldy #0
+	ldy #4
 
 	; fall through
 
 
 ; set cursor to x, y
-gfx_gotoxy:
+_gfx_gotoxy:
 	stx cursx
 	sty cursy
 	rts
 
 
-gfx_puts:
+_gfx_puts:
 	stax putsptr
 	ldy #0
 :	lda (putsptr),y
@@ -118,7 +127,7 @@ gfx_puts:
 	rts
 
 
-gfx_putchar:
+_gfx_putchar:
 	sta char
 	stx tempx
 	sty tempy

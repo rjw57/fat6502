@@ -53,7 +53,8 @@ floppy_vectors:
 
 dev_init:		jmp (dev_init_vector)
 dev_read_sector:	jmp (dev_read_sector_vector)
-			.res 10
+dev_set:		jmp _dev_set
+			.res 7
 
 
 	.segment "DEVBSS"
@@ -69,7 +70,7 @@ sectorptr:		.res 2	; pointer to where data is loaded
 	.code
 
 ; call with device identifier in A
-dev_set:
+_dev_set:
 	cmp #devtype_hd
 	beq @ide
 	cmp #devtype_cd
