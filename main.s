@@ -82,7 +82,11 @@ reseth:
 	;jsr checkaltrom		; see if there's a valid rom in bank 5
 
 warmstart:
+	lda bootconfig		; save bootconfig, ugly ugly
+	pha
 	jsr clrbss		; clear BSS segment
+	pla
+	sta bootconfig
 
 	jsr gfx_cls		; clear graphics screen
 	jsr gfx_drawlogo	; print C-ONE logo
