@@ -74,7 +74,7 @@
 	.segment "VOLZP" : zeropage
 
 dirptr:		.res 2	; directory pointer
-clusterptr:	.res 2	; custer buffer
+clusterptr:	.res 2	; cluster buffer
 
 
 	.zeropage
