@@ -415,21 +415,44 @@ loaddrivebin:
 	dex
 	bpl :-
 
+	lda drivebinlength	; add 511 to round up
+	clc
+	adc #$ff
+	;sta drivebinlength
+	lda drivebinlength+1
+	adc #1
+	sta drivebinlength+1
+	bcc :+
+	inc drivebinlength+2
+:
 	lsr drivebinlength+2	; divide by 2
 	ror drivebinlength+1	; gives us the number of 512 byte sectors in dbl+1
+
+	ldx vol_secperclus	; add secperclus-1 to round up
+	dex
+	txa
+	clc
+	adc drivebinlength+1
+	sta loadend
 
 	lda vol_secperclus	; divide by number of sectors per cluster
 :	lsr
 	bcs :+
-	lsr drivebinlength+1
+	lsr loadend
 	jmp :-
-:	lda drivebinlength+1
-	sta loadend
+:
+	lda loadend
+	jsr debug_puthex
+	ldax #msg_loadclusters
+	jsr debug_puts
 
 	ldax #clusterbuf
 	stax clusterptr
 	jsr loadclusters
-	jsr clusterbuf		; execute
+	jmp clusterbuf		; execute
+
+msg_loadclusters:
+	.byte " clusters", 13, 10, 0
 
 
 ; load clusters
