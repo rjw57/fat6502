@@ -27,19 +27,19 @@ debug_putdigit:		jmp _debug_putdigit
 debug_crlf:		jmp _debug_crlf
 
 
-
-fifo_rxd	= A16550BASE + 0	; (r)
-fifo_txd	= A16550BASE + 0	; (w)
-fifo_dll	= A16550BASE + 0
-fifo_dlm	= A16550BASE + 1
-fifo_ier	= A16550BASE + 1
-fifo_fcr	= A16550BASE + 2	; (w)
-fifo_iir	= A16550BASE + 2	; (r)
-fifo_lcr	= A16550BASE + 3
-fifo_mcr	= A16550BASE + 4
-fifo_lsr	= A16550BASE + 5
-fifo_msr	= A16550BASE + 6	; (r)
-fifo_scratch	= A16550BASE + 7	; (r/w)
+;Tobix was here
+fifo_rxd	= 0	; (r)
+fifo_txd	= 0	; (w)
+fifo_dll	= 0
+fifo_dlm	= 1
+fifo_ier	= 1
+fifo_fcr	= 2	; (w)
+fifo_iir	= 2	; (r)
+fifo_lcr	= 3
+fifo_mcr	= 4
+fifo_lsr	= 5
+fifo_msr	= 6	; (r)
+fifo_scratch	= 7	; (r/w)
 
 
 	.zeropage
@@ -87,14 +87,25 @@ baud_230400	= 13
 	.code
 
 _debug_init:
+;	lda #$55
+;	sta fifo_scratch
+;Tobix was here
+	stx xtemp
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_scratch
+	sca			; set A[4..0] and Csel[3..0]
 	lda #$55
-	sta fifo_scratch
-
+	ist
 	; set baudrate
 	lda #baud_38400
 	jsr debug_setbaud
 
-	lda fifo_scratch
+;	lda fifo_scratch
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_scratch
+	sca			; set A[4..0] and Csel[3..0]
+	ild			; read MB[7..0]
 	cmp #$55
 	bne @noss
 
@@ -102,37 +113,57 @@ _debug_init:
 	sta sspresent
 
 	; disable nmi's from ssurfer
+;	lda #0
+;	sta fifo_ier
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_ier
+	sca			; set A[4..0] and Csel[3..0]
 	lda #0
-	sta fifo_ier
+	ist
 
 	; activate dtr
+;	lda #1
+;	sta fifo_mcr
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_mcr
+	sca			; set A[4..0] and Csel[3..0]
 	lda #1
-	sta fifo_mcr
+	ist
 
 	ldx #0
 	ldy #0
 @waitrecv:			; check if receiver is ready
-	lda fifo_msr
+;	lda fifo_msr
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_msr
+	sca			; set A[4..0] and Csel[3..0]
+	ild			; read MB[7..0]
 	and #%00010000
 	bne @ready
 	inx
 	bne @waitrecv
 	iny
 	bne @waitrecv
-	beq @noss		; timeout
-
-@ready:
-	ldax @initstr
-	jsr debug_puts
-
-	clc
-	rts
-
+;	beq @noss		; timeout
 @noss:
+	ldx #$ff		;deselcet all CEs
+	sca			;very importend for the other stuff
 	lda #0			; no silver surfer found
 	sta sspresent
+	ldx xtemp
 	clc
 	rts
+
+@ready:
+	ldx #$ff		;deselcet all CEs
+	sca			;very importend for the other stuff
+	ldax @initstr
+	jsr debug_puts
+	ldx xtemp
+	clc
+	rts
+
 
 @initstr:
 	.byte 13,10,"C-ONE debug init",13,10,0
@@ -156,39 +187,92 @@ _debug_puts:
 
 _debug_done:
 	; disable nmi's from ssurfer
+;	lda #0
+;	sta fifo_ier
+;Tobix was here
+	stx xtemp
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_ier
+	sca			; set A[4..0] and Csel[3..0]
 	lda #0
-	sta fifo_ier
-
+	ist
 	; deactivate dtr
-	sta fifo_mcr
+;	sta fifo_mcr
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_mcr
+	sca			; set A[4..0] and Csel[3..0]
+	lda #0
+	ist
 
+	ldx #$ff		;deselcet all CEs
+	sca			;very importend for the other stuff
 	lda #0			; no more rs-232
 	sta sspresent
 
+	ldx xtemp
 	clc
 	rts
 
 
 debug_setbaud:
 	; reset fifo
-	ldx #%10000111
-	stx fifo_fcr
+;	ldx #%10000111
+;	stx fifo_fcr
+;Tobix was here
+	stx xtemp
+	pha
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_fcr
+	sca			; set A[4..0] and Csel[3..0]
+	lda #%10000111
+	ist
 
 	; set dlab
-	ldx #%10000011 ; we assmume 8n1
-	stx fifo_lcr
+;	ldx #%10000011 ; we assmume 8n1
+;	stx fifo_lcr
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_lcr
+	sca			; set A[4..0] and Csel[3..0]
+	lda #%10000011
+	ist
 
+	pla
 	; set baudrate
 	asl a
 	tax
 	lda debug_baudrates,x
-	sta fifo_dll
+;Tobix was here
+	pha
+;	sta fifo_dll
 	lda debug_baudrates+1,x
-	sta fifo_dlm
+;	sta fifo_dlm
+	pha
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_dlm
+	sca			; set A[4..0] and Csel[3..0]
+	pla
+	ist
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_dll
+	sca			; set A[4..0] and Csel[3..0]
+	pla
+	ist
 
 	; reset dlab
+;	lda #%00000011
+;	sta fifo_lcr
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_lcr
+	sca			; set A[4..0] and Csel[3..0]
 	lda #%00000011
-	sta fifo_lcr
+	ist
+
+	ldx #$ff		;deselcet all CEs
+	sca			;very importend for the other stuff
+	ldx xtemp
 	rts
 
 
@@ -196,25 +280,58 @@ _debug_get:
 	bit sspresent
 	bpl @return
 
-	lda fifo_lsr  ; check if byte available
+;	lda fifo_lsr  ; check if byte available
+;Tobix was here
+	stx xtemp
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_lsr
+	sca			; set A[4..0] and Csel[3..0]
+	ild			; read MB[7..0]
 	and #1
 	bne @byteready ; yes
 
 	; activate rts
+;	lda #%00000011
+;	sta fifo_mcr
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_mcr
+	sca			; set A[4..0] and Csel[3..0]
 	lda #%00000011
-	sta fifo_mcr
+	ist
+
 @waitbyte:
-	lda fifo_lsr  ; check if byte available
+;	lda fifo_lsr  ; check if byte available
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_lsr
+	sca			; set A[4..0] and Csel[3..0]
+	ild			; read MB[7..0]
 	and #1
 	beq @waitbyte
 
 @byteready:
 	; deactivate rts
+;	lda #%00000001
+;	sta fifo_mcr
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_mcr
+	sca			; set A[4..0] and Csel[3..0]
 	lda #%00000001
-	sta fifo_mcr
+	ist
 
 	; get byte
-	lda fifo_rxd
+;	lda fifo_rxd
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_rxd
+	sca			; set A[4..0] and Csel[3..0]
+	ild			; read MB[7..0]
+
+	ldx #$ff		;deselcet all CEs
+	sca			;very importend for the other stuff
+	ldx xtemp
 @return:
 	clc
 	rts
@@ -224,20 +341,52 @@ _debug_put:
 	bit sspresent
 	bpl @return
 
+	stx xtemp
 	pha
 	; transmit buf ready?
+;@waitbuf:
+;	lda fifo_lsr
+;	and #%00100000
+;	beq @waitbuf
+	; reciever ready?
+;@waitrecv:
+;	lda fifo_msr
+;	and #%00010000
+;	beq @waitrecv
+
+;Tobix was here
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_lsr
+	sca			; set A[4..0] and Csel[3..0]
 @waitbuf:
-	lda fifo_lsr
+	ild			; read MB[7..0]
 	and #%00100000
 	beq @waitbuf
-	; reciever ready?
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_msr
+	sca			; set A[4..0] and Csel[3..0]
 @waitrecv:
-	lda fifo_msr
+	ild			; read MB[7..0]
 	and #%00010000
 	beq @waitrecv
 
+	ldx #$f2   ;select Silversurfer
+	lda #fifo_txd
+	sca			; set A[4..0] and Csel[3..0]
 	pla
-	sta fifo_txd
+	pha
+	.byte 00
+	.byte 09
+	.byte $c0
+	pla
+
+;	sta fifo_txd
+	ist			;write to silversurfer
+
+	ldx #$ff		;deselcet all CEs
+	sca			;very importend for the other stuff
+	ldx xtemp
+	
 @return:
 	clc
 	rts
@@ -255,7 +404,7 @@ _debug_crlf:
 
 _debug_puthex:
 	pha
-	stx @xtemp
+	stx xtemp
 	lsr
 	lsr
 	lsr
@@ -267,12 +416,12 @@ _debug_puthex:
 	and #$0f
 	tax
 	lda hextoascii,x
-	ldx @xtemp
+	ldx xtemp
 	jmp debug_put
 
 	.bss
 
-@xtemp:	.res 1
+xtemp:	.res 1
 
 
 	.code
