@@ -116,7 +116,7 @@ struct c1io {
   unsigned char ide_dev;     /* master or slave */
 
   /* ide regs */
-  unsigned char idereg[4][8];
+  unsigned char idereg[2][8];
 
   /* sab/sau/sal */
   unsigned long sysramaddr;
@@ -148,9 +148,7 @@ void ResetIDE(void) {
 
   for (r = 0; r < 8; ++r) {
     C1IO.idereg[0][r] = 0x7f;
-    C1IO.idereg[1][r] = 0x7f;
-    C1IO.idereg[2][r] = hdsig[r];
-    C1IO.idereg[3][r] = cdsig[r];
+    C1IO.idereg[1][r] = hdsig[r];
   }
 }
 
@@ -223,7 +221,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
     } else {
 
       if (C1IO.ide_addr == 0) {
-	if (C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] == 0x08) {
+	if (C1IO.idereg[C1IO.ide_channel][7] == 0x08) {
 	  if (sbufctr < sbufsize) {
 	    sectorbuf[sbufctr++] = R->A;
 	    sectorbuf[sbufctr++] = R->X;
@@ -243,10 +241,10 @@ byte Patch6502(register byte Op,register M6502 *R) {
 		}
 		if (read(iso, &sectorbuf, 2048) != 2048) {
 		  if (!silent) printf("!IDE ATAPI Read failed for sector %d\n", offs / 2048);
-		  C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x41;
+		  C1IO.idereg[C1IO.ide_channel][7] = 0x41;
 		} else {
 		  if (!silent) printf("!IDE ATAPI Read sector %d\n", offs / 2048);
-		  C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x08;
+		  C1IO.idereg[C1IO.ide_channel][7] = 0x08;
 		  sbufctr = 0;
 		  sbufsize = 2048;
 		}
@@ -255,7 +253,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
 
 	      default:
 		if (!silent) printf("!IDE unknown atapi packet command: 0x%02x\n", sectorbuf[0]);
-		C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x41;
+		C1IO.idereg[C1IO.ide_channel][7] = 0x41;
 		break;
 
 	      }
@@ -287,25 +285,25 @@ byte Patch6502(register byte Op,register M6502 *R) {
 
 	case 0x20:
 	  if (C1IO.ide_channel == 1 && C1IO.ide_dev == 0) {
-	    offs = 512 * (C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][3] |
-			  C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][4]<<8 |
-			  C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][5]<<16 |
-			  (C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][6] & 0x0f)<<24);
+	    offs = 512 * (C1IO.idereg[C1IO.ide_channel][3] |
+			  C1IO.idereg[C1IO.ide_channel][4]<<8 |
+			  C1IO.idereg[C1IO.ide_channel][5]<<16 |
+			  (C1IO.idereg[C1IO.ide_channel][6] & 0x0f)<<24);
 	    if (lseek(hd, offs, SEEK_SET) != offs) {
 	      if (!silent) printf("!IDE Seek failed for offset %d\n", offs);
 	    }
 	    if (read(hd, &sectorbuf, 512) != 512) {
 	      if (!silent) printf("!IDE Read failed for sector %d\n", offs / 512);
-	      C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x41;
+	      C1IO.idereg[C1IO.ide_channel][7] = 0x41;
 	    } else {
 	      if (!silent) printf("!IDE Read sector %d\n", offs / 512);
-	      C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x08;
+	      C1IO.idereg[C1IO.ide_channel][7] = 0x08;
 	      sbufctr = 0;
 	      sbufsize = 512;
 	    }
 	  } else {
 	    if (!silent) printf("!IDE Read sector on unsupported device\n");
-	    C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x41;
+	    C1IO.idereg[C1IO.ide_channel][7] = 0x41;
 	  }
 	  break;
 
@@ -313,7 +311,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	case 0xec:
 	  if (C1IO.ide_channel == 1 && C1IO.ide_dev == 0) {
 	    if (!silent) printf("!IDE identify device\n");
-	    C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x08;
+	    C1IO.idereg[C1IO.ide_channel][7] = 0x08;
 	    sbufctr = 0;
 	    sbufsize = 512;
 	    for (i = 0; i < 512; ++i) {
@@ -321,7 +319,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	    }
 	  } else {
 	    if (!silent) printf("!IDE identify device on unsupported device\n");
-	    C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x41;
+	    C1IO.idereg[C1IO.ide_channel][7] = 0x41;
 	  }
 	  break;
 
@@ -329,12 +327,12 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	case 0xa0:
 	  if (C1IO.ide_channel == 1 && C1IO.ide_dev == 1) {
 	    if (!silent) printf("!IDE packet command\n");
-	    C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x08;
+	    C1IO.idereg[C1IO.ide_channel][7] = 0x08;
 	    sbufctr = 0;
-	    sbufsize = C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][4];
+	    sbufsize = C1IO.idereg[C1IO.ide_channel][4];
 	  } else {
 	    if (!silent) printf("!IDE packet command on unsupported device\n");
-	    C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x41;
+	    C1IO.idereg[C1IO.ide_channel][7] = 0x41;
 	  }
 	  break;
 
@@ -342,7 +340,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	case 0xa1:
 	  if (C1IO.ide_channel == 1 && C1IO.ide_dev == 1) {
 	    if (!silent) printf("!IDE identify packet device\n");
-	    C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x08;
+	    C1IO.idereg[C1IO.ide_channel][7] = 0x08;
 	    sbufctr = 0;
 	    sbufsize = 512;
 	    for (i = 0; i < 512; ++i) {
@@ -350,14 +348,14 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	    }
 	  } else {
 	    if (!silent) printf("!IDE identify packet device on unsupported device\n");
-	    C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x41;
+	    C1IO.idereg[C1IO.ide_channel][7] = 0x41;
 	  }
 	  break;
 
 	// unknown command
 	default:
 	  if (!silent) printf("!IDE unknown command: 0x%02x\n", R->A);
-	  C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x41;
+	  C1IO.idereg[C1IO.ide_channel][7] = 0x41;
 	  break;
 
 	}
@@ -365,7 +363,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	/* --- IDE commands --- */
 
       } else {
-	C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][C1IO.ide_addr] = R->A;
+	C1IO.idereg[C1IO.ide_channel][C1IO.ide_addr] = R->A;
       }
     }
     break;
@@ -380,12 +378,12 @@ byte Patch6502(register byte Op,register M6502 *R) {
       R->X = 0;
     } else {
       if (C1IO.ide_addr == 0) {
-	if (C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] & 0x08) { /* if DRQ is set */
+	if (C1IO.idereg[C1IO.ide_channel][7] & 0x08) { /* if DRQ is set */
 	  R->A = sectorbuf[sbufctr++];
 	  R->X = sectorbuf[sbufctr++];
 
 	  if (sbufctr == sbufsize) {
-	    C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][7] = 0x40;
+	    C1IO.idereg[C1IO.ide_channel][7] = 0x40;
 	  }
 
 	} else {
@@ -394,7 +392,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	  exitnow = 1;
 	}
       } else {
-	R->A = C1IO.idereg[C1IO.ide_channel * 2 + C1IO.ide_dev][C1IO.ide_addr];
+	R->A = C1IO.idereg[C1IO.ide_channel][C1IO.ide_addr];
 	R->X = 0;
       }
     }
@@ -510,8 +508,6 @@ void simulate(M6502 *R) {
   int x;
   unsigned long instctr = 0, cyclectr = 0;
 
-  //C1IO.idereg[2, 7] = 0x40;
-  //C1IO.idereg[3, 7] = 0x40;
   while (!exitnow) {
     if (!silent) printregs(R);
     l = DAsm(s, R->PC.W);

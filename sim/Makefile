@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O3 -DLSB_FIRST -DDEBUG
+CFLAGS = -O3 -DMSB_FIRST -DDEBUG
 
 %.o: %c
 	$(CC) $(CFLAGS) -c $<
