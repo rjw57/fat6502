@@ -39,12 +39,6 @@
 
 	.import dev_read_sector
 
-	.import debug_put
-	.import debug_puts
-	.import debug_putdigit
-	.import debug_puthex
-	.import debug_crlf
-
 
 fs_iso9660	= $96
 
@@ -68,8 +62,8 @@ iso_volname:
 
 ; read volume information
 iso_read_volid:
-	ldax #msg_reading_pvd
-	jsr debug_puts
+;	ldax #msg_reading_pvd
+;	jsr debug_puts
 
 	ldax #clusterbuf		; load primary volume descriptor
 	stax sectorptr
@@ -97,19 +91,19 @@ iso_read_volid:
 	dex
 	bne @compare
 
-	ldax #msg_found_volume
-	jsr debug_puts
+;	ldax #msg_found_volume
+;	jsr debug_puts
 
-	ldx #0			; print volume name
-@printvolname:
+	ldx #0			; copy volume name
+@copyvolname:
 	lda clusterbuf+40,x
 	sta volname,x		; save volume name
-	jsr debug_put
+;	jsr debug_put
 	inx
 	cpx #32
-	bne @printvolname
+	bne @copyvolname
 	stx volnamelen		; save length
-	jsr debug_crlf
+;	jsr debug_crlf
 
 	ldx #31			; trim trailing spaces
 :	lda volname,x
@@ -472,7 +466,7 @@ descname:
 cd001:
 	.byte 1,"CD001",1
 
-msg_reading_pvd:
-	.byte "Reading Primary Volume Descriptor",13,10,0
-msg_found_volume:
-	.byte "Found ISO9660 volume: ",0
+;msg_reading_pvd:
+;	.byte "Reading Primary Volume Descriptor",13,10,0
+;msg_found_volume:
+;	.byte "Found ISO9660 volume: ",0
