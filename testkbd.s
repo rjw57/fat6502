@@ -16,8 +16,8 @@
 lastkey:	.res 1
 
 
-	.segment "VOLZP", zeropage
-	.segment "DEVZP", zeropage
+	.segment "VOLZP" : zeropage
+	.segment "DEVZP" : zeropage
 	.segment "VOLBSS"
 	.segment "DEVBSS"
 	.segment "VOLVECTORS"

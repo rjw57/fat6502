@@ -57,8 +57,8 @@ io_get		= real_io_get
 	.endif
 
 
-	.segment "VOLZP", zeropage
-	.segment "DEVZP", zeropage
+	.segment "VOLZP" : zeropage
+	.segment "DEVZP" : zeropage
 	.segment "VOLBSS"
 	.segment "DEVBSS"
 	.segment "VOLVECTORS"
