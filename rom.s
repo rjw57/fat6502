@@ -11,6 +11,13 @@
 	.import lba
 	.importzp sectorptr
 
+	.import flash_addr_clear
+	.import flash_addr_inc
+	.import flash_addr_shift
+	.import flash_data_read
+	.import flash_reg_tab
+	.importzp flash_reg
+
 
 	.bss
 
@@ -18,11 +25,6 @@ devtype_rom	= $04
 
 shiftemp:	.res 1
 count:		.res 1
-
-
-	.zeropage
-
-datareg:	.res 1
 
 
 	.code
@@ -36,24 +38,24 @@ rom_init:
 ; read sector
 rom_read_sector:
 	ldy lba + 1		; set the bank
-	lda fa_reg,y
-	sta datareg
+	lda flash_reg_tab,y
+	sta flash_reg
 
-	jsr fa_clear		; clear flash address
+	jsr flash_addr_clear		; clear flash address
 
 	lda lba			; shift in 8 bits
 	sta shiftemp
 	ldy #8
 @shift:
-	jsr fa_shift
+	jsr flash_addr_shift
 	asl shiftemp
 	bcc :+
-	jsr fa_inc
+	jsr flash_addr_inc
 :	dey
 	bne @shift
 
 	ldy #9			; pad with 9 clear bits
-:	jsr fa_shift
+:	jsr flash_addr_shift
 	dey
 	bne :-
 
@@ -62,7 +64,7 @@ rom_read_sector:
 	ldy #0
 @read:
 	ldx #dev_clk2		; load data
-	lda datareg
+	lda flash_reg
 	sca
 	ild
 	ldx #dev_release	; <- can I remove
@@ -87,50 +89,7 @@ rom_read_sector:
 	rts
 
 
-fa_clear:
-	ldx #dev_clk2
-	lda #flash_clear
-	sca
-	ldx #dev_release
-	sca
-	rts
-
-fa_inc:
-	ldx #dev_clk2
-	lda #flash_inc
-	sca
-	ldx #dev_release
-	sca
-	rts
-
-fa_shift:
-	ldx #dev_clk2
-	lda #flash_shift
-	sca
-	ldx #dev_release
-	sca
-	rts
-
-fa_data:
-	ldx #dev_clk2
-	lda datareg
-	sca
-	ild
-	ldx #dev_release
-	sca
-	rts
-
-
 ; write sector
 rom_write_sector:
 	sec
 	rts
-
-
-	.rodata
-
-fa_reg:
-	.byte <flash_data
-	.byte <flash_data + 1
-	.byte <flash_data + 2
-	.byte <flash_data + 3
