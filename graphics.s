@@ -224,7 +224,7 @@ _gfx_cls:
 
 
 _gfx_drawlogo:
-	ldax bootlogo		; draw C-ONE logo
+	ldax #bootlogo		; draw C-ONE logo
 	stax gfxptr
 
 	ldy #0

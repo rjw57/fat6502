@@ -106,11 +106,11 @@ boot:
 	sta fpgafound
 	sta drivebinfound
 
-	ldax msg_cdroot
+	ldax #msg_cdroot
 	jsr debug_puts
 	jsr vol_cdroot		; start in the root dir
 
-	ldax msg_cdboot
+	ldax #msg_cdboot
 	jsr debug_puts
 	jsr vol_cdboot		; change directory
 	bcs @error		; no boot directory? fux0red
@@ -136,7 +136,7 @@ boot:
 	ldx #28			; print booting
 	ldy #12
 	jsr gfx_gotoxy
-	ldax msg_bootingfrom
+	ldax #msg_bootingfrom
 	jsr gfx_puts
 	jsr drawbooticon	; draw device icon
 	jsr printvolname	; print volume name
@@ -184,7 +184,7 @@ boot:
 	ldx imagenum		; check list of found images
 	beq @doneimg
 
-	ldax msg_loadingroms
+	ldax #msg_loadingroms
 	jsr debug_puts
 
 	ldx imagenum
@@ -225,7 +225,7 @@ boot:
 	rts
 
 @foundfpgabin:
-	ldax msg_foundfpgabin
+	ldax #msg_foundfpgabin
 	jsr debug_puts
 	jsr vol_stat
 	ldx #3
@@ -239,7 +239,7 @@ boot:
 	rts
 
 @founddrivebin:
-	ldax msg_founddrivebin
+	ldax #msg_founddrivebin
 	jsr debug_puts
 	jsr vol_stat
 	ldx #3
@@ -253,7 +253,7 @@ boot:
 	rts
 
 @foundimage:
-	ldax msg_foundrom
+	ldax #msg_foundrom
 	jsr debug_puts
 	ldx imagenum		; convert hex filename to load address
 	ldy #5			; there is no error checking here!
@@ -362,7 +362,7 @@ bootflash:
 	rts
 
 @loadflashbin:
-	ldax msg_foundflashbin
+	ldax #msg_foundflashbin
 	jsr debug_puts
 	jsr vol_stat
 	ldx #3
@@ -380,15 +380,15 @@ bootflash:
 	jmp :-
 :	lda stat_length+1
 	sta loadend
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr
 	jsr loadclusters
 	bcc @ok
 	rts
 @ok:
-	ldax clusterbuf		; copy code to $2000
+	ldax #clusterbuf		; copy code to $2000
 	stax clusterptr
-	ldax flashbuf
+	ldax #flashbuf
 	stax ptr
 	ldx #$1f
 	ldy #0
@@ -407,7 +407,7 @@ bootflash:
 
 ; load drive code to clusterbuf and execute
 loaddrivebin:
-	ldax msg_loadingdrivebin
+	ldax #msg_loadingdrivebin
 	jsr debug_puts
 	ldx #3
 :	lda drivebincluster,x
@@ -426,7 +426,7 @@ loaddrivebin:
 :	lda drivebinlength+1
 	sta loadend
 
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr
 	jsr loadclusters
 	jsr clusterbuf		; execute
@@ -452,10 +452,10 @@ loadfpga:
 	ldx #40 - 8
 	ldy #22
 	jsr gfx_gotoxy
-	ldax msg_bootfpga
+	ldax #msg_bootfpga
 	jsr gfx_puts
 
-	ldax msg_loadingfpga
+	ldax #msg_loadingfpga
 	jsr debug_puts
 	ldx #3			; copy pointers
 @copy:
@@ -490,7 +490,7 @@ loadfpga:
 	sta bar_curr
 	jsr bar_update
 
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr
 	jsr vol_read_clust	; read the first cluster
 	bcs @error
@@ -530,7 +530,7 @@ loadfpga:
 	bne @nextcluster
 
 @error:
-	ldax msg_loadfailed
+	ldax #msg_loadfailed
 	jsr debug_puts
 
 	sec
@@ -551,7 +551,7 @@ loadfpga:
 	ldx #40 - 14		; erase message
 	ldy #22
 	jsr gfx_gotoxy
-	ldax msg_bootnone
+	ldax #msg_bootnone
 	jsr gfx_puts
 
 	clc			; all done
@@ -566,7 +566,7 @@ loadimage:
 	ldx #40 - 14
 	ldy #22
 	jsr gfx_gotoxy
-	ldax msg_bootrom
+	ldax #msg_bootrom
 	jsr gfx_puts
 	lda loadaddress + 2
 	jsr gfx_puthex
@@ -597,7 +597,7 @@ loadimage:
 	adc loadaddress + 2
 	sta loadend + 2
 
-	ldax msg_loadingrom
+	ldax #msg_loadingrom
 	jsr debug_puts
 
 	lda loadaddress+3
@@ -609,7 +609,7 @@ loadimage:
 	lda loadaddress
 	jsr debug_puthex
 
-	ldax msg_romtoaddr
+	ldax #msg_romtoaddr
 	jsr debug_puts
 
 	lda loadend+3
@@ -647,7 +647,7 @@ loadimage:
 	sta bar_curr + 2
 	jsr bar_update
 
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr
 	jsr vol_read_clust	; read the first cluster
 	bcs @error
@@ -689,7 +689,7 @@ loadimage:
 	ldx #40 - 14		; erase message
 	ldy #22
 	jsr gfx_gotoxy
-	ldax msg_bootnone
+	ldax #msg_bootnone
 	jsr gfx_puts
 
 	clc
@@ -713,17 +713,17 @@ loadimage:
 	jmp @nextcluster
 
 @error:
-	ldax msg_loadfailed
+	ldax #msg_loadfailed
 	jsr debug_puts
 
 	sec
 	rts
 
 @eoferror:
-	ldax msg_faileof
+	ldax #msg_faileof
 	jsr debug_puts
 
-	ldax msg_loadaddr
+	ldax #msg_loadaddr
 	jsr debug_puts
 	lda loadaddress+3
 	jsr debug_puthex
@@ -735,7 +735,7 @@ loadimage:
 	jsr debug_puthex
 	jsr debug_crlf
 
-	ldax msg_loadend
+	ldax #msg_loadend
 	jsr debug_puts
 	lda loadend+3
 	jsr debug_puthex
@@ -747,7 +747,7 @@ loadimage:
 	jsr debug_puthex
 	jsr debug_crlf
 
-	ldax msg_endcluster
+	ldax #msg_endcluster
 	jsr debug_puts
 	lda cluster+3
 	jsr debug_puthex

@@ -72,7 +72,7 @@ _ctl_select:
 	rts
 
 @select_floppy:
-	ldax floppymsg
+	ldax #floppymsg
 	jsr debug_puts
 
 	lda #fs_fat12		; kludge, fixme
@@ -89,7 +89,7 @@ _ctl_select:
 	rts
 
 @select_ide:
-	ldax idemsg
+	ldax #idemsg
 	jsr debug_puts
 
 	jsr ide_scan		; scan ide bus
@@ -110,7 +110,7 @@ _ctl_select:
 
 	inc numdevs
 
-	ldax founddevmsg
+	ldax #founddevmsg
 	jsr debug_puts
 
 	lda currdev
@@ -120,7 +120,7 @@ _ctl_select:
 	cmp #devtype_cd
 	bne @notcd
 
-	ldax cdmsg
+	ldax #cdmsg
 	jsr debug_puts
 	jmp @printcolon
 @notcd:
@@ -139,7 +139,7 @@ _ctl_select:
 	jsr printsize
 
 @printcolon:
-	ldax colonmsg
+	ldax #colonmsg
 	jsr debug_puts
 
 	lda #<ide_modeltab
@@ -222,7 +222,7 @@ _ctl_select:
 	.code
 
 printsize:
-	ldax preamble
+	ldax #preamble
 	jsr debug_puts
 	lda size
 	ora size+1
@@ -242,7 +242,7 @@ printsize:
 	jsr debug_put
 	lda prefixes,x
 	jsr debug_put
-	ldax postamble
+	ldax #postamble
 	jmp debug_puts
 
 

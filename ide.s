@@ -86,7 +86,7 @@ scanmsg:
 
 ; scan the ide bus
 ide_scan:
-	ldax scanmsg
+	ldax #scanmsg
 	jsr debug_puts
 
 	ldx #3
@@ -116,7 +116,7 @@ ide_identify:
 	sta currdrive
 
 @nextdrive:
-	ldax probingmsg
+	ldax #probingmsg
 	jsr debug_puts
 	lda currdrive
 	jsr debug_putdigit
@@ -126,7 +126,7 @@ ide_identify:
 	jsr ide_init
 	bcs @failed			; not ready
 
-	ldax initedmsg
+	ldax #initedmsg
 	jsr debug_puts
 
 	lda #idecmd_identify		; identify HD
@@ -149,7 +149,7 @@ ide_identify:
 	lda #devtype_cd
 	sta ide_drivetab,x
 
-	ldax foundcdmsg
+	ldax #foundcdmsg
 	jmp @readdata
 
 @foundhd:
@@ -157,7 +157,7 @@ ide_identify:
 	lda #devtype_hd
 	sta ide_drivetab,x
 
-	ldax foundhdmsg
+	ldax #foundhdmsg
 @readdata:
 	jsr debug_puts
 
@@ -187,7 +187,7 @@ ide_identify:
 	rts
 
 @failed:
-	ldax failedmsg
+	ldax #failedmsg
 	jsr debug_puts
 	ldx currdrive
 	lda #devtype_none
@@ -304,7 +304,7 @@ ide_init:
 	inc init_timeout
 	bne :-
 
-	ldax timeoutmsg
+	ldax #timeoutmsg
 	jsr debug_puts
 	jsr ide_read_status
 	jsr debug_puthex

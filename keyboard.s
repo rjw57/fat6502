@@ -54,7 +54,7 @@ asciicodes:
 	.code
 
 mrt:
-	ldax (clusterbuf + 64 * 512 - 130)
+	ldax #clusterbuf + 64 * 512 - 130
 	stax ptr
 	ldy #0
 	sty line

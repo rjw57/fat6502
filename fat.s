@@ -76,7 +76,7 @@ rctemp:		.res 1	; ugly, ugly fat16
 ; return pointer and length to volume name
 fat_volname:
 	ldy volnamelen
-	ldax volname
+	ldax #volname
 	rts
 
 
@@ -147,7 +147,7 @@ stat:
 ; return config number in A
 ; does NOT verify that the first char is a digit!
 fat_isfpgabin:
-	ldax fpganame
+	ldax #fpganame
 	stax nameptr
 compare:
 	jsr comparedirname
@@ -164,21 +164,21 @@ returnconfig:
 
 ; check if it's a drive binary
 fat_isdrivebin:
-	ldax drivename
+	ldax #drivename
 	stax nameptr
 	jmp compare
 
 
 ; check if it's a flash binary
 fat_isflashbin:
-	ldax flashname
+	ldax #flashname
 	stax nameptr
 	jmp compare
 
 
 ; check if it's a description file
 fat_isdesc:
-	ldax descname
+	ldax #descname
 	stax nameptr
 	jmp compare
 
@@ -187,7 +187,7 @@ fat_isdesc:
 ; copy ascii image address to romaddr and return config number in A
 ; does NOT verify that the first char is a digit!
 fat_isrom:
-	ldax romname
+	ldax #romname
 	stax nameptr
 	jsr comparedirname
 	beq @yes
@@ -212,7 +212,7 @@ fat_isrom:
 ; and the name of the dir to change to in nameptr
 ; returns the new dir address in cluster or carry set on error
 fat_cdboot:
-	ldax bootdirname
+	ldax #bootdirname
 	stax nameptr
 	jsr fat_dir_first
 	bcs @error
@@ -306,7 +306,7 @@ checkdotbin:
 
 ; find the first dir entry
 fat_dir_first:
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr
 	jsr fat_read_clust	; load dir cluster into buffer
 	bcc fat_dir_ok
@@ -345,7 +345,7 @@ fat_dir_next:
 	jsr fat_next_clust	; next cluster in chain
 	beq fat_dir_error	; premature end of directory
 	bcs fat_dir_error
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr
 	jsr fat_read_clust	; load cluster into buffer
 	bcc fat_dir_ok

@@ -176,7 +176,7 @@ _dev_find_volume:
 	jsr readsector0
 	bcs @error
 
-	ldax (clusterbuf + 446)	; pointer to partition table
+	ldax #clusterbuf + 446	; pointer to partition table
 	stax ptr		; sector must be page aligned...
 
 	ldy #4
@@ -229,7 +229,7 @@ readsector0:
 :	sta lba,x
 	dex
 	bpl :-
-	ldax clusterbuf		; load data into clusterbuf
+	ldax #clusterbuf		; load data into clusterbuf
 	stax sectorptr
 	jsr dev_read_sector	; read sector 0
 	bcc @check

@@ -41,7 +41,7 @@ floppy_write_sector:
 	.if 0
 
 	pha
-	ldax msg_init
+	ldax #msg_init
 	jsr debug_puts
 	pla
 	pha
@@ -58,7 +58,7 @@ floppy_write_sector:
 :	sta currdrive		; save mask
 
 
-	ldax msg_motoron
+	ldax #msg_motoron
 	jsr debug_puts
 
 
@@ -69,7 +69,7 @@ floppy_write_sector:
 	jsr flp_delay		; wait for motor
 
 
-	ldax msg_step1
+	ldax #msg_step1
 	jsr debug_puts
 
 
@@ -98,7 +98,7 @@ floppy_write_sector:
 	bne @step1
 
 
-	ldax msg_step0
+	ldax #msg_step0
 	jsr debug_puts
 
 
@@ -130,7 +130,7 @@ floppy_write_sector:
 	lda #flp_none		; release
 	flp
 
-	ldax msg_motoroff
+	ldax #msg_motoroff
 	jsr debug_puts
 
 	rts

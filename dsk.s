@@ -57,7 +57,7 @@ _dsk_save:
 	jsr init		; set loadaddress and start cluster
 
 @nextcluster:
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr		; point to beginning of buffer
 
 	ldy #0
@@ -120,12 +120,12 @@ _dsk_load:
 
 ; load routine for dskimage
 @nextcluster:
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr		; load to clusterbuf
 	jsr vol_read_clust	; read the cluster
 	bcs @error
 
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr		; point to beginning of buffer
 
 	ldy #0

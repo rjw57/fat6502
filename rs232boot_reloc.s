@@ -21,16 +21,16 @@ rs232_ptr:	.res 2
 
 
 rs232boot:
-	ldax waitingmsg1
+	ldax #waitingmsg1
 	jsr rs232_puts
 	lda #>__ROM_SIZE__
 	jsr rs232_puthex
 	lda #0
 	jsr rs232_puthex
-	ldax waitingmsg2
+	ldax #waitingmsg2
 	jsr rs232_puts
 
-	ldax __ROM_START__
+	ldax #__ROM_START__
 	stax dest
 	ldx #>__ROM_SIZE__
 	ldy #0
@@ -52,11 +52,11 @@ rs232boot:
 	dex
 	bne @getbyte
 
-	;ldax checkmsg
+	;ldax #checkmsg
 	;jsr rs232_puts
 	;lda cksum
 	;jsr rs232_puthex
-	ldax execmsg
+	ldax #execmsg
 	jsr rs232_puts
 
 	jsr rs232_done

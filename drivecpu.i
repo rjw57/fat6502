@@ -132,20 +132,14 @@ A16550BASE	= $3f20
 
 
 ; --- misc ---
-;	.macro	ldax	arg
-;		.if (.match (.left (1, arg), #))
-;		    ; immediate mode
-;		    lda	    #<(.right (.tcount (arg)-1, arg))
-;		    ldx	    #>(.right (.tcount (arg)-1, arg))
-;		.else
-;		    ; assume absolute or zero page
-;		    lda	    arg
-;		    ldx	    1+(arg)
-;		.endif
-;	.endmacro
-	.macro ldax address
-	lda #<address
-	ldx #>address
+	.macro ldax arg
+	.if (.match (.left (1, arg), #))	; immediate mode
+	lda #<(.right (.tcount (arg)-1, arg))
+	ldx #>(.right (.tcount (arg)-1, arg))
+	.else					; assume absolute or zero page
+	lda arg
+	ldx 1+(arg)
+	.endif
 	.endmacro
 
 	.macro stax dest

@@ -93,9 +93,9 @@ warmstart:
 	ldy #3
 	ldx #66
 	jsr gfx_gotoxy
-	ldax msg_bootromv
+	ldax #msg_bootromv
 	jsr gfx_puts
-	ldax ver_str
+	ldax #ver_str
 	jsr gfx_puts
 
 	lda #0			; flag whether we should display boot menu
@@ -134,28 +134,28 @@ warmstart:
 	ldx #28			; print searching for boot device
 	ldy #12
 	jsr gfx_gotoxy
-	ldax msg_searching
+	ldax #msg_searching
 	jsr gfx_puts
 
 	ldx #38			; draw icon
 	ldy #14
 	jsr gfx_gotoxy
-	ldax devicon_none
+	ldax #devicon_none
 	jsr gfx_drawicon
 
 
-	ldax msg_init1		; print version number
+	ldax #msg_init1		; print version number
 	jsr debug_puts
-	ldax ver_str
+	ldax #ver_str
 	jsr debug_puts
-	ldax msg_init2
+	ldax #msg_init2
 	jsr debug_puts
-	ldax timestamp
+	ldax #timestamp
 	jsr debug_puts
-	ldax msg_init3
+	ldax #msg_init3
 	jsr debug_puts
 
-	ldax msg_erasefpga
+	ldax #msg_erasefpga
 	jsr debug_puts
 ;tobix was here
 ;	lda #%00000101		; erase FPGA
@@ -206,7 +206,7 @@ warmstart:
 	jsr dev_init		; initialize low level routines
 	bcs @next
 
-	ldax msg_bootingfrom	; print device number that we're booting from
+	ldax #msg_bootingfrom	; print device number that we're booting from
 	jsr debug_puts
 	lda currdev
 	jsr debug_putdigit
@@ -220,18 +220,18 @@ warmstart:
 
 	jsr printvolname	; print volume name
 
-	ldax msg_selectconfig	; print config number
+	ldax #msg_selectconfig	; print config number
 	jsr debug_puts
 	lda bootconfig
 	jsr debug_put
 	jsr debug_crlf
 
-	ldax msg_boot
+	ldax #msg_boot
 	jsr debug_puts
 	jsr boot		; load boot code
 	bcs @nextfailed
 
-	ldax msg_done
+	ldax #msg_done
 	jsr debug_puts
 	jsr debug_done
 	jsr gfx_cls		; clear screen
@@ -247,7 +247,7 @@ warmstart:
 
 
 @nextfailed:
-	ldax msg_failed		; soft failure
+	ldax #msg_failed		; soft failure
 	jsr debug_puts
 @next:
 	inc currdev
@@ -264,7 +264,7 @@ warmstart:
 	jmp @nextctl
 
 failure:
-	ldax msg_allfailed	; now we're screwed
+	ldax #msg_allfailed	; now we're screwed
 	jsr debug_puts
 	jsr gfx_cls		; clear screen
 	rti

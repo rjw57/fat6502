@@ -60,7 +60,7 @@ checkaltrom:
 	bpl :-
 
 	jsr setrombank5
-	ldax $c000
+	ldax #$c000
 	stax ptr
 	ldy #0
 	ldx #$40

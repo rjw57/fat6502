@@ -17,10 +17,10 @@ dest:	.res 2
 	.code
 
 relocate:
-	ldax __RELOC_LOAD__
+	ldax #__RELOC_LOAD__
 	stax src
 
-	ldax __RELOC_RUN__
+	ldax #__RELOC_RUN__
 	stax dest
 
 	ldy #0

@@ -18,11 +18,11 @@
 init232boot:
 	jsr debug_init
 
-	ldax initmsg1
+	ldax #initmsg1
 	jsr debug_puts
-	ldax timestamp
+	ldax #timestamp
 	jsr debug_puts
-	ldax initmsg2
+	ldax #initmsg2
 	jsr debug_puts
 
 	jmp rs232boot

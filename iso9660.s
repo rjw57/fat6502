@@ -58,17 +58,17 @@ volname:	.res 33		; volume name
 ; return pointer and length to volume name
 iso_volname:
 	ldy volnamelen
-	ldax volname
+	ldax #volname
 	rts
 
 
 
 ; read volume information
 iso_read_volid:
-	ldax msg_reading_pvd
+	ldax #msg_reading_pvd
 	jsr debug_puts
 
-	ldax clusterbuf		; load primary volume descriptor
+	ldax #clusterbuf		; load primary volume descriptor
 	stax sectorptr
 	lda #16
 	sta lba
@@ -94,7 +94,7 @@ iso_read_volid:
 	dex
 	bne @compare
 
-	ldax msg_found_volume
+	ldax #msg_found_volume
 	jsr debug_puts
 
 	ldx #0			; print volume name
@@ -155,7 +155,7 @@ iso_cdroot:
 
 ; change to boot directory
 iso_cdboot:
-	ldax (bootdirname-33)	; offset by -33 to compensate
+	ldax #bootdirname-33	; offset by -33 to compensate
 	stax nameptr
 	jsr iso_dir_first
 	bcc @checkname
@@ -190,13 +190,13 @@ iso_cdboot:
 ; read the first sector into the buffer and point dirptr
 ; to the first entry
 iso_dir_first:
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr
 	jsr iso_read_clust
 	bcc @ok
 	rts
 @ok:
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax dirptr
 	;clc
 	rts
@@ -241,7 +241,7 @@ iso_isfpgabin:
 	sec
 	rts
 @maybe:
-	ldax (fpgabinname-33)
+	ldax #fpgabinname-33
 	stax nameptr
 	jsr comparedirname
 	bne @no
@@ -265,7 +265,7 @@ iso_isdesc:
 	sec
 	rts
 @maybe:
-	ldax (descname-33)
+	ldax #descname-33
 	stax nameptr
 	jsr comparedirname
 	bne @no
@@ -285,7 +285,7 @@ iso_isflashbin:
 	sec
 	rts
 @maybe:
-	ldax (flashbinname-33)
+	ldax #flashbinname-33
 	stax nameptr
 	jsr comparedirname
 	bne @no
@@ -306,7 +306,7 @@ iso_isrom:
 	sec
 	rts
 @maybe:
-	ldax (romname-33)
+	ldax #romname-33
 	stax nameptr
 	jsr comparedirname
 	bne @no
@@ -333,7 +333,7 @@ iso_isdrivebin:
 	sec
 	rts
 @maybe:
-	ldax (drivebinname-33)
+	ldax #drivebinname-33
 	stax nameptr
 	jsr comparedirname
 	bne @no

@@ -54,10 +54,10 @@ warmstart:
 
 	jsr debug_init
 
-	ldax initmsg
+	ldax #initmsg
 	jsr debug_puts
 
-	ldax flashidmsg
+	ldax #flashidmsg
 	jsr debug_puts
 	lda #$aa
 	jsr write5555
@@ -80,7 +80,7 @@ warmstart:
 	jsr write5555quick
 
 restart:
-	ldax flashormemmsg
+	ldax #flashormemmsg
 	jsr debug_puts
 @select:
 	jsr debug_get
@@ -95,7 +95,7 @@ restart:
 
 
 programflash:
-	ldax addrmsg
+	ldax #addrmsg
 	jsr debug_puts
 	lda #6
 	jsr gethex
@@ -109,7 +109,7 @@ programflash:
 	lsr
 	sta bank
 
-	ldax lengthmsg
+	ldax #lengthmsg
 	jsr debug_puts
 	lda #4
 	jsr gethex
@@ -119,7 +119,7 @@ programflash:
 	lda hexbuf+2
 	sta len+1
 
-	ldax warningmsg
+	ldax #warningmsg
 	jsr debug_puts
 	jsr debug_get
 	cmp #' '
@@ -127,7 +127,7 @@ programflash:
 	jmp restart
 :
 
-	ldax erasemsg
+	ldax #erasemsg
 	jsr debug_puts
 
 	lda #$aa
@@ -158,7 +158,7 @@ programflash:
 :	cmp flash_data,y
 	bne :-
 
-	ldax waitmsg
+	ldax #waitmsg
 	jsr debug_puts
 
 flash:
@@ -175,7 +175,7 @@ flash:
 	jsr programpage
 
 	bcs @error
-	ldax okmsg
+	ldax #okmsg
 	jsr debug_puts
 
 	inc addr+1
@@ -185,12 +185,12 @@ flash:
 	dec len+1
 	bne flash
 
-	ldax donemsg
+	ldax #donemsg
 	jsr debug_puts
 	jmp restart
 
 @error:
-	ldax errormsg
+	ldax #errormsg
 	jsr debug_puts
 	jmp restart
 
@@ -439,7 +439,7 @@ kbd_get:
 
 
 viewflash:
-	ldax addrmsg
+	ldax #addrmsg
 	jsr debug_puts
 	lda #6
 	jsr gethex

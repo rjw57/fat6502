@@ -31,9 +31,10 @@ reseth:
 	ldx #$ff
 	txs
 
-	ldax msg_hello
-	jsr debug_puts
+	jsr debug_init
 
+	ldax #msg_hello
+	jsr debug_puts
 
 
 	rti

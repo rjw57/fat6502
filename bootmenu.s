@@ -133,7 +133,7 @@ checkentry:
 
 
 readdescs:
-	ldax desclist		; init pointer to desc
+	ldax #desclist		; init pointer to desc
 	stax descptr
 
 	ldx #0
@@ -156,7 +156,7 @@ readdescs:
 	cpy #4
 	bne :-
 
-	ldax clusterbuf
+	ldax #clusterbuf
 	stax clusterptr
 	jsr vol_read_clust	; read the first part of the file
 	bcs @next		; this really shouldn't happen
@@ -221,25 +221,25 @@ drawmenu:
 	ldx #menuxpos
 	ldy #menuypos - 3
 	jsr gfx_gotoxy
-	ldax msg_selectconfig
+	ldax #msg_selectconfig
 	jsr gfx_puts
 
 	ldx #menuxpos
 	ldy #menuypos + 12
 	jsr gfx_gotoxy
-	ldax msg_updown
+	ldax #msg_updown
 	jsr gfx_puts
 
 	ldx #menuxpos - 1
 	ldy #menuypos + 14
 	jsr gfx_gotoxy
-	ldax msg_seconds
+	ldax #msg_seconds
 	jsr gfx_puts
 
 	ldx #menuxpos - 8
 	ldy #menuypos + 17
 	jsr gfx_gotoxy
-	ldax msg_holddown
+	ldax #msg_holddown
 	jsr gfx_puts
 
 

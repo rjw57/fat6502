@@ -158,7 +158,7 @@ _debug_init:
 @ready:
 	ldx #$ff		;deselcet all CEs
 	sca			;very importend for the other stuff
-	ldax @initstr
+	ldax #@initstr
 	jsr debug_puts
 	ldx xtemp
 	clc
