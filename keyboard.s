@@ -113,89 +113,20 @@ pong:
 
 newround:
 	jsr drawball
-	jsr waitspace
+	lda spacectr
+	sta wait
+:	jsr delay
+	jsr moveplayers
+	inc random
+	lda spacectr
+	cmp wait
+	beq :-
+	jsr setballdelta
 
 pongmain:
-	jsr checkkbd
-	ldx #0
-	gax
-	lda keys
-	and #1
-	beq @p1ckdn
-
-	lda p1s
-	cmp #24
-	beq @p2ckup
-	dec p1s
-	dec p1e
-	ldy p1s
-	gay
-	lda #$ff
-	gst
-	ldy p1e
-	gay
-	lda #0
-	gst
-	jmp @p2ckup
-
-@p1ckdn:
-	lda keys
-	and #2
-	beq @p2ckup
-
-	lda p1e
-	cmp #247
-	beq @p2ckup
-	ldy p1s
-	gay
-	lda #0
-	gst
-	ldy p1e
-	gay
-	lda #$ff
-	gst
-	inc p1s
-	inc p1e
-@p2ckup:
-	ldx #79
-	gax
-	lda keys
-	and #4
-	beq @p2ckdn
-
-	lda p2s
-	cmp #24
-	beq @p2ckup
-	dec p2s
-	dec p2e
-	ldy p2s
-	gay
-	lda #$ff
-	gst
-	ldy p2e
-	gay
-	lda #0
-	gst
-	jmp @ckdone
-@p2ckdn:
-	lda keys
-	and #8
-	beq @ckdone
-
-	lda p2e
-	cmp #247
-	beq @p2ckup
-	ldy p2s
-	gay
-	lda #0
-	gst
-	ldy p2e
-	gay
-	lda #$ff
-	gst
-	inc p2s
-	inc p2e
-@ckdone:
+	jsr moveplayers
+	jsr delay
+	jsr moveplayers
 
 	jsr eraseball
 	lda by
@@ -208,7 +139,7 @@ pongmain:
 	adc bdx
 	sta bx
 
-	cmp #157
+	cmp #155
 	beq @p2bounce
 	cmp #1
 	beq @p1bounce
@@ -272,7 +203,7 @@ pongmain:
 
 
 delay:
-	ldy #32
+	ldy #16
 	ldx #0
 :	inx
 	bne :-
@@ -281,14 +212,9 @@ delay:
 	rts
 
 
-waitspace:
-:	lka
-	cmp #0
-	bne :-
-@wait:
-:	lka
+checkspace:
+	lka
 	cmp #space
-	bne :-
 	rts
 
 
@@ -317,6 +243,90 @@ bouncey:
 	clc
 	adc bdy
 	sta by
+	rts
+
+
+moveplayers:
+	jsr checkkbd
+	ldx #0
+	gax
+	lda keys
+	and #1
+	beq @p1ckdn
+
+	lda p1s
+	cmp #24
+	beq @p2ckup
+	dec p1s
+	dec p1e
+	ldy p1s
+	gay
+	lda #$ff
+	gst
+	ldy p1e
+	gay
+	lda #0
+	gst
+	jmp @p2ckup
+
+@p1ckdn:
+	lda keys
+	and #2
+	beq @p2ckup
+
+	lda p1e
+	cmp #248
+	beq @p2ckup
+	ldy p1s
+	gay
+	lda #0
+	gst
+	ldy p1e
+	gay
+	lda #$ff
+	gst
+	inc p1s
+	inc p1e
+@p2ckup:
+	ldx #79
+	gax
+	lda keys
+	and #4
+	beq @p2ckdn
+
+	lda p2s
+	cmp #24
+	beq @p2ckdn
+	dec p2s
+	dec p2e
+	ldy p2s
+	gay
+	lda #$ff
+	gst
+	ldy p2e
+	gay
+	lda #0
+	gst
+	jmp @ckdone
+@p2ckdn:
+	lda keys
+	and #8
+	beq @ckdone
+
+	lda p2e
+	cmp #248
+	beq @ckdone
+	ldy p2s
+	gay
+	lda #0
+	gst
+	ldy p2e
+	gay
+	lda #$ff
+	gst
+	inc p2s
+	inc p2e
+@ckdone:
 	rts
 
 
@@ -378,11 +388,16 @@ resetball:
 	lda #79
 	sta bx
 
-	lda #2
-	sta bdy
-	lda #1
-	sta bdx
+	rts
 
+setballdelta:
+	lda random
+	and #3
+	tax
+	lda dytab,x
+	sta bdy
+	lda dxtab,x
+	sta bdx
 	rts
 
 
@@ -542,7 +557,11 @@ checkkbd:
 	lka
 	cmp #0
 	beq @done
-	cmp #$f0
+	cmp #space
+	bne :+
+	inc spacectr
+	rts
+:	cmp #$f0
 	beq @break
 
 	ldx #3
@@ -589,6 +608,11 @@ keytab:
 bittab:
 	.byte 1, 2, 4, 8
 
+dxtab:
+	.byte $01, $ff, $01, $ff
+dytab:
+	.byte $02, $02, $fe, $fe
+
 
 	.bss
 
@@ -604,3 +628,6 @@ by:		.res 1
 bdx:		.res 1
 bdy:		.res 1
 keys:		.res 1
+spacectr:	.res 1
+wait:		.res 1
+random:		.res 1
