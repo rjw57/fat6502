@@ -28,6 +28,11 @@ tempx:		.res 1
 tempy:		.res 1
 
 
+	.bss
+
+line:		.res 1
+
+
 	.code
 
 doclr:
@@ -60,47 +65,48 @@ _gfx_cls:
 
 
 _gfx_drawlogo:
-	ldax logo1		; draw C-ONE logo
+	ldax (bootlogo-2)		; draw C-ONE logo
 	stax gfxptr
 
-	ldx #1
-@nextcolumn:
-	gax
 	ldy #0
+	sty line
 @nextline:
 	gay
-	lda (gfxptr),y
+
+	gab_odd
+
+	ldx #31
+	ldy #63
+:	lda (gfxptr),y
+	gax
 	gst
-	iny
-	cpy #24
-	bne @nextline
+	dey
+	dex
+	bpl :-
+
+	gab_even
+
+	ldx #31
+	;ldy #31
+:	lda (gfxptr),y
+	gax
+	gst
+	dey
+	dex
+	bpl :-
+
 	lda gfxptr
 	clc
-	adc #24
+	adc #64
 	sta gfxptr
 	bcc :+
 	inc gfxptr+1
-:	inx
-	cpx #4
-	bne @nextcolumn
+:
+	inc line
+	ldy line
+	cpy #24
+	bne @nextline
 
-	ldx #5
-	ldy #0
-	jsr gfx_gotoxy
-	ldax msg_cone1
-	jsr gfx_puts
-
-	ldx #5
-	ldy #1
-	jsr gfx_gotoxy
-	ldax msg_cone2
-	jsr gfx_puts
-
-	ldx #5
-	ldy #2
-	jsr gfx_gotoxy
-	ldax msg_cone3
-	jsr gfx_puts
 
 	ldx #0
 	ldy #4
@@ -248,15 +254,6 @@ gfx_plotchar:
 
 	.rodata
 
-
-msg_cone1:
-	.byte "CCC     OOO NN  EEE",0
-msg_cone2:
-	.byte "C   --- O O N N EE ",0
-msg_cone3:
-	.byte "CCC     OOO N N EEE",0
-
-
 	.align 256
 bootfont:
 	.incbin "bootfont.bin"
@@ -265,79 +262,5 @@ font_num	= bootfont + 256
 font_AZ		= bootfont + 512
 font_az		= bootfont + 768
 
-
-logo1:
-	.byte %00000000
-	.byte %00000001
-	.byte %00000111
-	.byte %00001110
-	.byte %00011000
-	.byte %00110000
-	.byte %00110000
-	.byte %01100000
-	.byte %01100000
-	.byte %11000000
-	.byte %11000000
-	.byte %11000000
-	.byte %11000000
-	.byte %11000000
-	.byte %11000000
-	.byte %01100000
-	.byte %01100000
-	.byte %00110000
-	.byte %00110000
-	.byte %00011000
-	.byte %00001110
-	.byte %00000111
-	.byte %00000001
-	.byte %00000000
-
-	.byte %01111110
-	.byte %11111111
-	.byte %10000001
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00000000
-	.byte %00111111
-	.byte %00111111
-	.byte %00110000
-	.byte %00110000
-	.byte %00110011
-	.byte %00110011
-	.byte %00110011
-	.byte %00110011
-	.byte %00110011
-	.byte %00110011
-	.byte %00110011
-	.byte %11110011
-	.byte %11110011
-	.byte %01110011
-
-	.byte %00000000
-	.byte %10000000
-	.byte %11100000
-	.byte %01110000
-	.byte %00011000
-	.byte %00001100
-	.byte %00001100
-	.byte %00000110
-	.byte %00000110
-	.byte %00000111
-	.byte %11111111
-	.byte %11111111
-	.byte %00000000
-	.byte %00000000
-	.byte %11111111
-	.byte %11111111
-	.byte %00000011
-	.byte %00000011
-	.byte %00000011
-	.byte %00000011
-	.byte %00000011
-	.byte %00000011
-	.byte %11111111
-	.byte %11111111
+bootlogo:
+	.incbin "bootlogo.bin"
