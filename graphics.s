@@ -26,13 +26,16 @@ gfx_puthex:		jmp _gfx_puthex
 	.zeropage
 
 gfxptr:		.res 3
+srcptr:		.res 2
 putsptr:	.res 2
+cursptr:	.res 3
 cursy:		.res 1	; cursor y position
 cursx:		.res 1	; cursor x position
 ystop:		.res 1
 char:		.res 1
 tempx:		.res 1
 tempy:		.res 1
+baseaddr:	.res 1
 
 
 	.bss
@@ -148,7 +151,7 @@ _gfx_quickcls:
 	ldx #7
 @next:
 	ldy #210
-	lda rowsel,x
+	lda rowmask,x
 	ora #$01
 	sta gfxptr + 1
 	lda #$40
@@ -226,34 +229,51 @@ _gfx_cls:
 
 _gfx_drawlogo:
 	ldax #bootlogo		; draw C-ONE logo
-	stax gfxptr
+	stax srcptr
 
-	ldy #0
-	sty line
+	lda #$00
+	sta gfxptr
+	lda #$c0
+	sta gfxptr + 1
+	lda #$0b
+	sta gfxptr + 2
+
+	lda #3
+	sta line
 @nextline:
-	gay
-
-	ldx #31
-	ldy #63
-:	lda (gfxptr),y
-	gax
-	gst
+	ldx #32
+@nextcol:
+	ldy #7
+:	lda rowmask,y
+	sta gfxptr + 1
+	lda (srcptr),y
+	sam gfxptr
 	dey
-	dex
 	bpl :-
+
+	lda srcptr
+	clc
+	adc #8
+	sta srcptr
+	bne :+
+	inc srcptr + 1
+:
+	inc gfxptr
+	bne :+
+	inc gfxptr + 1
+:
+	dex
+	bne @nextcol
 
 	lda gfxptr
 	clc
-	adc #64
+	adc #(80 - 32)
 	sta gfxptr
-	bcc :+
-	inc gfxptr+1
-:
-	inc line
-	ldy line
-	cpy #24
-	bne @nextline
+	; bcc :+
+	; inc gfxptr + 1
 
+	dec line
+	bne @nextline
 
 	ldx #0
 	ldy #4
@@ -263,8 +283,39 @@ _gfx_drawlogo:
 
 ; set cursor to x, y
 _gfx_gotoxy:
+	pha
+
 	stx cursx
 	sty cursy
+
+	lda #$0b
+	sta cursptr + 2
+	lda #0
+	sta cursptr + 1
+
+	tya
+	asl
+	asl
+	;clc
+	adc cursy
+	asl
+	rol cursptr + 1
+	asl
+	rol cursptr + 1
+	asl
+	rol cursptr + 1
+	asl
+	rol cursptr + 1
+	;clc
+	adc cursx
+	sta cursptr
+	bcc :+
+	inc cursptr + 1
+:	lda #$c8
+	ora cursptr + 1
+	sta cursptr + 1
+
+	pla
 	rts
 
 
@@ -306,31 +357,46 @@ _gfx_putchar:
 	rts
 @lf:
 	inc cursy
-	lda cursy
-	cmp #32
-	bne @return
-	lda #0
-	sta cursy
-	beq @return
+	lda cursptr
+	clc
+	adc #80
+	sta cursptr
+	bcc :+
+	inc cursptr + 1
+:	jmp @return
 @cr:
-	lda #0
+	lda cursptr
+	sec
+	sbc cursx
+	sta cursptr
+	bcs :+
+	dec cursptr + 1
+:	lda #0
 	sta cursx
 	beq @return
 @tab:
 	lda cursx
-	and #7
-	beq @return
-	lda cursx
 	ora #7
 	clc
 	adc #1
-	sta cursx
+	tax
+	sec
+	sbc cursx
+	clc
+	adc cursptr
+	sta cursptr
+	bcc :+
+	inc cursptr + 1
+:	stx cursx
 	jmp @return
 
 
 ; advance to the next character
 gfx_nextchar:
-	inc cursx
+	inc cursptr
+	bne :+
+	inc cursptr + 1
+:	inc cursx
 	lda cursx
 	cmp #80
 	bcc @return
@@ -338,7 +404,7 @@ gfx_nextchar:
 	sta cursx
 	inc cursy
 	lda cursy
-	cmp #32
+	cmp #25
 	bcc @return
 	lda #0
 	sta cursy
@@ -348,89 +414,72 @@ gfx_nextchar:
 
 ; plot character at current position
 gfx_plotchar:
-	ldx cursx
-	gax
+	pha
+
+	lda cursptr
+	sta gfxptr
+	lda cursptr + 1
+	and #7
+	sta baseaddr
+	lda cursptr + 2
+	sta gfxptr + 2
+
+	ldy #0
+
+	pla
 	asl
 	asl
 	bcs @upper
-
 @lower:
 	asl
 	tax
 	bcs @num
 @sym:
-	lda cursy
-	asl
-	asl
-	asl
-	tay
-	clc
-	adc #8
-	sta ystop
-:	gay
+:	lda rowmask,y
+	ora baseaddr
+	sta gfxptr + 1
 	lda font_sym,x
-	gst
+	sam gfxptr
 	inx
 	iny
-	cpy ystop
+	cpy #8
 	bne :-
 	rts
-
 @num:
-	lda cursy
-	asl
-	asl
-	asl
-	tay
-	clc
-	adc #8
-	sta ystop
-:	gay
+:	lda rowmask,y
+	ora baseaddr
+	sta gfxptr + 1
 	lda font_num,x
-	gst
+	sam gfxptr
 	inx
 	iny
-	cpy ystop
+	cpy #8
 	bne :-
 	rts
-
 @upper:
 	asl
 	tax
 	bcs @az
 @AZ:
-	lda cursy
-	asl
-	asl
-	asl
-	tay
-	clc
-	adc #8
-	sta ystop
-:	gay
+:	lda rowmask,y
+	ora baseaddr
+	sta gfxptr + 1
 	lda font_AZ,x
-	gst
+	sam gfxptr
 	inx
 	iny
-	cpy ystop
+	cpy #8
 	bne :-
 	rts
-
 @az:
-	lda cursy
-	asl
-	asl
-	asl
-	tay
-	clc
-	adc #8
-	sta ystop
-:	gay
+:	lda rowmask,y
+	ora baseaddr
+	sta gfxptr + 1
 	lda font_az,x
-	gst
+	sam gfxptr
 	inx
 	iny
-	cpy ystop
+	cpy #8
 	bne :-
 	rts
 
@@ -518,5 +567,5 @@ bootlogo:
 
 hextoascii:
 	.byte "0123456789abcdef"
-rowsel:
+rowmask:
 	.byte $c0, $c8, $d0, $d8, $e0, $e8, $f0, $f8
