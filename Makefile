@@ -1,5 +1,5 @@
 AS = ca65
-LD = ld65
+LD = ld65 -vm
 CC = cc65
 CFLAGS = -Oirs
 AFLAGS = #-DDEBUG
@@ -39,7 +39,7 @@ INCS = \
 	ide.i
 
 
-all: bigboot.bin boot232.bin testkbd.bin
+all: bigboot.bin boot232.bin
 
 bigboot.bin: $(OBJS) $(INCS)
 	$(LD) -C $(CFG) -m bigboot.map -o $@ $(OBJS)
