@@ -33,9 +33,7 @@
 	.import part_secperclus
 	.import romaddr
 
-	.import debug_put
 	.import debug_puts
-	.import debug_puthex
 	.import debug_putdigit
 	.import debug_crlf
 

@@ -27,7 +27,6 @@
 	.importzp fs_iso9660
 
 	.import debug_puts
-	.import debug_puthex
 	.import debug_putdigit
 	.import debug_put
 

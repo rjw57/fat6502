@@ -12,12 +12,8 @@
 	.import __RELOC_LOAD__
 
 	.import debug_init
-	.import debug_done
-	.import debug_put
 	.import debug_puts
 	.import debug_puthex
-	.import debug_putdigit
-	.import debug_crlf
 
 
 	.zeropage
