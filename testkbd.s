@@ -16,6 +16,15 @@
 lastkey:	.res 1
 
 
+	.segment "VOLZP", zeropage
+	.segment "DEVZP", zeropage
+	.segment "VOLBSS"
+	.segment "DEVBSS"
+	.segment "VOLVECTORS"
+	.segment "DEVVECTORS"
+	.segment "CTLVECTORS"
+
+
 	.segment "RELOC"
 
 ; this is a dummy segment just to suppress an ld65 warning
