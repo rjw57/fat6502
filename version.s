@@ -1,14 +1,14 @@
 	.export ver_str
-	.exportzp ver_major
-	.exportzp ver_minor
-	.exportzp ver_rev
+	.export ver_major
+	.export ver_minor
+	.export ver_rev
 
 
-	.rodata
+	.segment "VERSION"
 
-ver_major	= 0
-ver_minor	= 9
-ver_rev		= 1
+ver_major:	.byte 0
+ver_minor:	.byte 9
+ver_rev:	.byte 1
 
 ver_str:
 	.byte "0.9.1", 0

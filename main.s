@@ -19,9 +19,9 @@
 
 	.import timestamp
 	.import ver_str
-	.importzp ver_major
-	.importzp ver_minor
-	.importzp ver_rev
+	.import ver_major
+	.import ver_minor
+	.import ver_rev
 
 	.import gfx_drawlogo
 	.import gfx_cls
