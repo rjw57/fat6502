@@ -178,6 +178,9 @@ boot:
 	lda fpgafound		; did we find an fpga config?
 	beq @error
 
+	jsr loadfpga		; upload it
+	bcs @error
+
 	ldx imagenum		; check list of found images
 	beq @doneimg
 
@@ -213,9 +216,6 @@ boot:
 	bne @copynext
 
 @doneimg:
-	jsr loadfpga		; upload it
-	bcs @error
-
 	lda drivebinfound
 	beq @done
 
