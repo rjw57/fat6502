@@ -71,7 +71,7 @@
 	.import iso_volname
 
 
-	.segment "VOLZP", zeropage
+	.segment "VOLZP" : zeropage
 
 dirptr:		.res 2	; directory pointer
 clusterptr:	.res 2	; custer buffer

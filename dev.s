@@ -73,7 +73,7 @@ lba:			.res 4	; 32-bit block address
 devtype:		.res 1	; current device type
 
 
-	.segment "DEVZP", zeropage
+	.segment "DEVZP" : zeropage
 
 sectorptr:		.res 2	; pointer to where data is loaded
 
