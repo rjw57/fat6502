@@ -20,6 +20,7 @@
 	.export pagecount
 	.export ide_channel
 	.export ide_device
+	.export ide_sizetab
 	.export ide_drivetab
 	.export ide_modeltab
 	.export offset40
@@ -49,6 +50,8 @@ regmap:			.res 8	; copy of register map
 presence:		.res 1	; all regmap bytes or:ed, used to detect drives
 identbuf:		.res 512	; buffer for identify info
 ide_modeltab:		.res 4*40	; drive model names
+ide_sizetab:		.res 4*4	; drive sizes
+
 
 devtype_none	= $00
 devtype_hd	= $01
@@ -209,17 +212,8 @@ ide_identify:
 	jsr ide_read_256_words
 	bcs @failed
 
-	ldx currdrive		; copy drive model number
-	lda offset40,x
-	tax
-	ldy #0
-@copymodel:
-	lda identbuf+54,y	; offset for drive model in identify result
-	sta ide_modeltab,x
-	inx
-	iny
-	cpy #40
-	bne @copymodel
+	jsr copymodel
+	jsr setdrivesize
 
 @done:
 	inc currdrive
@@ -235,6 +229,56 @@ ide_identify:
 	lda #devtype_none
 	sta ide_drivetab,x
 	jmp @done
+
+
+; copy drive model number
+copymodel:
+	ldx currdrive
+	lda offset40,x
+	tax
+	ldy #0
+@copymodel:
+	lda identbuf+54,y	; offset for drive model in identify result
+	sta ide_modeltab,x
+	inx
+	iny
+	cpy #40
+	bne @copymodel
+	rts
+
+
+; set drive size
+setdrivesize:
+	lda currtype
+	cmp #devtype_cd
+	beq @setcdsize
+
+	lda currdrive		; copy drive size
+	asl
+	asl
+	tax
+	lda identbuf + 114	; offset for drive size
+	sta ide_sizetab+1,x
+	lda identbuf + 115	; flip lo/hi bytes
+	sta ide_sizetab,x
+	lda identbuf + 116
+	sta ide_sizetab+3,x
+	lda identbuf + 117
+	sta ide_sizetab+2,x
+	rts
+
+@setcdsize:
+	lda currdrive		; set drive size
+	asl
+	asl
+	tax
+:	lda #0
+	sta ide_sizetab,x
+	iny
+	inx
+	cpx #4
+	bne :-
+	rts
 
 
 ; initialize device. call with dev 0..3 in A

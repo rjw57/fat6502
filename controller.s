@@ -11,6 +11,7 @@
 
 	.import ide_scan
 
+	.import ide_sizetab
 	.import ide_drivetab
 	.import ide_modeltab
 	.import offset40
@@ -35,6 +36,10 @@ msgptr:		.res 2
 devmap:		.res 4	; list of devices on current controller
 numdevs:	.res 1	; number of devices on controller
 currdev:	.res 1
+currtype:	.res 1
+size:		.res 4
+sizechar:	.res 1
+sizestr:	.res 5
 
 
 	.code
@@ -82,6 +87,7 @@ ctl_select:
 	sty currdev
 	lda ide_drivetab,y
 	beq @nextide
+	sta currtype
 
 	inc numdevs
 
@@ -92,6 +98,30 @@ ctl_select:
 	lda currdev
 	jsr debug_puthex
 
+	lda currtype
+	cmp #devtype_cd
+	bne @notcd
+
+	lda #<cdmsg
+	ldx #>cdmsg
+	jsr debug_puts
+	jmp @printcolon
+@notcd:
+	lda currdev
+	asl
+	asl
+	tax
+	ldy #0
+:	lda ide_sizetab,x
+	sta size,y
+	inx
+	iny
+	cpy #4
+	bne :-
+
+	jsr printsize
+
+@printcolon:
 	lda #<colonmsg
 	ldx #>colonmsg
 	jsr debug_puts
@@ -128,6 +158,115 @@ ctl_select:
 	rts
 
 
+; print size as a friendly number
+printsize:
+	lda #' '
+	jsr debug_put
+	lda #'('
+	jsr debug_put
+
+	asl size
+	rol size+1
+	rol size+2
+	rol size+3
+
+	lda #3
+	sta sizechar
+
+@check10zero:
+	lda size+3
+	bne @nope
+	lda size+2
+	and #$c0
+@nope:
+	bne @print
+
+	jsr shift10bits
+
+	dec sizechar
+	bne @check10zero
+
+@print:
+	lda size+3
+	sta size
+	lda #0
+	asl size+2
+	rol size
+	rol
+	asl size+2
+	rol size
+	rol
+	sta size+1
+
+	ldx #3
+@loop:
+	jsr div16
+	sta sizestr,x
+	dex
+	bpl @loop
+
+	ldx #0			; eliminate leading 0s
+:	lda sizestr,x
+	bne @foundnumber
+	inx
+	cpx #3
+	bne :-
+
+@foundnumber:
+:	lda sizestr,x
+	clc
+	adc #'0'
+	jsr debug_put
+	inx
+	cpx #4
+	bne :-
+
+	lda #' '
+	jsr debug_put
+	ldx sizechar
+	lda sizechartab,x
+	jsr debug_put
+	lda #'B'
+	jsr debug_put
+	lda #')'
+	jmp debug_put
+
+
+; divide a 16-bit number (in size) by the 10. result -> size,
+; remainder in a. modified version of Steve Judd's 32-bit divide.
+div16:
+ 	lda #00
+	ldy #$10
+@loop: 	asl size
+	rol size+1
+	rol
+	cmp #10
+	bcc :+
+	sbc #10
+	inc size
+: 	dey
+	bne @loop
+	rts
+
+
+shift10bits:
+	lda size+2
+	sta size+3
+	lda size+1
+	sta size+2
+	lda size
+	sta size+1
+	lda #0
+	sta size
+	asl size+1
+	rol size+2
+	rol size+3
+	asl size+1
+	rol size+2
+	rol size+3
+	rts
+
+
 ; select a device on the currently active controller
 ctl_select_dev:
 	tax
@@ -138,11 +277,15 @@ ctl_select_dev:
 :	jmp dev_set
 
 
+sizechartab:
+	.byte " ", "k", "M", "G"
 founddevmsg:
 	.byte "Found device ",0
 colonmsg:
-	.byte ": ",0
+	.byte ", ",0
 floppymsg:
 	.byte "Searching for boot devices on floppy controller",13,10,0
 idemsg:
 	.byte "Searching for boot devices on IDE controller",13,10,0
+cdmsg:
+	.byte " (CD-ROM)",0
