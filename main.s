@@ -111,8 +111,8 @@ warmstart:
 	cmp #'F'
 	bne @debuginit
 
-	lda #%00000111		; keep /DMA high or we can't flash later
-	ctl
+;	lda #%00000111		; keep /DMA high or we can't flash later
+;	ctl
 	jsr debug_done		; disable rs-232
 	jmp @configdone
 
@@ -230,13 +230,13 @@ warmstart:
 	ldax msg_done
 	jsr debug_puts
 	jsr debug_done
-	lda #%00000010		; reset main CPU
-	ctl
-	nop
-	nop
-	nop
-	lda #%00000110		; start main CPU
-	ctl
+;	lda #%00000010		; reset main CPU
+;	ctl
+;	nop
+;	nop
+;	nop
+;	lda #%00000110		; start main CPU
+;	ctl
 	rti
 ;	jmp *			; success
 
