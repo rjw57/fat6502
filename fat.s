@@ -64,7 +64,7 @@ fat12half:	.res 1	; flag that tells us if we should start with the
 			; high nybble ($80) or low nybble ($00)
 fat12byte:	.res 1	; temporary storage for current fat 12 byte
 fat12cluster:	.res 1  ; more temporary storage
-
+fat12fatflag:	.res 1	; flag that tells us to read the next fat sector
 
 	.code
 
@@ -368,7 +368,13 @@ fat12_next_byte:
 	cmp #$02		; check if we're past the end of the sector
 	bcc @done
 	
-	inc lba			; we're past it so read in the next sector
+	bit fat12fatflag	; should we read the next fat sector ?
+	bmi @done
+	
+	lda #$00		; zero out or fat sector offset
+	sta fat12tmp+1
+	
+	inc lba			; read in the next sector
 	bne @skiplb1
 	inc lba+1
 @skiplb1:
@@ -449,10 +455,13 @@ fat12_next_clust:
 	bpl :-
 
 @iscached:
+	lda #$7f		; set flag to read the next sector if
+	sta fat12fatflag	; necessary
 	jsr fat12_next_byte	; Get the current byte from the FAT
 	bcs @error
 	sta fat12cluster
 	
+	inc fat12fatflag	; don't read the next sector this time
 	jsr fat12_next_byte	; Next byte
 	bcs @error
 
