@@ -8,6 +8,7 @@
 	.export gfx_quickcls
 	.export gfx_drawicon
 	.export gfx_puthex
+	.export gfx_x
 
 
 	.segment "GFXVECTORS"
@@ -41,6 +42,99 @@ line:		.res 1
 
 	.code
 
+; 07-sept-2004 add CPC gfx hack
+
+; entry point and parameter storage for CPC gfx hack
+
+gfx_x:
+        .res 1
+gfx_x_row:
+gfx_y:
+        .res 1
+gfx_x_bank:
+        .res 1
+gfx_x_data:
+        .res 1
+
+; temporary storage
+
+gfx_x_temp1:
+gfx_addr_lo:
+        .res 1
+gfx_x_temp2:
+gfx_addr_mid:
+        .res 1
+gfx_x_temp3:
+gfx_addr_hi:
+        .res 1
+gfx_x_temp4:
+        .res 1
+
+; gst routine here... no separate label
+
+; gfx_x_gst:
+        sta gfx_x_data
+
+;save everything
+
+        php
+        txa
+        pha
+        tya
+        pha
+
+	lda #$0b
+	sta gfx_addr_hi
+
+	;80 = 16 * 5
+	lda #0
+	sta gfx_addr_mid
+	lda gfx_y
+	lsr
+	lsr
+	lsr
+	sta gfx_addr_lo
+	asl
+	asl
+	;clc
+	adc gfx_addr_lo
+	asl
+	rol gfx_addr_mid
+	asl
+	rol gfx_addr_mid
+	asl
+	rol gfx_addr_mid
+	asl
+	rol gfx_addr_mid
+	;clc
+	adc gfx_x
+	sta gfx_addr_lo
+	bcc :+
+	inc gfx_addr_mid
+:
+	lda gfx_y
+	and #7
+	asl
+	asl
+	asl
+	ora #$c0
+	ora gfx_addr_mid
+	sta gfx_addr_mid
+
+        lda gfx_x_data
+        sam gfx_x_temp1
+
+; restore and exit
+
+        pla
+        tay
+        pla
+        tax
+        lda gfx_x_data
+        plp
+        rts
+
+
 _gfx_quickcls:
 	lda #0
 	ldy #32
@@ -59,10 +153,31 @@ _gfx_quickcls:
 
 ; clear screen
 _gfx_cls:
-	gab_odd
-	jsr @doclr
-	gab_even
-@doclr:
+	lda #$55
+
+	ldy #0
+:	gay
+	ldx #0
+	gax
+	gst
+	ldx #79
+	gax
+	gst
+	iny
+	cpy #200
+	bne :-
+
+	ldx #255
+	ldy #255
+:	dex
+	bne :-
+	dey
+	bne :-
+
+	jmp *
+
+	rts
+
 	ldy #0
 	tya
 @nextline:
@@ -86,21 +201,8 @@ _gfx_drawlogo:
 @nextline:
 	gay
 
-	gab_odd
-
 	ldx #31
 	ldy #63
-:	lda (gfxptr),y
-	gax
-	gst
-	dey
-	dex
-	bpl :-
-
-	gab_even
-
-	ldx #31
-	;ldy #31
 :	lda (gfxptr),y
 	gax
 	gst
@@ -322,19 +424,7 @@ _gfx_drawicon:
 @nextline:
 	gay
 
-	gab_even
 	ldy #0
-	ldx cursx
-:	lda (gfxptr),y
-	gax
-	gst
-	iny
-	inx
-	cpx tempx
-	bne :-
-
-	gab_odd
-	ldy #4
 	ldx cursx
 :	lda (gfxptr),y
 	gax
@@ -356,7 +446,6 @@ _gfx_drawicon:
 	cpy tempy
 	bne @nextline
 
-	gab_even
 	rts
 
 
