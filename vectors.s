@@ -8,9 +8,9 @@
 
 	; reset and irq vectors
 
-irqvector:
-	.addr 0
-resetvector:
-	.addr reseth
 warmstartvector:
 	.addr warmstart
+resetvector:
+	.addr reseth
+irqvector:
+	.addr 0
