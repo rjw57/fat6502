@@ -393,6 +393,8 @@ iso_stat:
 @dot:
 	tay			; incidentally, len = type + 1
 	iny
+	ldx #type_dir
+	stx stat_type
 	ldax #dotdot
 	jmp @gotname
 @getname:
@@ -400,6 +402,17 @@ iso_stat:
 
 	ldy #32			; return name length in y
 	lda (dirptr),y
+	tax			; save in x
+
+	clc			; check if file version (;x) is at end of name
+	adc #31
+	tay
+	lda (dirptr),y
+	cmp #';'
+	bne :+
+	dex			; yep, decrease length by 2
+	dex
+:	txa
 	tay
 
 	ldax dirptr		; return pointer to name in a/x
