@@ -1,10 +1,18 @@
-
-
 ; CPU speed in MHz
 cpuspeed	= 2
 
 
-; C=1 custom opcode macros
+; --- Flash ROM ---
+
+flash_clear	= $3f60
+flash_shift	= $3f66
+flash_inc	= $3f68
+flash_data	= $3f6c
+
+
+; --- RS-232 ---
+
+A16550BASE	= $3f20
 
 
 ; --- Debugging ---
@@ -229,11 +237,3 @@ cpuspeed	= 2
 	.macro gst
 	.byte $04
 	.endmacro
-
-
-; --- Flash ROM ---
-
-flash_clear	= $3f60
-flash_shift	= $3f66
-flash_inc	= $3f68
-flash_data	= $3f6c
