@@ -31,6 +31,8 @@
 
 	.import stat_length
 	.import stat_cluster
+	.import stat_type
+	.importzp type_file, type_dir, type_vol, type_lfn, type_other
 
 	.import debug_init
 	.import debug_done
@@ -102,6 +104,9 @@ reseth:
 	;jsr vol_volname		; print volume name
 	;jsr debug_puts
 
+	jsr vol_cdroot		; change to root dir
+	jsr listdir		; list directory
+	jsr vol_cdboot		; change to boot dir
 	jsr listdir		; list directory
 
 @next:
@@ -125,7 +130,6 @@ failure:
 
 
 listdir:
-	jsr vol_cdroot
 	jsr vol_dir_first	; find the first dir entry
 @checkentry:
 	jsr vol_endofdir	; check for end of dir
@@ -135,6 +139,15 @@ listdir:
 	stax nameptr
 	sty namelen
 
+	lda stat_type
+	cmp #type_file
+	beq @print
+	cmp #type_dir
+	beq @print
+	cmp #type_vol
+	beq @print
+	bne @next
+@print:
 	ldy #0			; print
 :	lda (nameptr),y
 	jsr debug_put
@@ -155,7 +168,7 @@ listdir:
 :	lda stat_length,x
 	jsr debug_puthex
 	dex
-	bne :-
+	bpl :-
 
 	lda #' '		; spaces
 	jsr debug_put
@@ -165,7 +178,7 @@ listdir:
 :	lda stat_cluster,x
 	jsr debug_puthex
 	dex
-	bne :-
+	bpl :-
 
 	jsr debug_crlf		; newline
 
@@ -174,6 +187,8 @@ listdir:
 	bcc @checkentry		; premature end of dir
 
 @lastentry:
+	rts
+
 
 	.rodata
 
