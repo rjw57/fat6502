@@ -8,9 +8,14 @@
 	.export dev_init
 	.export dev_read_sector
 	.export dev_set
+	.export dev_find_volume
 	.export lba
 	.export devtype
+	.export volsector
 	.exportzp sectorptr
+
+	.import clusterbuf
+	.importzp ptr
 
 	.import ide_init		; ide hard drives
 	.import ide_read_sector
@@ -25,6 +30,9 @@
 	.importzp devtype_floppy
 
 	.bss
+
+volsector:		.res 4	; 32-bit LBA start address of active partition
+
 
 	.align 2
 vectablesize		= 2
@@ -55,7 +63,8 @@ floppy_vectors:
 dev_init:		jmp (dev_init_vector)
 dev_read_sector:	jmp (dev_read_sector_vector)
 dev_set:		jmp _dev_set
-			.res 7
+dev_find_volume:	jmp _dev_find_volume
+			.res 4
 
 
 	.segment "DEVBSS"
@@ -113,5 +122,119 @@ _dev_set:
 	inx
 	cpx #vectablesize * 2
 	bne @copyfloppy
+	clc
+	rts
+
+
+; find the first volume on a device and return the filesystem type
+_dev_find_volume:
+	lda devtype
+	cmp #devtype_hd
+	beq @ide
+	cmp #devtype_cd
+	beq @atapi
+	cmp #devtype_floppy
+	beq @floppy
+@error:
+	sec
+	rts
+
+@atapi:
+	lda #16			; hardcoding is fun
+	sta volsector
+	lda #0
+	sta volsector+1
+	sta volsector+2
+	sta volsector+3
+	lda #$96
+	clc
+	rts
+
+@floppy:
+	jsr readsector0		; if sector 0 is a fat sector
+	bcs @error
+	lda #0
+	ldx #3
+:	sta volsector,x
+	dex
+	bpl :-
+	lda #$12		; then it's a FAT12 floppy
+	clc
+	rts
+
+
+@ide:
+	jsr readsector0
+	bcs @error
+
+	ldax (clusterbuf + 446)	; pointer to partition table
+	stax ptr		; sector must be page aligned...
+
+	ldy #4
+@checktype:
+	lda (ptr),y		; check file system type
+	cmp #$01
+	beq @foundfat12		; fat12 uses $01
+	cmp #$04		; fat16 uses $04, $06, or $0e
+	beq @foundfat16
+	cmp #$06
+	beq @foundfat16
+	cmp #$0e
+	beq @foundfat16
+	cmp #$0b		; fat32 uses $0b or $0c
+	beq @foundfat32
+	cmp #$0c
+	beq @foundfat32
+
+	lda ptr			; ...or this'll fail
+	clc
+	adc #16
+	sta ptr
+	bcc @checktype
+	jmp @error		; no partition found
+
+@foundfat12:
+	ldx #$12
+	.byte $2c
+@foundfat16:
+	ldx #$16
+	.byte $2c
+@foundfat32:
+	ldx #$32
+
+	ldy #8			; copy volume start sector
+:	lda (ptr),y
+	sta volsector-8,y
+	iny
+	cpy #12
+	bne :-
+
+	txa			; happy camper
+	clc
+	rts
+
+
+readsector0:
+	ldx #3
+	lda #0
+:	sta lba,x
+	dex
+	bpl :-
+	ldax clusterbuf		; load data into clusterbuf
+	stax sectorptr
+	jsr dev_read_sector	; read sector 0
+	bcc @check
+@error:
+	sec
+	rts
+@check:
+	lda clusterbuf + $1fe
+	cmp #$55
+	bne @error
+
+	lda clusterbuf + $1ff
+	cmp #$aa
+	bne @error
+
 	clc
 	rts
