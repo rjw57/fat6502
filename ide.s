@@ -630,10 +630,6 @@ atapi_read_sector:
 
 ; 400 ns delay
 delay_400ns:
-	.ifdef DEBUG
-	rts
-	.endif
-
 	ldx #10 * cpuspeed
 :	dex
 	nop
