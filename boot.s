@@ -537,9 +537,9 @@ loadfpga:
 	cpy loadleft
 	bne :-
 @done:
-	jsr bar_done
+	jsr bar_done		; erase progress bar
 
-	ldx #40 - 14
+	ldx #40 - 14		; erase message
 	ldy #26
 	jsr gfx_gotoxy
 	ldax msg_bootnone

@@ -248,30 +248,30 @@ drawmenu:
 	ldx #menuxpos - 4	; draw top
 	ldy #menuypos - 1
 	jsr gfx_gotoxy
-	lda #7
+	lda #7 + $80
 	jsr gfx_putchar
-	lda #12			; character to print
+	lda #12 + $80		; character to print
 	ldx #35
 :	jsr gfx_putchar
 	dex
 	bne :-
-	lda #8
+	lda #8 + $80
 	jsr gfx_putchar
 
 	ldx #menuxpos - 4	; draw bottom
 	ldy #menuypos + 10
 	jsr gfx_gotoxy
-	lda #9
+	lda #9 + $80
 	jsr gfx_putchar
-	lda #12
+	lda #12 + $80
 	ldx #35
 :	jsr gfx_putchar
 	dex
 	bne :-
-	lda #10
+	lda #10 + $80
 	jsr gfx_putchar
 
-	lda #11			; draw sides
+	lda #11	+ $80		; draw sides
 	ldy #menuypos
 :	ldx #menuxpos - 4
 	jsr gfx_gotoxy
@@ -474,6 +474,6 @@ msg_seconds:
 msg_selectconfig:
 	.byte "Select computer configuration",0
 msg_updown:
-	.byte 3, "/", 4," to select, Enter to start",0
+	.byte $83, "/", $84," to select, Enter to start",0
 msg_holddown:
 	.byte "Hold down 0-9 to quick select and bypass menu",0

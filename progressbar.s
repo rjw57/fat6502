@@ -33,7 +33,7 @@ bar_init:
 	ldx #8
 	ldy #28
 	jsr gfx_gotoxy
-	lda #2			; 50% dither
+	lda #$82		; 50% dither
 	ldx #64
 :	jsr gfx_putchar
 	dex
@@ -72,7 +72,7 @@ bar_update:
 	jsr gfx_gotoxy
 	pla
 	tax
-	lda #1
+	lda #$81
 :	jsr gfx_putchar
 	dex
 	bne :-

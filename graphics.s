@@ -148,12 +148,48 @@ _gfx_putchar:
 	sta char
 	stx tempx
 	sty tempy
+	cmp #$80
+	bcs @gfxchar
+	cmp #32
+	bcs @nocontrol
+	cmp #10
+	beq @lf
+	cmp #13
+	beq @cr
+	cmp #9
+	beq @tab
+@gfxchar:
+	and #$7f
+@nocontrol:
 	jsr gfx_plotchar
 	jsr gfx_nextchar
+@return:
 	ldy tempy
 	ldx tempx
 	lda char
 	rts
+@lf:
+	inc cursy
+	lda cursy
+	cmp #32
+	bne @return
+	lda #0
+	sta cursy
+	beq @return
+@cr:
+	lda #0
+	sta cursx
+	beq @return
+@tab:
+	lda cursx
+	and #7
+	beq @return
+	lda cursx
+	ora #7
+	clc
+	adc #1
+	sta cursx
+	jmp @return
 
 
 ; advance to the next character
