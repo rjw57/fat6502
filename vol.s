@@ -66,7 +66,7 @@
 	.import iso_firstnamechar
 
 
-	.zeropage
+	.segment "VOLZP", zeropage
 
 dirptr:		.res 2	; directory pointer
 nameptr:	.res 2	; name pointer
@@ -92,13 +92,6 @@ vol_isflashbin_vector	= vector_table + 20
 vol_isdrivebin_vector	= vector_table + 22
 vol_stat_vector		= vector_table + 24
 vol_firstnamechar_vector= vector_table + 26
-
-romaddr:		.res 6
-stat_length:		.res 4
-stat_cluster:		.res 4
-vol_fstype:		.res 1
-vol_secperclus:		.res 1	; number of 512-byte sectors per cluster
-cluster:		.res 4	; 32-bit cluster address
 
 
 	.rodata
@@ -168,7 +161,7 @@ iso_vectors:
 	.word iso_firstnamechar
 
 
-	.code
+	.segment "VOLVECTORS"
 
 vol_read_ptable:	jmp (vol_read_ptable_vector)
 vol_cdboot:		jmp (vol_cdboot_vector)
@@ -185,6 +178,19 @@ vol_isdrivebin:		jmp (vol_isdrivebin_vector)
 vol_stat:		jmp (vol_stat_vector)
 vol_firstnamechar:	jmp (vol_firstnamechar_vector)
 
+			.res 22
+
+	.segment "VOLBSS"
+
+romaddr:		.res 6
+stat_length:		.res 4
+stat_cluster:		.res 4
+vol_fstype:		.res 1
+vol_secperclus:		.res 1	; number of 512-byte sectors per cluster
+cluster:		.res 4	; 32-bit cluster address
+
+
+	.code
 
 ; call with filesystem identifier in A
 vol_set_fs:

@@ -47,6 +47,14 @@ sizechar:	.res 1
 sizestr:	.res 5
 
 
+	.segment "CTLVECTORS"
+
+	; jump table at $ffxx
+
+_ctl_select:		jmp ctl_select
+_ctl_select_dev:	jmp ctl_select_dev
+
+
 	.code
 
 ; select controller. returns number of devices.

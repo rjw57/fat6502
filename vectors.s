@@ -8,8 +8,10 @@
 
 irqh:
 nmih:	rti
-	
-	.segment "VECTORS"
+
+	.segment "CPUVECTORS"
+
+	; reset and irq vectors
 
 irqvector:
 	.addr irqh

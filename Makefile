@@ -30,8 +30,9 @@ OBJS = \
 	vol.o \
 	dev.o \
 	controller.o \
-	version.o \
-	graphics.o
+	timestamp.o \
+	graphics.o \
+	version.o
 
 INCS = \
 	drivecpu.i \
@@ -43,22 +44,23 @@ all: bigboot.bin boot232.bin testkbd.bin
 bigboot.bin: $(OBJS) $(INCS)
 	$(LD) -C $(CFG) -m bigboot.map -o $@ $(OBJS)
 
-boot232.bin: rs232boot.o rs232boot_reloc.o debug.o buffers.o vectors.o version.o
+boot232.bin: rs232boot.o rs232boot_reloc.o debug.o buffers.o vectors.o timestamp.o
 	$(LD) -C $(CFG) -m boot232.map -o $@ $^
 
 testkbd.bin: testkbd.o debug.o buffers.o vectors.o
 	$(LD) -C $(CFG) -m testkbd.map -o $@ $^
 
-.PHONY: version.s
-version.s:
-	@echo ".export timestamp" > version.s
-	@echo "timestamp:" >> version.s
-	@date "+ .byte \"%Y-%m-%d %H:%M:%S %Z\"" >> version.s
-	@echo " .byte 0" >> version.s
+.PHONY: timestamp.s
+timestamp.s:
+	@echo " .export timestamp" > timestamp.s
+	@echo " .rodata" >> timestamp.s
+	@echo "timestamp:" >> timestamp.s
+	@date "+ .byte \"%Y-%m-%d %H:%M:%S %Z\"" >> timestamp.s
+	@echo " .byte 0" >> timestamp.s
 
 clean:
 	$(RM) $(OBJS) \
-		version.s \
+		timestamp.s \
 		bigboot.bin boot232.bin testkbd.bin \
 		rs232boot.o rs232boot_reloc.o \
 		bigboot.map boot232.map testkbd.map

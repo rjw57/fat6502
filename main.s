@@ -18,6 +18,10 @@
 	.import vol_read_ptable
 
 	.import timestamp
+	.import ver_str
+	.importzp ver_major
+	.importzp ver_minor
+	.importzp ver_rev
 
 	.import gfx_drawlogo
 	.import gfx_cls
@@ -64,9 +68,13 @@ reseth:
 
 	ldax msg_init1
 	jsr debug_puts
-	ldax timestamp
+	ldax ver_str
 	jsr debug_puts
 	ldax msg_init2
+	jsr debug_puts
+	ldax timestamp
+	jsr debug_puts
+	ldax msg_init3
 	jsr debug_puts
 
 	ldax msg_erasefpga
@@ -212,8 +220,10 @@ clrbss:
 
 
 msg_init1:
-	.byte "C-ONE boot rom (",0
+	.byte "C-ONE boot rom v",0
 msg_init2:
+	.byte " (",0
+msg_init3:
 	.byte ") initializing",13,10,0
 msg_erasefpga:
 	.byte "Erasing FPGA",13,10,0

@@ -16,6 +16,15 @@
 	.import debug_puthex
 
 
+	.segment "VOLZP", zeropage
+	.segment "DEVZP", zeropage
+	.segment "VOLBSS"
+	.segment "DEVBSS"
+	.segment "VOLVECTORS"
+	.segment "DEVVECTORS"
+	.segment "CTLVECTORS"
+
+
 	.zeropage
 
 src:		.res 2

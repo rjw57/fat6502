@@ -31,13 +31,6 @@ vector_table:		.res vectablesize * 2
 dev_init_vector		= vector_table
 dev_read_sector_vector	= vector_table + 2
 
-lba:			.res 4	; 28-bit block address, set bits 28-31 to 0
-
-
-	.zeropage
-
-sectorptr:		.res 2	; pointer to where data is loaded
-
 
 	.rodata
 
@@ -54,11 +47,26 @@ floppy_vectors:
 	.word floppy_read_sector
 
 
-	.code
+	.segment "DEVVECTORS"
+
+	; vectors at $ffxx
 
 dev_init:		jmp (dev_init_vector)
 dev_read_sector:	jmp (dev_read_sector_vector)
+			.res 10
 
+
+	.segment "DEVBSS"
+
+lba:			.res 4	; 32-bit block address
+
+
+	.segment "DEVZP", zeropage
+
+sectorptr:		.res 2	; pointer to where data is loaded
+
+
+	.code
 
 ; call with device identifier in A
 dev_set:
