@@ -182,6 +182,16 @@ _gfx_cls:
         lda #%10010010          ; set hires mode
         zout $7f
 
+	lda #$0c		; reset screenbase, lo
+	zout $bc
+	lda #$30
+	zout $bd
+
+	lda #$0d		; hi
+	zout $bc
+	lda #$0
+	zout $bd
+
         lda #%00000000          ; select pen 0
         zout $7f
         lda #%01011000          ; select magenta
