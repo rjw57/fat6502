@@ -15,10 +15,10 @@
 
 	.code
 
-
 ; select config 0..9, 0 is default
 select_config:
 	lka
+	bcs @default
 	cmp #$2c
 	beq mrt
 	cmp #$4d
@@ -29,6 +29,9 @@ select_config:
 	beq @done
 	dex
 	bpl @checknext
+	bmi select_config	; loop until we get a valid scancode
+				; or fifo is empty. that should do it
+@default:
 	lda #'0'		; default to config 0
 	sec
 	rts
@@ -204,7 +207,11 @@ delay:
 
 checkspace:
 	lka
+	bcs @notspace
 	cmp #space
+	rts
+@notspace:
+	cmp #0		; lka should never return 0
 	rts
 
 
@@ -545,8 +552,7 @@ drawscore:
 
 checkkbd:
 	lka
-	cmp #0
-	beq @done
+	bcs @done
 	cmp #space
 	bne :+
 	inc spacectr
@@ -569,8 +575,7 @@ checkkbd:
 
 @break:
 	lka
-	cmp #0
-	beq @break
+	bcs @break
 	ldx #3
 :	cmp keytab,x
 	beq @broke

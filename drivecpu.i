@@ -106,7 +106,7 @@ cpuspeed	= 2
 
 ; --- Keyboard ---
 
-; load keyboard scancode
+; load keyboard scancode. carry set if fifo is empty (and A invalid)
 	.macro lka
 	.byte $32
 	.endmacro

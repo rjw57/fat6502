@@ -35,12 +35,10 @@ lastkey:	.res 1
 	.code
 
 reseth:
-	lka
 	sei
 	cld
 	ldx #$ff
 	txs
-	sta lastkey
 
 	lda #%00000111		; initalize ctl reg
 	ctl
@@ -50,15 +48,9 @@ reseth:
 	ldax msg_kbdinit
 	jsr debug_puts
 
-	lda lastkey
-	jsr debug_puthex
-	jsr debug_crlf
-
 loop:
 	lka
-	cmp lastkey
-	beq loop
-	sta lastkey
+	bcs loop
 	jsr debug_puthex
 	jsr debug_crlf
 	jmp loop
