@@ -64,6 +64,7 @@ reseth:
 
 	jsr debug_init
 
+restart:
 	ldax initmsg
 	jsr debug_puts
 
@@ -173,12 +174,12 @@ flash:
 
 	ldax donemsg
 	jsr debug_puts
-	jmp *
+	jmp restart
 
 @error:
 	ldax errormsg
 	jsr debug_puts
-	jmp *
+	jmp restart
 
 
 printaddr:
