@@ -2,8 +2,9 @@
 
 	.export reseth
 
-	.import init232boot
+	.import relocate
 
+	.import init232boot
 
 	.segment "VOLZP", zeropage
 	.segment "DEVZP", zeropage
@@ -26,5 +27,7 @@ reseth:
 
 	lda #%00000110		; initalize ctl reg
 	ctl
+
+	jsr relocate
 
 	jmp init232boot

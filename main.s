@@ -44,6 +44,8 @@
 	.import debug_putdigit
 	.import debug_crlf
 
+	.import relocate
+
 	.import init232boot
 
 
@@ -74,6 +76,8 @@ reseth:
 	bne :-
 
 	jsr clrbss		; clear BSS segment
+
+	jsr relocate
 
 	jsr gfx_cls		; clear graphics screen
 	jsr gfx_drawlogo	; print C-ONE logo
