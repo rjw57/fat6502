@@ -184,7 +184,6 @@ In the current version of the boot rom, the following doesn't work as
 advertised:
 
 <ul>
-  <li> Loading of xDRIVE.BIN has not been implemented yet.
   <li> The floppy code has not been implemented yet.
 </ul>
 
