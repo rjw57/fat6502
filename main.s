@@ -65,6 +65,7 @@ currctl:	.res 1
 	.code
 
 reseth:
+	sta bootconfig
 	sei
 	cld
 	ldx #$ff
@@ -96,8 +97,10 @@ warmstart:
 	lda #0			; flag whether we should display boot menu
 	sta entermenu
 
-	jsr select_config	; check which config to boot (0-9)
+	;jsr select_config	; check which config to boot (0-9)
+	lda bootconfig
 	sta bootconfig
+	jmp @debuginit
 	bcs @default		; is holding a config key?
 
 	cmp #'S'
@@ -150,10 +153,11 @@ warmstart:
 
 	ldax msg_erasefpga
 	jsr debug_puts
-	lda #%00000101		; erase FPGA
-	ctl
-	lda #%00000111		; back to normal
-	ctl
+;tobix was here
+;	lda #%00000101		; erase FPGA
+;	ctl
+;	lda #%00000111		; back to normal
+;	ctl
 
 	lda #0			; start with controller 0
 	sta currctl
@@ -231,9 +235,10 @@ warmstart:
 	nop
 	nop
 	nop
-	lda #%00000111		; start main CPU
+	lda #%00000110		; start main CPU
 	ctl
-	jmp *			; success
+	rti
+;	jmp *			; success
 
 
 @nextfailed:
@@ -256,8 +261,8 @@ warmstart:
 failure:
 	ldax msg_allfailed	; now we're screwed
 	jsr debug_puts
-
-	jmp *			; failure
+	rti
+;	jmp *			; failure
 
 
 ; clear BSS segment aka initialize variable space
