@@ -68,6 +68,7 @@ fat12cluster:	.res 1  ; more temporary storage
 fat12fatflag:	.res 1	; flag that tells us to read the next fat sector
 volnamelen:	.res 1	; length of volume name
 volname:	.res 12	; volume name
+rctemp:		.res 1	; ugly, ugly fat16
 
 
 	.code
@@ -716,12 +717,77 @@ isfatcached:
 
 
 ; load the specified cluster to memory
-; with ugly, ugly special case for FAT12/16 root directory
-	.bss
-rctemp:	.res 1			; ugly, ugly fat16
-	.code
-
 fat_read_clust:
+	jsr clustertolba	; calculate lba address, sets scount
+
+	lda clusterptr		; load to cluster buffer
+	sta sectorptr
+	lda clusterptr+1
+	sta sectorptr+1
+
+@readnext:
+	jsr dev_read_sector	; write the sector
+	bcs @error
+
+	inc lba			; next sector
+	bne @done
+	inc lba+1
+	bne @done
+	inc lba+2
+	bne @done
+	inc lba+3
+@done:
+	dec scount
+	bne @readnext
+
+	lda sectorptr		; update cluster pointer
+	sta clusterptr
+	lda sectorptr+1
+	sta clusterptr+1
+
+	clc
+@error:
+	rts
+
+
+; write cluster sector by sector
+fat_write_clust:
+	jsr clustertolba	; calculate lba address, sets scount
+
+	lda clusterptr		; load to cluster buffer
+	sta sectorptr
+	lda clusterptr+1
+	sta sectorptr+1
+
+@readnext:
+	jsr dev_write_sector	; write the sector
+	bcs @error
+
+	inc lba			; next sector
+	bne @done
+	inc lba+1
+	bne @done
+	inc lba+2
+	bne @done
+	inc lba+3
+@done:
+	dec scount
+	bne @readnext
+
+	lda sectorptr		; update cluster pointer
+	sta clusterptr
+	lda sectorptr+1
+	sta clusterptr+1
+
+	clc
+@error:
+	rts
+
+
+; calculate lba address of cluster
+; with ugly, ugly special case for FAT12/16 root directory
+; sets scount
+clustertolba:
 	lda cluster		; lba = cluster * secperclus + part_cstart
 	sta lba
 	sta rctemp
@@ -752,7 +818,7 @@ fat_read_clust:
 	sta lba+3
 
 	lda #16			; assuming 512 rootdir entries for FAT16. ugly, ugly
-	jmp @readsectors
+	bne @done
 
 @notclusterzero:
 	lda vol_secperclus	; multiply cluster address by number of
@@ -783,45 +849,8 @@ fat_read_clust:
 	; we should now have the correct cluster in the lba address
 
 	lda vol_secperclus	; number of sectors to read
-@readsectors:
-	sta scount
-
-	lda clusterptr		; load to cluster buffer
-	sta sectorptr
-	lda clusterptr+1
-	sta sectorptr+1
-
-@readnext:
-	jsr dev_read_sector
-	bcs @error
-
-	inc lba		; next sector
-	bne @done
-	inc lba+1
-	bne @done
-	inc lba+2
-	bne @done
-	inc lba+3
 @done:
-	dec scount
-	bne @readnext
-
-	lda sectorptr
-	sta clusterptr
-	lda sectorptr+1
-	sta clusterptr+1
-
-	clc
-	rts
-
-@error:
-	sec
-	rts
-
-
-; write cluster sector by sector
-fat_write_clust:
-	sec
+	sta scount
 	rts
 
 
