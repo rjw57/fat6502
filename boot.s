@@ -61,6 +61,7 @@ fpgalength:		.res 4	; 32-bit fpga length
 loadaddress:		.res 4	; 32-bit load address
 loadlength:		.res 4	; 32-bit file length
 loadend:		.res 4	; 32-bit load address + file length
+loadleft:		.res 4	; load counter
 storevector:		.res 2	; jump vector for indirect store
 fpgafound:		.res 1	; flag if fpga file found
 drivebinfound:		.res 1	; flag if drive bin found
@@ -72,25 +73,6 @@ entermenu:		.res 1	; non-0 if we should display boot menu
 	.code
 
 ; try to boot from the current partition
-;
-; * the boot images should be in a dir in the root called BOOT
-; * there can be a total of 10 configs, numbered 0-9
-; * each config should as a bare minium have a file named xFPGA.BIN
-;   where x is the config number
-; * each config may also have up to 16 memory images named xRaaaaaa.BIN
-;   where x is the config number and aaaaaa is the 24-bit address in hex
-;   where the image should be loaded
-; * each config may also have a file called 0DESC.TXT which is a plain ascii
-;   file with CR/LF linebreaks that should contain a one line description of
-;   the configuration, with max 32 characters. the other lines are optional
-;   and should have max 39 characters per line 
-;
-; example:
-;
-; BOOT/0FPGA.BIN
-; BOOT/0R01A000.BIN
-; BOOT/0R01E000.BIN
-; BOOT/0DESC.TXT
 boot:
 	ldx #63			; clear image tables
 	lda #0
@@ -410,7 +392,7 @@ bootflash:
 	dex
 	bne @copy
 
-	jmp flashbuf		; lock and load
+	jsr flashbuf		; lock and load
 
 
 ; load drive code to clusterbuf and execute
@@ -437,7 +419,7 @@ loaddrivebin:
 	ldax clusterbuf
 	stax clusterptr
 	jsr loadclusters
-	jmp clusterbuf		; point of no return
+	jsr clusterbuf		; execute
 
 
 ; load clusters
@@ -462,21 +444,73 @@ loadfpga:
 	lda fpgacluster,x
 	sta cluster,x
 	lda fpgalength,x
-	sta loadend,x
-	lda #0
-	sta loadaddress,x
+	sta loadleft,x
 	dex
 	bpl @copy
-
-	lda #<storefpga		; store to fpga config
-	sta storevector
-	lda #>storefpga
-	sta storevector+1
 
 	lda #%00000110		; halt 65816
 	ctl
 
-	jmp load
+@nextcluster:
+	ldax clusterbuf
+	stax clusterptr
+	jsr vol_read_clust	; read the first cluster
+	bcs @error
+
+	lda #<clusterbuf	; point to the buffer
+	sta loadptr
+	lda #>clusterbuf
+	sta loadptr+1
+
+@upload:
+	lda loadleft + 1	; any 256-byte pages left?
+	ora loadleft + 2
+	beq @loadlast		; nope, load the last few bytes
+
+	ldy #0
+:	lda (loadptr),y		; grab a byte
+	saf			; feed the fpga
+	iny
+	bne :-
+
+	dec loadleft + 1	; decrement number of pages left
+	lda loadleft + 1
+	cmp #$ff
+	bne :+
+	dec loadleft + 2
+:	inc loadptr+1		; increment load ptr
+
+	lda vol_secperclus	; check for end of cluster
+	asl
+	;clc
+	adc #>clusterbuf
+	cmp loadptr+1
+	bne @upload
+
+	jsr vol_next_clust	; find next cluster in chain
+	bcs @error
+	bne @nextcluster
+
+@error:
+	ldax msg_loadfailed
+	jsr debug_puts
+
+	sec
+	rts
+
+@loadlast:
+	lda loadleft		; bytes left to load
+	beq @done
+
+:	lda (loadptr),y
+	saf
+	iny
+	cpy loadleft
+	bne :-
+@done:
+	clc			; all done
+	rts
+
 
 
 ; load a memory image to system ram
@@ -494,11 +528,6 @@ loadimage:
 	cpx #4
 	bne @add
 	plp
-
-	lda #<storeimage	; store to ram
-	sta storevector
-	lda #>storeimage
-	sta storevector+1
 
 	ldax msg_loadingrom
 	jsr debug_puts
@@ -536,27 +565,28 @@ loadimage:
 
 	jsr debug_crlf
 
-	;jmp load
-
-
-; load routine for loadimage/loadfpga
-load:
+; load routine for loadimage
 @nextcluster:
 	ldax clusterbuf
 	stax clusterptr
 	jsr vol_read_clust	; read the first cluster
-	bcc @ok
+	bcs @error
 
-	jmp @error
-
-@ok:	lda #<clusterbuf	; point to the buffer
+	lda #<clusterbuf	; point to the buffer
 	sta loadptr
 	lda #>clusterbuf
 	sta loadptr+1
 
 	ldy #0
 @upload:
-	jsr @store		; indirect store
+	lda loadaddress		; set the 24-bit load address
+	sal			; in the system ram registers
+	lda loadaddress+1
+	sau
+	lda loadaddress+2
+	sab
+	lda (loadptr),y		; grab a byte
+	mst			; store it in system ram
 
 	inc loadaddress		; increment our byte counter
 	bne @skip3
@@ -582,9 +612,6 @@ load:
 
 	clc
 	rts
-
-@store:
-	jmp (storevector)	; indirect store springboard
 
 @next:
 	iny
@@ -651,24 +678,6 @@ load:
 	jsr debug_crlf
 
 	sec
-	rts
-
-
-storefpga:
-	lda (loadptr),y		; grab a byte
-	saf			; feed the fpga
-				; simple enough, eh?
-	rts
-
-storeimage:
-	lda loadaddress		; set the 24-bit load address
-	sal			; in the system ram registers
-	lda loadaddress+1
-	sau
-	lda loadaddress+2
-	sab
-	lda (loadptr),y		; grab a byte
-	mst			; store it in system ram
 	rts
 
 
