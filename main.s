@@ -78,12 +78,12 @@ reseth:
 	bne :-
 
 	jsr relocate
-	jsr checkaltrom		; see if there's a valid rom in bank 5
+	;jsr checkaltrom		; see if there's a valid rom in bank 5
 
 warmstart:
 	jsr clrbss		; clear BSS segment
 
-	jsr gfx_cls		; clear graphics screen
+	;jsr gfx_cls		; clear graphics screen
 	jsr gfx_drawlogo	; print C-ONE logo
 	ldy #29
 	ldx #65
