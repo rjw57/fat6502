@@ -8,6 +8,7 @@
 	.export ctl_select_dev
 
 	.import dev_set
+	.import dev_find_volume
 
 	.import ide_scan
 
@@ -424,25 +425,10 @@ _ctl_select_dev:
 	tax
 	lda devmap,x
 	bne :+
+@error:
 	sec
 	rts
-:	pha
-	cmp #devtype_floppy
-	beq @floppy
-	cmp #devtype_hd
-	beq @hd
-
-	lda #fs_iso9660
-	.byte $2c		; skip next
-@hd:
-	lda #fs_fat32
-	.byte $2c		; skip next
-@floppy:
-	lda #fs_fat12
-
-	jsr vol_set_fs
-	pla
-	jmp dev_set
+:	jmp dev_set
 
 
 	.rodata
