@@ -61,12 +61,12 @@ bar_update:
 	bcc @done
 
 	tax
+	pha
 	sec
 	sbc lastpos
 	stx lastpos
-	pha
-	clc
-	adc #8
+	;clc
+	adc #6
 	tax
 	ldy #28
 	jsr gfx_gotoxy
