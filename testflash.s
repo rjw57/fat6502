@@ -69,13 +69,6 @@ io_get		= real_io_get
 	.segment "RELOC"
 
 
-flash_clear	= $3f20
-flash_clear15	= $3f22
-flash_shift	= $3f26
-flash_inc	= $3f28
-flash_data	= $3f2c
-
-
 	.zeropage
 
 addr:	.res 3
@@ -133,8 +126,6 @@ main:
 	beq f_inc
 	cmp #'2'
 	beq f_shift
-	cmp #'3'
-	beq f_clear15
 	cmp #'b'
 	beq f_bank
 	cmp #'r'
@@ -167,13 +158,6 @@ f_shift:
 	asl addr
 	rol addr+1
 	rol addr+2
-	jmp main
-
-f_clear15:
-	bit flash_clear15
-	lda addr+1
-	and #$7f
-	sta addr+1
 	jmp main
 
 f_bank:
@@ -413,7 +397,6 @@ initmsg:
 	.byte "0 - clear",13,10
 	.byte "1 - increment",13,10
 	.byte "2 - shift left",13,10
-	.byte "3 - clear bit 15",13,10
 	.byte "b - select bank",13,10
 	.byte "r - read byte",13,10
 	.byte "w - write byte",13,10

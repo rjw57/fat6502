@@ -229,3 +229,11 @@ cpuspeed	= 2
 	.macro gst
 	.byte $04
 	.endmacro
+
+
+; --- Flash ROM ---
+
+flash_clear	= $3f60
+flash_shift	= $3f66
+flash_inc	= $3f68
+flash_data	= $3f6c

@@ -33,11 +33,6 @@
 	.segment "RELOC"
 
 
-flash_clear	= $3f60
-flash_shift	= $3f66
-flash_inc	= $3f68
-flash_data	= $3f6c
-
 flashbuf	= $2000
 
 
