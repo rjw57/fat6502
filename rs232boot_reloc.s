@@ -10,6 +10,11 @@
 	.import __ROM_START__
 
 
+	.zeropage
+
+rs232_ptr:	.res 2
+
+
 	.segment "RELOC"
 
 cksum:		.res 1
@@ -71,6 +76,12 @@ execmsg:
 	.byte 13,10,0
 
 
+;-----------------------------------------------------------------------
+; RS-232 routines
+; based on groepaz' source
+;-----------------------------------------------------------------------
+
+
 A16550BASE	= $3f20
 fifo_rxd	= A16550BASE + 0	; (r)
 fifo_txd	= A16550BASE + 0	; (w)
@@ -84,12 +95,6 @@ fifo_mcr	= A16550BASE + 4
 fifo_lsr	= A16550BASE + 5
 fifo_msr	= A16550BASE + 6	; (r)
 fifo_scratch	= A16550BASE + 7	; (r/w)
-
-
-	.zeropage
-
-rs232_ptr:	.res 2
-
 
 baud_50		= 0
 baud_110	= 1
@@ -106,8 +111,6 @@ baud_57600	= 11
 baud_115200	= 12
 baud_230400	= 13
 
-
-	.segment "RELOC"
 
 rs232_puts:
 	sta rs232_ptr
@@ -196,11 +199,8 @@ rs232_puthex:
 	ldx @xtemp
 	jmp rs232_put
 
-	.bss
-
-@xtemp:	.res 1
-
-	.rodata
+@xtemp:
+	.res 1
 
 hextoascii:
 	.byte "0123456789abcdef"
