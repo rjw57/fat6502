@@ -12,6 +12,7 @@
 	.import dev_init
 	.import dev_find_volume
 	.import devtype
+	.import devmap
 	.importzp ptr
 	.import __BSS_RUN__
 	.import __BSS_SIZE__
@@ -74,7 +75,7 @@ reseth:
 
 	jsr gfx_cls		; clear graphics screen
 	jsr gfx_drawlogo	; print C-ONE logo
-	ldy #31
+	ldy #29
 	ldx #65
 	jsr gfx_gotoxy
 	ldax msg_bootromv
@@ -147,6 +148,26 @@ reseth:
 	jmp @failedctl
 
 @devpresent:
+	lda #0
+	sta currdev
+
+	ldy currctl		; populate device array
+	ldx #72
+	jsr gfx_gotoxy
+	ldx currdev		; print small icon
+:	lda devmap,x
+	asl
+	tax
+	lda devchar,x
+	jsr gfx_putchar
+	inx
+	lda devchar,x
+	jsr gfx_putchar
+	inc currdev
+	ldx currdev
+	cpx #4
+	bne :-
+
 	lda #0			; start with dev 0
 	sta currdev
 
@@ -155,7 +176,6 @@ reseth:
 	bcc @selected
 	jmp @next
 @selected:
-
 	jsr drawbooticon	; draw icon
 
 	lda currdev
@@ -269,6 +289,12 @@ devicon:
 	.word devicon_hd
 	.word devicon_cd
 	.word devicon_floppy
+
+devchar:
+	.byte 0, 0
+	.byte $8d, $8e
+	.byte $8f, $90
+	.byte $91, $92
 
 msg_init1:
 	.byte "C-ONE boot rom v",0
