@@ -99,7 +99,8 @@ cluster			1f10		; set before calling vol_read_clust
 					; or vol_next_clust
 (reserved)		1f14-1f3f
 lba			1f40		; set before calling dev_read_sector
-(reserved)		1f44-1fff
+devtype			1f44		; current device type
+(reserved)		1f45-1fff
 flashbuf		2000-3eff	; reserved for flash code or
 					; application code
 
@@ -168,6 +169,8 @@ gfx_drawlogo		ff83		; draw C-ONE logo
 gfx_gotoxy		ff86		; set cursor position
 gfx_puts		ff89		; print string
 gfx_putchar		ff8c		; print character
+gfx_quickcls		ff8f		; clear text area
+gfx_drawicon		ff92		; draw 32x32 icon
 </pre>
 
 

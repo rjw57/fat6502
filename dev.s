@@ -9,6 +9,7 @@
 	.export dev_read_sector
 	.export dev_set
 	.export lba
+	.export devtype
 	.exportzp sectorptr
 
 	.import ide_init		; ide hard drives
@@ -60,6 +61,7 @@ dev_set:		jmp _dev_set
 	.segment "DEVBSS"
 
 lba:			.res 4	; 32-bit block address
+devtype:		.res 1	; current device type
 
 
 	.segment "DEVZP", zeropage
@@ -71,6 +73,7 @@ sectorptr:		.res 2	; pointer to where data is loaded
 
 ; call with device identifier in A
 _dev_set:
+	sta devtype
 	cmp #devtype_hd
 	beq @ide
 	cmp #devtype_cd

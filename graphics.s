@@ -5,6 +5,8 @@
 	.export gfx_gotoxy
 	.export gfx_puts
 	.export gfx_putchar
+	.export gfx_quickcls
+	.export gfx_drawicon
 
 
 	.segment "GFXVECTORS"
@@ -14,6 +16,8 @@ gfx_drawlogo:		jmp _gfx_drawlogo
 gfx_gotoxy:		jmp _gfx_gotoxy
 gfx_puts:		jmp _gfx_puts
 gfx_putchar:		jmp _gfx_putchar
+gfx_quickcls:		jmp _gfx_quickcls
+gfx_drawicon:		jmp _gfx_drawicon
 
 
 	.zeropage
@@ -35,7 +39,28 @@ line:		.res 1
 
 	.code
 
-doclr:
+_gfx_quickcls:
+	lda #0
+	ldy #24
+@nextline:
+	gay
+	ldx #79
+:	gax
+	gst
+	dex
+	bpl :-
+	iny
+	cpy #248
+	bne @nextline
+	rts
+
+
+; clear screen
+_gfx_cls:
+	gab_odd
+	jsr @doclr
+	gab_even
+@doclr:
 	ldy #0
 	tya
 @nextline:
@@ -50,22 +75,8 @@ doclr:
 	rts
 
 
-; clear screen
-_gfx_cls:
-	gab_odd
-	jsr doclr
-	gab_even
-	jsr doclr
-	
-	lda #0
-	sta cursx
-	sta cursy
-
-	rts
-
-
 _gfx_drawlogo:
-	ldax (bootlogo-2)		; draw C-ONE logo
+	ldax bootlogo		; draw C-ONE logo
 	stax gfxptr
 
 	ldy #0
@@ -249,6 +260,65 @@ gfx_plotchar:
 	iny
 	cpy ystop
 	bne :-
+	rts
+
+
+; draw 32x32 icon at cursor position
+_gfx_drawicon:
+	stax gfxptr
+
+	lda cursx
+	clc
+	adc #4
+	sta tempx
+
+	lda cursy
+	asl
+	asl
+	asl
+	sta line
+	tay
+	clc
+	adc #16
+	sta tempy
+@nextline:
+	gay
+
+	gab_even
+	ldy #0
+	ldx cursx
+:	lda (gfxptr),y
+	gax
+	gst
+	iny
+	inx
+	cpx tempx
+	bne :-
+
+	gab_odd
+	ldy #4
+	ldx cursx
+:	lda (gfxptr),y
+	gax
+	gst
+	iny
+	inx
+	cpx tempx
+	bne :-
+
+	lda gfxptr
+	clc
+	adc #8
+	sta gfxptr
+	bcc :+
+	inc gfxptr+1
+:
+	inc line
+	ldy line
+	cpy tempy
+	bne @nextline
+
+	gab_even
 	rts
 
 

@@ -6,6 +6,8 @@
 
 	.import bootconfig
 	.import entermenu
+	.import devicon
+	.import devtype
 
 	.import cluster
 	.import clusterbuf
@@ -29,6 +31,8 @@
 	.import gfx_gotoxy
 	.import gfx_putchar
 	.import gfx_puts
+	.import gfx_quickcls
+	.import gfx_drawicon
 
 
 	.zeropage
@@ -66,7 +70,19 @@ bootmenu:
 	clc
 	adc #$30
 	sta bootconfig		; and store
-	rts
+
+	jsr gfx_quickcls	; clear screen
+
+	ldx #38			; redraw icon
+	ldy #14
+	jsr gfx_gotoxy
+	lda devtype
+	asl
+	tay
+	lda devicon+1,y
+	tax
+	lda devicon,y
+	jmp gfx_drawicon
 
 
 checkentry:
@@ -212,6 +228,11 @@ menuypos	= 8
 menuxpos	= 26
 
 drawmenu:
+	gab_odd			; clear text screen
+	jsr gfx_quickcls
+	gab_even
+	jsr gfx_quickcls
+
 	ldx #menuxpos
 	ldy #menuypos - 3
 	jsr gfx_gotoxy

@@ -1,12 +1,14 @@
 	.include "drivecpu.i"
 
 	.export reseth
+	.export devicon
 
 	.import bootconfig
 	.import select_config
 	.import boot
 	.import entermenu
 	.import dev_init
+	.import devtype
 	.importzp ptr
 	.import __BSS_RUN__
 	.import __BSS_SIZE__
@@ -29,6 +31,7 @@
 	.import gfx_gotoxy
 	.import gfx_putchar
 	.import gfx_puts
+	.import gfx_drawicon
 
 	.import debug_init
 	.import debug_done
@@ -76,6 +79,17 @@ reseth:
 	ldax ver_str
 	jsr gfx_puts
 
+	ldx #28			; print searching for boot device
+	ldy #12
+	jsr gfx_gotoxy
+	ldax msg_searching
+	jsr gfx_puts
+
+	ldx #38			; draw icon
+	ldy #14
+	jsr gfx_gotoxy
+	ldax devicon_none
+	jsr gfx_drawicon
 
 	lda #0			; flag whether we should display boot menu
 	sta entermenu
@@ -138,6 +152,18 @@ reseth:
 	bcc @selected
 	jmp @next
 @selected:
+
+	ldx #38			; draw icon
+	ldy #14
+	jsr gfx_gotoxy
+	lda devtype
+	asl
+	tay
+	lda devicon+1,y
+	tax
+	lda devicon,y
+	jsr gfx_drawicon
+
 	lda currdev
 	jsr dev_init		; initialize low level routines
 	bcs @next
@@ -245,6 +271,19 @@ clrbss:
 	rts
 
 
+	.rodata
+
+devicon_none:	.incbin "devtype_none.bin"
+devicon_hd:	.incbin "devtype_hd.bin"
+devicon_cd:	.incbin "devtype_cd.bin"
+devicon_floppy:	.incbin "devtype_floppy.bin"
+
+devicon:
+	.word devicon_none
+	.word devicon_hd
+	.word devicon_cd
+	.word devicon_floppy
+
 msg_init1:
 	.byte "C-ONE boot rom v",0
 msg_init2:
@@ -280,3 +319,5 @@ msg_allfailed:
 
 msg_bootromv:
 	.byte "Boot ROM v",0
+msg_searching:
+	.byte "Searching for boot device",0
