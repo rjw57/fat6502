@@ -205,7 +205,7 @@ byte Loop6502(register M6502 *R) {
 byte Patch6502(register byte Op,register M6502 *R) {
   unsigned char l, h;
   unsigned long offs;
-  int i;
+  int i, r;
 
   switch(Op) {
 
@@ -303,7 +303,11 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	    }
 	  } else {
 	    if (!silent) printf("!IDE Read sector on unsupported device\n");
+	    for (r = 0; r < 8; ++r) {
+	      C1IO.idereg[1][r] = cdsig[r];
+	    }
 	    C1IO.idereg[C1IO.ide_channel][7] = 0x41;
+	    C1IO.idereg[C1IO.ide_channel][1] = 0x08;
 	  }
 	  break;
 
@@ -319,7 +323,11 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	    }
 	  } else {
 	    if (!silent) printf("!IDE identify device on unsupported device\n");
+	    for (r = 0; r < 8; ++r) {
+	      C1IO.idereg[1][r] = cdsig[r];
+	    }
 	    C1IO.idereg[C1IO.ide_channel][7] = 0x41;
+	    C1IO.idereg[C1IO.ide_channel][1] = 0x08;
 	  }
 	  break;
 
@@ -333,6 +341,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	  } else {
 	    if (!silent) printf("!IDE packet command on unsupported device\n");
 	    C1IO.idereg[C1IO.ide_channel][7] = 0x41;
+	    C1IO.idereg[C1IO.ide_channel][1] = 0x08;
 	  }
 	  break;
 
@@ -349,6 +358,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	  } else {
 	    if (!silent) printf("!IDE identify packet device on unsupported device\n");
 	    C1IO.idereg[C1IO.ide_channel][7] = 0x41;
+	    C1IO.idereg[C1IO.ide_channel][1] = 0x08;
 	  }
 	  break;
 
@@ -356,6 +366,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
 	default:
 	  if (!silent) printf("!IDE unknown command: 0x%02x\n", R->A);
 	  C1IO.idereg[C1IO.ide_channel][7] = 0x41;
+	  C1IO.idereg[C1IO.ide_channel][1] = 0x08;
 	  break;
 
 	}

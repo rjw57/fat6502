@@ -14,7 +14,6 @@
 	.import ide_read_data
 	.import ide_read_error
 	.import ide_write_reg
-	.import ide_write_reg_no_wait
 	.import atapi_read_sector
 
 	.import lba
@@ -210,7 +209,7 @@ identify:
 @notcd:
 	txa
 	ldy #ide_command
-	jsr ide_write_reg_no_wait
+	jsr ide_write_reg
 
 	jsr delay_400ns
 

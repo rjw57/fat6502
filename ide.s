@@ -10,7 +10,6 @@
 	.export ide_wait_drq
 	.export ide_write_data
 	.export ide_write_reg
-	.export ide_write_reg_no_wait
 	.export ide_read_reg
 	.export ide_read_status
 	.export ide_read_error
@@ -122,20 +121,20 @@ ide_scan:
 	lda #devtype_hd
 	sta ide_drivetab,x
 
-	lda #1
-	cmp regmap+2
-	bne @done
-	cmp regmap+3
-	bne @done
-	lda #$14
-	cmp regmap+4
-	bne @done
-	lda #$eb
-	cmp regmap+5
-	bne @done
+	;lda #1
+	;cmp regmap+2
+	;bne @done
+	;cmp regmap+3
+	;bne @done
+	;lda #$14
+	;cmp regmap+4
+	;bne @done
+	;lda #$eb
+	;cmp regmap+5
+	;bne @done
 
-	lda #devtype_cd		; we found an ATAPI drive
-	sta ide_drivetab,x
+	;lda #devtype_cd		; we found an ATAPI drive
+	;sta ide_drivetab,x
 
 @done:
 	inc currdrive
@@ -173,17 +172,32 @@ ide_identify:
 
 	lda #idecmd_identify	; identify HD
 
-	ldy currtype
-	cpy #devtype_cd
-	bne @notcd
-
-	lda #idecmd_identifypacket	; identify CD
-@notcd:
+;	ldy currtype
+;	cpy #devtype_cd
+;	bne @notcd
+;
+;	lda #idecmd_identifypacket	; identify CD
+;@notcd:
 	ldy #ide_command
-	jsr ide_write_reg_no_wait	; we don't want to get stuck here...
+	jsr ide_write_reg		; we don't want to get stuck here...
 
 	jsr delay_400ns
 
+	jsr ide_read_error		; check for error condition
+	bcc @noerror
+
+	lda #idecmd_identifypacket	; identify CD
+	ldy #ide_command
+	jsr ide_write_reg		; we don't want to get stuck here...
+	jsr delay_400ns
+	jsr ide_read_error		; check for error condition
+	bcs @failed			; ok, no CD
+
+	ldx currdrive			; set type to CD
+	lda #devtype_cd
+	sta ide_drivetab,x
+
+@noerror:
 	jsr ide_wait_drq		; wait for data if BSY drops and DRQ
 	bcs @failed			; is not set, we're fux0red
 
@@ -420,17 +434,6 @@ ide_write_reg:
 	and #$c0		; that BSY isn't set
 	bne @write_command
 	jmp @do_write
-
-
-; write A/X to register in Y without waiting for BSY or RDY
-ide_write_reg_no_wait:
-	pha
-	tya			; write to register in Y
-	ora ide_channel
-	csa
-	pla
-	ist			; write A/X
-	rts
 
 
 ; read A/X from register in Y
