@@ -1,6 +1,8 @@
 	.include "drivecpu.i"
 
 	.export boot
+	.export drawbooticon
+	.export printvolname
 	.export bootconfig
 	.export entermenu
 
@@ -22,6 +24,7 @@
 	.import vol_isflashbin
 	.import vol_firstnamechar
 	.import vol_endofdir
+	.import vol_volname
 
 	.import romaddr
 	.import stat_length
@@ -143,17 +146,8 @@ boot:
 	jsr gfx_gotoxy
 	ldax msg_bootingfrom
 	jsr gfx_puts
-
-	ldx #38			; redraw icon
-	ldy #14
-	jsr gfx_gotoxy
-	lda devtype
-	asl
-	tay
-	lda devicon+1,y
-	tax
-	lda devicon,y
-	jsr gfx_drawicon
+	jsr drawbooticon	; draw device icon
+	jsr printvolname	; print volume name
 
 @checkentry:
 	jsr vol_endofdir	; check for end of dir
@@ -326,6 +320,34 @@ asciitohex:
 	sbc #7
 @skip:
 	rts
+
+
+; draw boot device icon and print volume name
+drawbooticon:
+	ldx #38			; redraw icon
+	ldy #14
+	jsr gfx_gotoxy
+	lda devtype
+	asl
+	tay
+	lda devicon+1,y
+	tax
+	lda devicon,y
+	jmp gfx_drawicon
+
+printvolname:
+	jsr vol_volname		; print volume name
+	tya
+	lsr
+	eor #$ff
+	clc
+	adc #41
+	tax
+	ldy #17
+	jsr gfx_gotoxy
+	jsr vol_volname
+	jmp gfx_puts
+
 
 
 ; load FLASH.BIN
