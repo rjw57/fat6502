@@ -48,6 +48,11 @@ debug_ptr:	.res 2
 sspresent:	.res 1		; $80 for ss present, $00 for no ss
 
 
+	.bss
+
+xtemp:	.res 1
+
+
 	.rodata
 
 debug_baudrates:
@@ -341,7 +346,7 @@ _debug_put:
 	bit sspresent
 	bpl @return
 
-	stx xtemp
+	stx @temp
 	pha
 	; transmit buf ready?
 ;@waitbuf:
@@ -380,11 +385,18 @@ _debug_put:
 
 	ldx #$ff		;deselcet all CEs
 	sca			;very importend for the other stuff
-	ldx xtemp
+	ldx @temp
 	
 @return:
 	clc
 	rts
+
+
+	.bss
+
+@temp:	.res 1
+
+	.code
 
 
 _debug_crlf:
@@ -413,11 +425,6 @@ _debug_puthex:
 	lda hextoascii,x
 	ldx xtemp
 	jmp debug_put
-
-	.bss
-
-xtemp:	.res 1
-
 
 	.code
 
