@@ -6,8 +6,11 @@
 	.import bootconfig
 	.import select_config
 	.import boot
+	.import drawbooticon
+	.import printvolname
 	.import entermenu
 	.import dev_init
+	.import dev_find_volume
 	.import devtype
 	.importzp ptr
 	.import __BSS_RUN__
@@ -18,7 +21,7 @@
 
 	.import vol_fstype
 	.import vol_set_fs
-	.import vol_read_ptable
+	.import vol_read_volid
 
 	.import timestamp
 	.import ver_str
@@ -153,16 +156,7 @@ reseth:
 	jmp @next
 @selected:
 
-	ldx #38			; draw icon
-	ldy #14
-	jsr gfx_gotoxy
-	lda devtype
-	asl
-	tay
-	lda devicon+1,y
-	tax
-	lda devicon,y
-	jsr gfx_drawicon
+	jsr drawbooticon	; draw icon
 
 	lda currdev
 	jsr dev_init		; initialize low level routines
@@ -174,21 +168,13 @@ reseth:
 	jsr debug_putdigit
 	jsr debug_crlf
 
-	ldax msg_readptable	; read volume info
-	jsr debug_puts
+	jsr dev_find_volume	; inspect filesystem
+	bcs @next
+	jsr vol_set_fs		; set the filesystem
+	jsr vol_read_volid	; initialize volume data
+	bcs @next
 
-	lda vol_fstype		; save the fstype
-	pha
-	jsr vol_read_ptable	; find the boot partition
-	pla
-	bcs @nextfailed
-
-	cmp vol_fstype		; see if it changed
-	beq @fsdidntchange
-
-	lda vol_fstype		; can happen with FAT
-	jsr vol_set_fs		; set the new fs
-@fsdidntchange:
+	jsr printvolname	; print volume name
 
 	ldax msg_selectconfig	; print config number
 	jsr debug_puts
@@ -294,8 +280,6 @@ msg_erasefpga:
 	.byte "Erasing FPGA",13,10,0
 msg_ideinit:
 	.byte "Initializing IDE interface",13,10,0
-msg_readptable:
-	.byte "Reading partition table",13,10,0
 msg_selectconfig:
 	.byte "Selecting config ",0
 msg_boot:
