@@ -104,6 +104,7 @@ warmstart:
 	;jsr select_config	; check which config to boot (0-9)
 	lda bootconfig
 	sta bootconfig
+	dec entermenu		; force boot menu
 	jmp @debuginit
 	bcs @default		; is holding a config key?
 
