@@ -61,7 +61,7 @@ bootflash.bin: bootflash.o graphics.o debug.o buffers.o vectors.o version.o time
 	$(LD) -C $(CFG) -m bootflash.map -o $@ $^
 
 testcpc.bin: testcpc.o debug.o buffers.o vectors.o version.o checksum.o controller.o dev.o vol.o fat.o ide.o iso9660.o floppy.o zeropage.o dsk.o rom.o romfs.o
-	$(LD) -C $(CFG) -m testcpc.map -o $@ $^
+	$(LD) -C $(CFG) -m testcpc.map --dbgfile testcpc.dbg -o $@ $^
 
 .PHONY: timestamp.s
 timestamp.s:
