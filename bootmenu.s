@@ -208,33 +208,67 @@ copyline:
 	rts
 
 
-menuypos	= 10
-menuxpos	= 10
+menuypos	= 8
+menuxpos	= 26
 
 drawmenu:
-	lda #1			; character to print
+	ldx #menuxpos
+	ldy #menuypos - 3
+	jsr gfx_gotoxy
+	ldax msg_selectconfig
+	jsr gfx_puts
+
+	ldx #menuxpos
+	ldy #menuypos + 12
+	jsr gfx_gotoxy
+	ldax msg_updown
+	jsr gfx_puts
+
+	ldx #menuxpos - 1
+	ldy #menuypos + 14
+	jsr gfx_gotoxy
+	ldax msg_seconds
+	jsr gfx_puts
+
+	ldx #menuxpos - 8
+	ldy #menuypos + 17
+	jsr gfx_gotoxy
+	ldax msg_holddown
+	jsr gfx_puts
+
 
 	ldx #menuxpos - 4	; draw top
 	ldy #menuypos - 1
 	jsr gfx_gotoxy
-	ldx #36
+	lda #7
+	jsr gfx_putchar
+	lda #12			; character to print
+	ldx #35
 :	jsr gfx_putchar
 	dex
 	bne :-
+	lda #8
+	jsr gfx_putchar
 
 	ldx #menuxpos - 4	; draw bottom
 	ldy #menuypos + 10
 	jsr gfx_gotoxy
-	ldx #36
+	lda #9
+	jsr gfx_putchar
+	lda #12
+	ldx #35
 :	jsr gfx_putchar
 	dex
 	bne :-
+	lda #10
+	jsr gfx_putchar
 
+	lda #11			; draw sides
 	ldy #menuypos
 :	ldx #menuxpos - 4
 	jsr gfx_gotoxy
 	jsr gfx_putchar
-	ldx #menuxpos + 31
+	ldx #menuxpos + 32
 	jsr gfx_gotoxy
 	jsr gfx_putchar
 	iny
@@ -348,8 +382,8 @@ selectconfig:
 	sta vbl
 	lda seconds
 	bmi @erasemsg		; skip check if set to negative
-	dec seconds
 	jsr printseconds
+	dec seconds
 	lda seconds
 	bpl @checkkey
 @return:
@@ -382,12 +416,12 @@ selectconfig:
 	lda erased
 	beq @checkkey
 
-	ldx #4
-	ldy #28
+	ldx #menuxpos - 1
+	ldy #menuypos + 14
 	jsr gfx_gotoxy
 
 	lda #' '
-	ldx #50
+	ldx #31
 :	jsr gfx_putchar
 	dex
 	bne :-
@@ -406,12 +440,9 @@ waitvbl:
 
 
 printseconds:
-	ldx #4
-	ldy #28
+	ldx #menuxpos + 20
+	ldy #menuypos + 14
 	jsr gfx_gotoxy
-
-	ldax msg_seconds1
-	jsr gfx_puts
 
 	lda seconds
 	clc
@@ -425,15 +456,16 @@ printseconds:
 :	txa
 	jsr gfx_putchar
 	tya
-	jsr gfx_putchar
-
-	ldax msg_seconds2
-	jmp gfx_puts
+	jmp gfx_putchar
 
 
 	.rodata
 
-msg_seconds1:
-	.byte "Default configuration will be loaded in ",0
-msg_seconds2:
-	.byte " seconds",0
+msg_seconds:
+	.byte "Default will boot in 10 seconds",0
+msg_selectconfig:
+	.byte "Select computer configuration",0
+msg_updown:
+	.byte 3, "/", 4," to select, Enter to start",0
+msg_holddown:
+	.byte "Hold down 0-9 to quick select and bypass menu",0

@@ -68,7 +68,7 @@ reseth:
 
 	jsr gfx_cls		; clear graphics screen
 	jsr gfx_drawlogo	; print C-ONE logo
-	ldy #0
+	ldy #31
 	ldx #65
 	jsr gfx_gotoxy
 	ldax msg_bootromv
