@@ -130,12 +130,14 @@ iso_read_volid:
 	sta rootdir,x
 	dex
 	bpl :-
-	; fall through
+
+	clc
+	rts
 
 
 ; write cluster
 iso_write_clust:
-	clc
+	sec
 	rts
 
 
