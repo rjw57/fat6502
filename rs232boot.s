@@ -5,6 +5,8 @@
 
 	.import rs232boot
 
+	.import timestamp
+
 	.import __RELOC_SIZE__
 	.import __RELOC_RUN__
 	.import __RELOC_LOAD__
@@ -86,5 +88,3 @@ initmsg1:
 	.byte "RS-232 boot rom downloader (",0
 initmsg2:
 	.byte ")",13,10,0
-timestamp:
-	.byte "fixme",0

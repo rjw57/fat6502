@@ -29,7 +29,8 @@ OBJS = \
 	debug.o \
 	vol.o \
 	dev.o \
-	controller.o
+	controller.o \
+	version.o
 
 INCS = \
 	drivecpu.i \
@@ -41,8 +42,15 @@ all: bigboot.bin boot232.bin
 bigboot.bin: $(OBJS) $(INCS)
 	$(LD) -C $(CFG) -m bigboot.map -o $@ $(OBJS)
 
-boot232.bin: rs232boot.o rs232boot_reloc.o debug.o buffers.o vectors.o
+boot232.bin: rs232boot.o rs232boot_reloc.o debug.o buffers.o vectors.o version.o
 	$(LD) -C $(CFG) -m boot232.map -o $@ $^
+
+.PHONY: version.s
+version.s:
+	@echo ".export timestamp" > version.s
+	@echo "timestamp:" >> version.s
+	@date "+ .byte \"%Y-%m-%d %H:%M:%S %Z\"" >> version.s
+	@echo " .byte 0" >> version.s
 
 scan.bin: scan.o debug.o buffers.o vectors.o ide.o dev.o floppy.o
 	$(LD) -C $(CFG) -m scan.map -o $@ $^
