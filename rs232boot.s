@@ -4,8 +4,6 @@
 
 	.import init232boot
 
-	.import debug_init
-
 
 	.segment "VOLZP", zeropage
 	.segment "DEVZP", zeropage
@@ -28,7 +26,5 @@ reseth:
 
 	lda #%00000110		; initalize ctl reg
 	ctl
-
-	jsr debug_init
 
 	jmp init232boot

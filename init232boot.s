@@ -13,6 +13,7 @@
 	.import __RELOC_RUN__
 	.import __RELOC_LOAD__
 
+	.import debug_init
 	.import debug_puts
 	.import debug_puthex
 
@@ -26,6 +27,8 @@ dest:	.res 2
 	.code
 
 init232boot:
+	jsr debug_init
+
 	ldax __RELOC_LOAD__
 	stax src
 
