@@ -1,6 +1,8 @@
 	.include "drivecpu.i"
 
+
 	.export reseth
+	.export warmstart
 
 	.importzp ptr
 
@@ -16,31 +18,16 @@
 lastkey:	.res 1
 
 
-	.segment "VOLZP" : zeropage
-	.segment "DEVZP" : zeropage
-	.segment "VOLBSS"
-	.segment "DEVBSS"
-	.segment "VOLVECTORS"
-	.segment "DEVVECTORS"
-	.segment "CTLVECTORS"
-	.segment "DBGVECTORS"
-	.segment "GFXVECTORS"
-
-
-	.segment "RELOC"
-
-; this is a dummy segment just to suppress an ld65 warning
-
-
 	.code
 
 reseth:
+warmstart:
 	sei
 	cld
 	ldx #$ff
 	txs
 
-	lda #%00000111		; initalize ctl reg
+	lda #%00000110		; initalize ctl reg
 	ctl
 
 	jsr debug_init
