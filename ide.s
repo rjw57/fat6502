@@ -346,7 +346,18 @@ ide_read_256_words:
 
 	ldy #0			; store data at sectorptr
 @next:
-	jsr ide_read_data
+	;jsr ide_read_data	; inlined
+	lda #ide_status
+	ora ide_channel
+	csa
+@checkstatus:
+	ild
+	and #$08		; check that DRQ is set
+	beq @checkstatus
+	lda ide_channel
+	csa
+	ild
+	;rts
 	sta (sectorptr),y
 	iny
 	txa
@@ -501,7 +512,7 @@ ide_read_data:
 	lda ide_channel
 	csa
 	ild
-	cmp #$00
+	;cmp #$00
 	rts
 
 
@@ -667,7 +678,18 @@ atapi_read_sector:
 	ldy #0			; store data at sectorptr
 
 @nextpage:
-	jsr ide_read_data
+	;jsr ide_read_data	; inlined
+	lda #ide_status
+	ora ide_channel
+	csa
+@checkstatus:
+	ild
+	and #$08		; check that DRQ is set
+	beq @checkstatus
+	lda ide_channel
+	csa
+	ild
+	;rts
 	sta (sectorptr),y
 	iny
 	txa
