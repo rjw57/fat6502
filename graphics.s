@@ -25,7 +25,7 @@ gfx_puthex:		jmp _gfx_puthex
 
 	.zeropage
 
-gfxptr:		.res 2
+gfxptr:		.res 3
 putsptr:	.res 2
 cursy:		.res 1	; cursor y position
 cursx:		.res 1	; cursor x position
@@ -135,60 +135,64 @@ gfx_x_temp4:
         rts
 
 
+; clear screen below logo
 _gfx_quickcls:
+	lda #$0b
+	sta gfxptr + 2
+
+	ldx #7
+@next:
+	ldy #210
+	lda rowsel,x
+	ora #$01
+	sta gfxptr + 1
+	lda #$40
+	sta gfxptr
 	lda #0
-	ldy #32
-@nextline:
-	gay
-	ldx #79
-:	gax
-	gst
+@clear:
+	sam (gfxptr)
+	inc gfxptr
+	sam (gfxptr)
+	inc gfxptr
+	sam (gfxptr)
+	inc gfxptr
+	sam (gfxptr)
+	inc gfxptr
+	sam (gfxptr)
+	inc gfxptr
+	sam (gfxptr)
+	inc gfxptr
+	sam (gfxptr)
+	inc gfxptr
+	sam (gfxptr)
+	inc gfxptr
+	bne :+
+	inc gfxptr + 1
+:	dey
+	bne @clear
+
 	dex
-	bpl :-
-	iny
-	cpy #224
-	bne @nextline
+	bpl @next
+
 	rts
 
 
 ; clear screen
 _gfx_cls:
-	lda #$55
+	lda #$0b
+	sta gfxptr + 2
+	lda #$c0
+	sta gfxptr + 1
+	lda #0
+	sta gfxptr
 
-	ldy #0
-:	gay
-	ldx #0
-	gax
-	gst
-	ldx #79
-	gax
-	gst
-	iny
-	cpy #200
-	bne :-
+@clear:
+	sam (gfxptr)
+	inc gfxptr
+	bne @clear
+	inc gfxptr + 1
+	bne @clear
 
-	ldx #255
-	ldy #255
-:	dex
-	bne :-
-	dey
-	bne :-
-
-	jmp *
-
-	rts
-
-	ldy #0
-	tya
-@nextline:
-	gay
-	ldx #79
-:	gax
-	gst
-	dex
-	bpl :-
-	iny
-	bne @nextline
 	rts
 
 
@@ -486,3 +490,5 @@ bootlogo:
 
 hextoascii:
 	.byte "0123456789abcdef"
+rowsel:
+	.byte $c0, $c8, $d0, $d8, $e0, $e8, $f0, $f8
