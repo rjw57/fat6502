@@ -57,6 +57,9 @@ reseth:
 
 	jsr clrbss		; clear BSS segment
 
+	lda #$ff
+	sta bootconfig
+
 	jsr debug_init
 
 	ldax msg_init1
@@ -111,6 +114,8 @@ reseth:
 	jsr vol_set_fs
 @fsdidntchange:
 
+	bit bootconfig		; no need to grab it twice
+	bpl @wehaveaconfig
 	ldax msg_selectconfig
 	jsr debug_puts
 	jsr select_config	; check which config to boot (0-9)
@@ -118,6 +123,7 @@ reseth:
 	sta bootconfig
 	jsr debug_putdigit
 	jsr debug_crlf
+@wehaveaconfig:
 
 	ldax msg_boot
 	jsr debug_puts

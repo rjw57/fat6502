@@ -2,22 +2,16 @@
 
 	.export select_config
 
+	.import debug_puthex
+	.import debug_crlf
+
 
 	.code
 
 
 ; select config 0..9, 0 is default
 select_config:
-	ldx #0
-@getcode:
-	lka			; grab a scancode from the keyboard
-	cmp #$00		; if it's 0 the previous one was the last
-	beq @gotlast
-	tax			; keep the code in x
-	bne @getcode
-
-@gotlast:
-	txa
+	lka
 	ldx #9
 @checknext:
 	cmp @numbercodes,x
@@ -27,7 +21,6 @@ select_config:
 @done:
 
 	txa
-	lda #0
 	clc
 	rts
 
