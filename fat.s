@@ -49,6 +49,8 @@ cluster:	.res 4	; 32-bit cluster address
 			; add start of clusters
 			; and you get the logical block address
 sectorbuf:	.res 512
+fatbuf:		.res 512
+fatcache:	.res 4	; 32-bit currently cached fat sector
 
 
 	.code
@@ -221,32 +223,42 @@ f16_next_clust:
 
 	jsr addfatstart		; fat += part-fat
 
-	lda #<sectorbuf
+	jsr isfatcached		; check if fat is already in buffer
+	beq @iscached
+
+	lda #<fatbuf
 	sta sectorptr
-	lda #>sectorbuf
+	lda #>fatbuf
 	sta sectorptr+1
 
 	jsr dev_read_sector
 	bcs @error
 
+	ldx #3			; mark this sector as cached
+:	lda lba,x
+	sta fatcache,x
+	dex
+	bpl :-
+
+@iscached:
 	lda cluster		; offset = cluster<<1
 	asl
 	tax
 	bcs @upperhalf
 
-	lda sectorbuf,x		; copy new cluster address
+	lda fatbuf,x		; copy new cluster address
 	sta cluster
 	inx
-	lda sectorbuf,x
+	lda fatbuf,x
 	sta cluster+1
 
 	jmp @checkeoc
 
 @upperhalf:
-	lda sectorbuf + 256,x
+	lda fatbuf + 256,x
 	sta cluster
 	inx
-	lda sectorbuf + 256,x
+	lda fatbuf + 256,x
 	sta cluster+1
 
 @checkeoc:
@@ -290,45 +302,55 @@ f32_next_clust:
 
 	jsr addfatstart		; fat += part_fat
 
-	lda #<sectorbuf
+	jsr isfatcached		; check if fat is already in buffer
+	beq @iscached
+
+	lda #<fatbuf
 	sta sectorptr
-	lda #>sectorbuf
+	lda #>fatbuf
 	sta sectorptr+1
 
 	jsr dev_read_sector
 	bcs @error
 
+	ldx #3			; mark this sector as cached
+:	lda lba,x
+	sta fatcache,x
+	dex
+	bpl :-
+
+@iscached:
 	lda cluster		; offset = (cluster & 127)<<2
 	asl
 	asl
 	tax
 	bcs @upperhalf
 
-	lda sectorbuf,x		; copy new cluster address
+	lda fatbuf,x		; copy new cluster address
 	sta cluster
 	inx
-	lda sectorbuf,x
+	lda fatbuf,x
 	sta cluster+1
 	inx
-	lda sectorbuf,x
+	lda fatbuf,x
 	sta cluster+2
 	inx
-	lda sectorbuf,x
+	lda fatbuf,x
 	sta cluster+3
 
 	jmp @checkeoc
 
 @upperhalf:
-	lda sectorbuf + 256,x
+	lda fatbuf + 256,x
 	sta cluster
 	inx
-	lda sectorbuf + 256,x
+	lda fatbuf + 256,x
 	sta cluster+1
 	inx
-	lda sectorbuf + 256,x
+	lda fatbuf + 256,x
 	sta cluster+2
 	inx
-	lda sectorbuf + 256,x
+	lda fatbuf + 256,x
 	sta cluster+3
 
 @checkeoc:
@@ -366,6 +388,19 @@ addfatstart:
 	lda lba+3
 	adc part_fat+3
 	sta lba+3
+	rts
+
+
+; check if fat is already cached
+isfatcached:
+	ldx #0
+:	lda lba,x
+	cmp fatcache,x
+	bne @no
+	inx
+	cpx #4
+	bne :-
+@no:
 	rts
 
 
