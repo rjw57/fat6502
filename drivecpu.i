@@ -5,7 +5,7 @@ cpuspeed	= 2
 ; --- Flash ROM ---
 
 flash_clear	= $00
-flash_shift	= $06
+flash_shift	= $04
 flash_inc	= $08
 flash_data	= $0c
 
