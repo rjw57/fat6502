@@ -27,6 +27,9 @@
 
 	.import stat_cluster
 	.import stat_length
+	.import stat_type
+	.importzp type_file, type_dir, type_vol, type_lfn, type_other
+
 	.import romaddr
 	.import vol_secperclus
 	.importzp dirptr
@@ -379,6 +382,26 @@ iso_stat:
 	cpy #14
 	bne :-
 
+	ldy #25			; check entry type
+	lda (dirptr),y
+	ldx #type_file		; check if file
+	and #2			; we only care about the 2nd bit
+	beq @getname
+	ldx #type_dir		; nope, dir
+
+	ldy #33			; check for special . and .. entries
+	lda (dirptr),y
+	beq @dot
+	cmp #1
+	bne @getname
+@dot:
+	tay			; incidentally, len = type + 1
+	iny
+	ldax #dotdot
+	jmp @gotname
+@getname:
+	stx stat_type
+
 	ldy #32			; return name length in y
 	lda (dirptr),y
 	tay
@@ -389,6 +412,7 @@ iso_stat:
 	bcc :+
 	inx
 :
+@gotname:
 	clc
 	rts
 
@@ -430,6 +454,8 @@ iso_read_clust:
 
 	.rodata
 
+dotdot:
+	.byte ".."
 bootdirname:
 	.byte "BOOT"
 fpgabinname:
