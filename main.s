@@ -34,6 +34,11 @@ currdev:	.res 1
 currctl:	.res 1
 
 
+	.segment "RELOC"
+
+; this is a dummy segment just to suppress an ld65 warning
+
+
 	.code
 
 reseth:
