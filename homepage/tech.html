@@ -223,6 +223,8 @@ emulation differs from a genuine 6502 in the following ways:
 
 <h2>I/O Port Addresses</h2>
 
+These are accessed with IN/OUT (Z80) and ZIN/ZOUT (6502).
+
 <table>
 
   <tr>
@@ -233,9 +235,10 @@ emulation differs from a genuine 6502 in the following ways:
   </tr>
 
   <tr>
-    <td class="hexaddr">$bc..$bf</td>
+    <td class="hexaddr">$bc..$bd</td>
     <td>
-      6845 CRTC.
+      6845 CRTC. Available registers are: R1, R4, R5, R6, R7, R9, R12,
+      and R13.
     </td>
   </tr>
 
@@ -249,7 +252,7 @@ emulation differs from a genuine 6502 in the following ways:
   <tr>
     <td class="hexaddr">$ef</td>
     <td>
-      Printer port.
+      Printer port (currently not working).
     </td>
   </tr>
 
@@ -257,6 +260,135 @@ emulation differs from a genuine 6502 in the following ways:
     <td class="hexaddr">$f4..f7</td>
     <td>
       PPI.
+    </td>
+  </tr>
+
+</table>
+
+
+
+<h2>C-ONE I/O Bus</h2>
+
+These are accessed with SCA and IST/ILD (6502).
+
+<table>
+
+  <tr>
+    <td class="hexaddr">$0000..$efff</td>
+    <td>
+      Reserved for future use.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f000..$f0ff</td>
+    <td>
+      Cartridge port <span class="invert">ROML</span>.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f100..$f1ff</td>
+    <td>
+      Cartridge port <span class="invert">I/O2</span>.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f200..$f2ff</td>
+    <td>
+      Clock port 1 (Silver Surfer).
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f300..$f3ff</td>
+    <td>
+      SID socket 1 (left channel).
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f400..$f4ff</td>
+    <td>
+      Cartridge port <span class="invert">ROMH</span>.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f500..$f5ff</td>
+    <td>
+      Cartridge port <span class="invert">I/O1</span>.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f600..$f6ff</td>
+    <td>
+      Clock port 2.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f700..$f7ff</td>
+    <td>
+      SID socket 2 (right channel).
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f800..$f8ff</td>
+    <td>
+      Enable status register buffer.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f900..$f9ff</td>
+    <td>
+      Printer port data output register latch.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$fa00..$faff</td>
+    <td>
+      Printer port DDR register latch.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$fb00..$fbff</td>
+    <td>
+      Serial port registers.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$fc00..$fcff</td>
+    <td>
+      PCI GRNT RESET.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$fd00..$fdff</td>
+    <td>
+      PCI0 GRNT SET.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$fe00..$feff</td>
+    <td>
+      PCI1 GRNT SET.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$ff00..$ffff</td>
+    <td>
+      Release chip selects. Read from $ffff after accessing I/O.
     </td>
   </tr>
 
@@ -308,7 +440,7 @@ flashbuf		2000-3eff	; reserved for flash code or
 
 <b>MEMORY MAPPED I/O AREA</b>
 
-Time will tell.
+Reserved for future use.
 <!--
 ROML			3f00-3f0f	; cartridge port chip select
 I/O2			3f10-3f1f	; cartridge port chip select
@@ -424,15 +556,6 @@ You need to add a cmp #$00, and #$ff, or some other regular 6502
 instruction before you check the registers.
 
 
-<h3>CSA, select address</h3>
-
-CSA uses the value in the accumulator to the IDE address pins:
-
-<pre>  bit 0-2  IDE interface A0-A2
-  bit 3    select IDE channel, 0 = primary, 1 = secondary
-  bit 4-7  unused, set to 0</pre>
-
-
 <h3>CTL, system control</h3>
 
 CTL uses the value in the accumulator to control various I/O lines:
@@ -443,16 +566,32 @@ CTL uses the value in the accumulator to control various I/O lines:
   bit 3-7  unused, set to 0</pre>
 
 
-<h3>ILD, IDE load from register</h3>
+<h3>CSA, select address</h3>
 
-Loads A and X from the currently selected IDE register. The LSB ends
+CSA uses the value in the accumulator to address the IDE vus:
+
+<pre>  bit 0-2  IDE interface A0-A2
+  bit 3    select IDE channel, 0 = primary, 1 = secondary
+  bit 4-7  unused, set to 0</pre>
+
+
+<h3>SCA, set control address</h3>
+
+SCA is used to address the C-ONE I/O bus. The X register is latched as
+the MSB and the A register is latched as the LSB.
+
+
+
+<h3>ILD, load from I/O bus</h3>
+
+Loads A and X from the currently selected I/O register. The LSB ends
 up in A, and if register 0 is read the MSB ends up in X, otherwise X
 is trashed.
 
 
-<h3>IST, IDE store to register</h3>
+<h3>IST, store to I/O bus</h3>
 
-Stores A and X to the currently selected IDE register, see ILD.
+Stores A and X to the currently selected I/O register, see ILD.
 
 
 <h3>LAM, load accumulator from memory</h3>
