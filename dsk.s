@@ -24,6 +24,10 @@
 
 	.importzp clusterptr
 
+	.import debug_puts
+	.import debug_puthex
+	.import debug_crlf
+
 
 	.bss
 
@@ -86,6 +90,15 @@ _dsk_save:
 	;cmp stat_length+3
 	;bne @next
 
+	ldax #msg_savecluster
+	jsr debug_puts
+	ldx #3
+:	lda cluster,x
+	jsr debug_puthex
+	dex
+	bpl :-
+	jsr debug_crlf
+
 	jmp vol_write_clust	; save last cluster
 
 @next:
@@ -99,6 +112,15 @@ _dsk_save:
 	adc #>clusterbuf
 	cmp clusterptr+1
 	bne @save
+
+	ldax #msg_savecluster
+	jsr debug_puts
+	ldx #3
+:	lda cluster,x
+	jsr debug_puthex
+	dex
+	bpl :-
+	jsr debug_crlf
 
 	jsr vol_write_clust
 	bcs @error
@@ -120,6 +142,15 @@ _dsk_load:
 
 ; load routine for dskimage
 @nextcluster:
+	ldax #msg_loadcluster
+	jsr debug_puts
+	ldx #3
+:	lda cluster,x
+	jsr debug_puthex
+	dex
+	bpl :-
+	jsr debug_crlf
+
 	ldax #clusterbuf
 	stax clusterptr		; load to clusterbuf
 	jsr vol_read_clust	; read the cluster
@@ -177,3 +208,11 @@ _dsk_load:
 @error:
 	sec
 	rts
+
+
+	.rodata
+
+msg_loadcluster:
+	.byte "reading cluster ", 0
+msg_savecluster:
+	.byte "writing cluster ", 0
