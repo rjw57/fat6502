@@ -56,7 +56,7 @@ version.s:
 	@echo " .byte 0" >> version.s
 
 clean:
-	$(RM) $(OBJS) bigboot.bin test232.o debug.o test232.bin scan.o scan.bin
+	$(RM) $(OBJS) bigboot.bin boot232.bin testkbd.bin rs232boot.o rs232boot_reloc.o
 
 distclean: clean
 	$(RM) *~
