@@ -142,7 +142,7 @@ ide_identify:
 	;jsr ide_wait_ready	; wait for RDY, with timeout
 	;bcs @done		; ignore timeout
 
-	lda #idecmd_identify	; identify HD
+	lda #idecmd_identify		; identify HD
 	ldy #ide_command
 	jsr ide_write_reg		; we don't want to get stuck here...
 
@@ -281,6 +281,14 @@ ide_init:
 
 	jsr delay_400ns
 
+	jsr ide_read_status
+	bne @checkrdy
+
+@done:
+	clc
+	rts
+
+@checkrdy:
 	lda #0
 	sta init_timeout
 
@@ -297,7 +305,6 @@ ide_init:
 	jsr debug_puthex
 	jsr debug_crlf
 	sec
-@done:
 	rts
 
 	.rodata
@@ -462,17 +469,16 @@ ide_write_data:
 
 ; write A/X to register in Y
 ide_write_reg:
+	cpy #7
+	beq @write_command
 	pha
 	lda #ide_status		; read ide status
 	ora ide_channel
 	csa
-	cpy #7
-	beq @write_command
 @checkstatus:	
 	ild
 	and #$80		; check that BSY isn't set
 	bne @checkstatus
-@do_write:
 	tya			; write to register in Y
 	ora ide_channel
 	csa
@@ -480,12 +486,26 @@ ide_write_reg:
 	ist			; write A/X
 	rts
 
-@write_command:	
-	ild
+@write_command:
+	pha
+	cmp #idecmd_identify
+	beq @do_write
+	cmp #idecmd_identifypacket
+	beq @do_write
+	lda #ide_status		; read ide status
+	ora ide_channel
+	csa
+:	ild
 	eor #$40		; check that RDY is set and
 	and #$c0		; that BSY isn't set
-	bne @write_command
-	jmp @do_write
+	bne :-
+@do_write:
+	tya			; write to register in Y
+	ora ide_channel
+	csa
+	pla
+	ist			; write A/X
+	rts
 
 
 ; read A/X from register in Y
