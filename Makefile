@@ -56,7 +56,11 @@ version.s:
 	@echo " .byte 0" >> version.s
 
 clean:
-	$(RM) $(OBJS) bigboot.bin boot232.bin testkbd.bin rs232boot.o rs232boot_reloc.o
+	$(RM) $(OBJS) \
+		version.s \
+		bigboot.bin boot232.bin testkbd.bin \
+		rs232boot.o rs232boot_reloc.o \
+		bigboot.map boot232.map testkbd.map
 
 distclean: clean
 	$(RM) *~
