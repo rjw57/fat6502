@@ -66,6 +66,16 @@ reseth:
 
 	jsr clrbss		; clear BSS segment
 
+	jsr gfx_cls		; clear graphics screen
+	jsr gfx_drawlogo	; print C-ONE logo
+	ldy #0
+	ldx #65
+	jsr gfx_gotoxy
+	ldax msg_bootromv
+	jsr gfx_puts
+	ldax ver_str
+	jsr gfx_puts
+
 
 	lda #0			; flag whether we should display boot menu
 	sta entermenu
@@ -110,16 +120,6 @@ reseth:
 	ctl
 	lda #%00000111		; back to normal
 	ctl
-
-	jsr gfx_cls		; clear graphics screen
-	jsr gfx_drawlogo
-	ldy #0
-	ldx #65
-	jsr gfx_gotoxy
-	ldax msg_bootromv
-	jsr gfx_puts
-	ldax ver_str
-	jsr gfx_puts
 
 	lda #0			; start with controller 0
 	sta currctl
