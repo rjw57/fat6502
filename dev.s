@@ -25,14 +25,13 @@
 
 	.bss
 
-lba:			.res 4	; 28-bit block address, set bits 28-31 to 0
-
+	.align 2
 vectablesize		= 2
-
 vector_table:		.res vectablesize * 2
-
 dev_init_vector		= vector_table
 dev_read_sector_vector	= vector_table + 2
+
+lba:			.res 4	; 28-bit block address, set bits 28-31 to 0
 
 
 	.rodata
