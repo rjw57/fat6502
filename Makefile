@@ -56,20 +56,11 @@ bigboot.bin: $(OBJS) $(INCS)
 boot232.bin: rs232boot.o rs232boot_reloc.o init232boot.o relocate.o debug.o buffers.o vectors.o version.o timestamp.o checksum.o
 	$(LD) -C $(CFG) -m boot232.map -o $@ $^
 
-testkbd.bin: testkbd.o debug.o buffers.o vectors.o version.o checksum.o
-	$(LD) -C $(CFG) -m testkbd.map -o $@ $^
+bootflash.bin: bootflash.o graphics.o debug.o buffers.o vectors.o version.o timestamp.o checksum.o
+	$(LD) -C $(CFG) -m bootflash.map -o $@ $^
 
 testcpc.bin: testcpc.o debug.o buffers.o vectors.o version.o checksum.o
 	$(LD) -C $(CFG) -m testcpc.map -o $@ $^
-
-test1280.bin: test1280.o buffers.o vectors.o version.o graphics.o checksum.o
-	$(LD) -C $(CFG) -m test1280.map -o $@ $^
-
-testflash.bin: testflash.o graphics.o debug.o buffers.o vectors.o version.o timestamp.o checksum.o
-	$(LD) -C $(CFG) -m testflash.map -o $@ $^
-
-bootflash.bin: bootflash.o graphics.o debug.o buffers.o vectors.o version.o timestamp.o checksum.o
-	$(LD) -C $(CFG) -m bootflash.map -o $@ $^
 
 .PHONY: timestamp.s
 timestamp.s:
@@ -85,11 +76,13 @@ jeri: bigboot.bin boot232.bin
 
 
 clean:
-	$(RM) $(OBJS) \
+	$(RM) *.o \
 		timestamp.s \
-		bigboot.bin boot232.bin testkbd.bin \
 		rs232boot.o rs232boot_reloc.o \
-		bigboot.map boot232.map testkbd.map
+		bigboot.bin bigboot.map \
+		boot232.bin boot232.map \
+		bootflash.bin testflash.map \
+		testcpc.bin testcpc.map \
 
 distclean: clean
 	$(RM) *~
