@@ -31,8 +31,8 @@ reseth:
 	txs
 	sta lastkey
 
-	lda #%01110000		; initalize csa reg
-	csa_unsafe
+	lda #%00000111		; initalize ctl reg
+	ctl
 
 	jsr debug_init
 

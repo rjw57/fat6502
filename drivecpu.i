@@ -23,27 +23,12 @@ cpuspeed	= 2
 ; IDE register select
 ; bit 0-2  A0-A2
 ; bit 3    IDE channel
-; bit 4    CPU DMA control line
-; bit 5    strobe 0 to erase FPGA, set to 1
-; bit 6    CPU RESET control line
-; bit 7    unused, set to 0
+; bits 4-7 unused, set to 0
 
 	.macro csa
-	ora #%01100000		; keep reset and erase line high
 	.byte $5a
 	.endmacro
 
-	.macro csa_unsafe
-	.byte $5a
-	.endmacro
-
-; erase FPGA
-	.macro clf
-	lda #%01000000
-	.byte $5a
-	lda #%01100000
-	.byte $5a
-	.endmacro
 
 ; IDE load from register
 ; LSB in A, MSB in X
@@ -63,6 +48,16 @@ cpuspeed	= 2
 
 
 ; --- System config ---
+
+; System control
+; bit 0    CPU DMA control line, active low
+; bit 1    erase FPGA, strobe low
+; bit 2    CPU RESET control line, active low
+; bits 3-7 unused, set to 0
+
+	.macro ctl
+	.byte $0b
+	.endmacro
 
 ; system ram memory bank select
 	.macro sab

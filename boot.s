@@ -277,6 +277,9 @@ loadfpga:
 	lda #>storefpga
 	sta storevector+1
 
+	lda #%00000110		; halt 65816
+	ctl
+
 	jmp load
 
 

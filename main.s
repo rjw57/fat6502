@@ -48,9 +48,6 @@ reseth:
 	ldx #$ff
 	txs
 
-	lda #%01100000		; initalize csa reg
-	csa_unsafe
-
 	ldx #0			; clear zp and stack
 	txa
 :	sta $00,x
@@ -74,7 +71,10 @@ reseth:
 
 	ldax msg_erasefpga
 	jsr debug_puts
-	clf			; erase FPGA
+	lda #%00000101		; erase FPGA
+	ctl
+	lda #%00000111		; back to normal
+	ctl
 
 	jsr gfx_cls		; clear graphics screen
 	jsr gfx_drawlogo
@@ -139,15 +139,14 @@ reseth:
 	ldax msg_done
 	jsr debug_puts
 	jsr debug_done
-	lda #%00100000		; reset 65816
-	csa_unsafe
+	lda #%00000010		; reset 65816
+	ctl
 	nop
 	nop
 	nop
-	lda #%01110000		; start 65816
-	csa_unsafe
-	trc $ff			; success
-	jmp *
+	lda #%00000111		; start 65816
+	ctl
+	jmp *			; success
 
 
 @nextfailed:
@@ -171,8 +170,7 @@ failure:
 	ldax msg_allfailed
 	jsr debug_puts
 
-	inc $d020		; fix me
-	jmp *-3
+	jmp *			; failure
 
 
 ; clear BSS segment
