@@ -26,6 +26,7 @@
 	.export dstr_readcluster
 	.export dstr_loadaddress
 	.export dstr_dircluster
+	.export dstr_foundfat12
 	.export dstr_foundfat16
 	.export dstr_foundfat32
 	.export dstr_loadfailed
@@ -235,10 +236,13 @@ debug_put:
 
 
 debug_crlf:
+	pha
 	lda #13
 	jsr debug_put
 	lda #10
-	jmp debug_put
+	jsr debug_put
+	pla
+	rts
 
 
 debug_puthex:
@@ -308,6 +312,8 @@ dstr_loadaddress:
 	.byte "Loaded byte ",0
 dstr_dircluster:
 	.byte "Loading dir cluster ",0
+dstr_foundfat12:
+	.byte "Found FAT12 partition number ",0
 dstr_foundfat16:
 	.byte "Found FAT16 partition number ",0
 dstr_foundfat32:
