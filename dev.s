@@ -19,14 +19,17 @@
 
 	.import ide_init		; ide hard drives
 	.import ide_read_sector
+	.import ide_write_sector
 	.importzp devtype_hd
 
 	.import atapi_init		; ATAPI drives
 	.import atapi_read_sector
+	.import atapi_write_sector
 	.importzp devtype_cd
 
 	.import floppy_init		; floppy disks
 	.import floppy_read_sector
+	.import floppy_write_sector
 	.importzp devtype_floppy
 
 	.bss
@@ -35,10 +38,11 @@ volsector:		.res 4	; 32-bit LBA start address of active partition
 
 
 	.align 2
-vectablesize		= 2
+vectablesize		= 3
 vector_table:		.res vectablesize * 2
 dev_init_vector		= vector_table
 dev_read_sector_vector	= vector_table + 2
+dev_write_sector_vector	= vector_table + 4
 
 
 	.rodata
@@ -46,14 +50,17 @@ dev_read_sector_vector	= vector_table + 2
 ide_vectors:
 	.word ide_init
 	.word ide_read_sector
+	.word ide_write_sector
 
 atapi_vectors:
 	.word atapi_init
 	.word atapi_read_sector
+	.word atapi_write_sector
 
 floppy_vectors:
 	.word floppy_init
 	.word floppy_read_sector
+	.word floppy_write_sector
 
 
 	.segment "DEVVECTORS"
@@ -64,7 +71,8 @@ dev_init:		jmp (dev_init_vector)
 dev_read_sector:	jmp (dev_read_sector_vector)
 dev_set:		jmp _dev_set
 dev_find_volume:	jmp _dev_find_volume
-			.res 4
+dev_write_sector:	jmp (dev_write_sector_vector)
+			.res 1
 
 
 	.segment "DEVBSS"

@@ -2,6 +2,7 @@
 
 	.export floppy_init
 	.export floppy_read_sector
+	.export floppy_write_sector
 	.exportzp devtype_floppy
 
 
@@ -29,8 +30,13 @@ cnt:		.res 1	; step counter
 
 ; initialize floppy, 0 or 1 in A
 floppy_init:
+; read sector
+floppy_read_sector:
+; write sector
+floppy_write_sector:
 	sec
 	rts
+
 
 	.if 0
 
@@ -128,13 +134,6 @@ floppy_init:
 	jsr debug_puts
 
 	rts
-	.endif
-
-
-
-floppy_read_sector:
-	sec
-	rts
 
 
 ; this should take something like 656640 cycles =~ 0.3 secs
@@ -149,8 +148,12 @@ flp_delay:
 	bne :-
 	rts
 
+	.endif			; .if 0
+
 
 	.rodata
+
+	.if 0
 
 msg_init:
 	.byte "initializing floppy ",0
@@ -162,3 +165,5 @@ msg_step0:
 	.byte "stepping with direction 0",13,10,0
 msg_step1:
 	.byte "stepping with direction 1",13,10,0
+
+	.endif		     ; .if 0

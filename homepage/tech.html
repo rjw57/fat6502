@@ -498,11 +498,13 @@ vol_isflashbin		ff21		; check if entry is FLASH.BIN
 vol_isdrivebin		ff24		; check if entry is ?DRIVE.BIN
 vol_stat		ff27		; copy cluster and length
 vol_firstnamechar	ff2a		; return first char in filename
+vol_write_clust		ff2d		; write cluster
 
 dev_init		ff40		; initialize device
 dev_read_sector		ff43		; read sector
 dev_set			ff46		; activate device
 dev_find_volume		ff49		; inspect filesystem
+dev_write_sector	ff4c		; write sector
 
 ctl_select		ff50		; activate controller
 ctl_select_dev		ff53		; select device

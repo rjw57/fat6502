@@ -14,6 +14,7 @@
 	.export fat_firstnamechar
 	.export fat_isdesc
 	.export fat_volname
+	.export fat_write_clust
 
 	.exportzp fs_fat12
 	.exportzp fs_fat16
@@ -29,6 +30,7 @@
 	.import stat_length
 
 	.import dev_read_sector
+	.import dev_write_sector
 
 	.import clusterbuf
 
@@ -40,11 +42,6 @@
 	.import vol_fstype
 	.import vol_secperclus
 	.import romaddr
-
-	.import debug_puts
-	.import debug_putdigit
-;	.import debug_puthex		; fixme - remove this after debugging
-	.import debug_crlf
 
 
 fs_fat12	= $12
@@ -760,7 +757,7 @@ fat_read_clust:
 @notclusterzero:
 	lda vol_secperclus	; multiply cluster address by number of
 @shift:
-	lsr		; sectors per cluster. this number is a
+	lsr			; sectors per cluster. this number is a
 	bcs @shifted		; power of two so we'll just shift.
 	asl lba
 	rol lba+1
@@ -769,7 +766,7 @@ fat_read_clust:
 	jmp @shift
 @shifted:
 
-	clc		; add start of clusters
+	clc			; add start of clusters
 	lda lba
 	adc part_cstart
 	sta lba
@@ -818,6 +815,12 @@ fat_read_clust:
 	rts
 
 @error:
+	sec
+	rts
+
+
+; write cluster sector by sector
+fat_write_clust:
 	sec
 	rts
 

@@ -15,6 +15,7 @@
 	.import clusterbuf
 
 	.import vol_read_clust
+	.import vol_write_clust
 	.import vol_next_clust
 	.import vol_secperclus
 
@@ -85,9 +86,7 @@ _dsk_save:
 	;cmp stat_length+3
 	;bne @next
 
-	;jmp vol_write_cluster	; save last cluster
-	sec
-	rts
+	jmp vol_write_clust	; save last cluster
 
 @next:
 	iny
@@ -101,8 +100,8 @@ _dsk_save:
 	cmp clusterptr+1
 	bne @save
 
-	;jsr vol_write_cluster
-	;bcs @error
+	jsr vol_write_clust
+	bcs @error
 
 	jsr vol_next_clust	; find next cluster in chain
 	bcs @error

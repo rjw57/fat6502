@@ -21,6 +21,7 @@
 	.export vol_firstnamechar
 	.export vol_isdesc
 	.export vol_volname
+	.export vol_write_clust
 
 	.export romaddr
 	.export stat_length
@@ -50,6 +51,7 @@
 	.import fat_firstnamechar
 	.import fat_isdesc
 	.import fat_volname
+	.import fat_write_clust
 
 	.importzp fs_iso9660		; iso9660 support
 
@@ -69,6 +71,7 @@
 	.import iso_firstnamechar
 	.import iso_isdesc
 	.import iso_volname
+	.import iso_write_clust
 
 
 	.segment "VOLZP" : zeropage
@@ -85,7 +88,7 @@ nameptr:	.res 2	; name pointer
 	.bss
 
 	.align 2
-vectablesize		= 16
+vectablesize		= 17
 vector_table:		.res vectablesize * 2
 vol_read_volid_vector	= vector_table
 vol_cdboot_vector	= vector_table + 2
@@ -103,6 +106,7 @@ vol_stat_vector		= vector_table + 24
 vol_firstnamechar_vector= vector_table + 26
 vol_isdesc_vector	= vector_table + 28
 vol_fat_volname_vector	= vector_table + 30
+vol_write_clust_vector	= vector_table + 32
 
 
 	.segment "VOLVECTORS"
@@ -124,8 +128,9 @@ vol_stat:		jmp (vol_stat_vector)
 vol_firstnamechar:	jmp (vol_firstnamechar_vector)
 vol_isdesc:		jmp (vol_isdesc_vector)
 vol_volname:		jmp (vol_fat_volname_vector)
+vol_write_clust:	jmp (vol_write_clust_vector)
 
-			.res 13
+			.res 10
 
 
 	.segment "VOLBSS"
@@ -157,6 +162,7 @@ fat12_vectors:
 	.word fat_firstnamechar
 	.word fat_isdesc
 	.word fat_volname
+	.word fat_write_clust
 
 fat16_vectors:
 	.word fat_read_volid
@@ -175,6 +181,7 @@ fat16_vectors:
 	.word fat_firstnamechar
 	.word fat_isdesc
 	.word fat_volname
+	.word fat_write_clust
 
 fat32_vectors:
 	.word fat_read_volid
@@ -193,6 +200,7 @@ fat32_vectors:
 	.word fat_firstnamechar
 	.word fat_isdesc
 	.word fat_volname
+	.word fat_write_clust
 
 iso_vectors:
 	.word iso_read_volid
@@ -211,6 +219,7 @@ iso_vectors:
 	.word iso_firstnamechar
 	.word iso_isdesc
 	.word iso_volname
+	.word iso_write_clust
 
 
 	.code

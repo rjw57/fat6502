@@ -7,6 +7,7 @@
 	.export ide_scan
 	.export ide_init
 	.export ide_read_sector
+	.export ide_write_sector
 	.export ide_read_data
 	.export ide_wait_drq
 	.export ide_write_data
@@ -17,6 +18,7 @@
 
 	.export atapi_init
 	.export atapi_read_sector
+	.export atapi_write_sector
 
 	.export pagecount
 	.export ide_channel
@@ -380,6 +382,17 @@ ide_read_256_words:
 	rts
 
 @timeout:
+	; fall through
+
+
+; write sector in sectorptr to ATAPI device
+atapi_write_sector:
+	sec
+	rts
+
+
+; write 512-byte sector from sectorptr
+ide_write_sector:
 	sec
 	rts
 

@@ -18,6 +18,7 @@
 	.export iso_firstnamechar
 	.export iso_isdesc
 	.export iso_volname
+	.export iso_write_clust
 
 	.import lba
 	.import cluster
@@ -132,7 +133,11 @@ iso_read_volid:
 	sta rootdir,x
 	dex
 	bpl :-
+	; fall through
 
+
+; write cluster
+iso_write_clust:
 	clc
 	rts
 
