@@ -168,6 +168,8 @@ _dev_find_volume:
 	beq @atapi
 	cmp #devtype_floppy
 	beq @floppy
+	cmp #devtype_rom
+	beq @rom
 @error:
 	sec
 	rts
