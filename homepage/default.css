@@ -4,16 +4,32 @@ h2 {
 h3 {
 	margin-top: 2em;
 }
+table.noborder {
+	border-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+td.noborder {
+	border-style: none;
+	margin-left: 0px;
+	padding-left: 0px;
+}
+td.small {
+	border-style: none;
+	margin-left: 0px;
+	padding-left: 0px;
+	font-size: small;
+}
 table {
 	border: 1px solid #000000;
 	border-spacing: 0px;
-	margin: 10px;
+	margin: 10px 0px 0px 30px;
 }
 td {
 	border: 1px solid #000000;
-	padding: 5px;
+	padding: 5px 15px;
 }
 th {
 	border: 1px solid #000000;
-	padding: 5px;
+	padding: 5px 15px;
 }

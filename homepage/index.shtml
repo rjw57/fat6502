@@ -1,0 +1,261 @@
+<html>
+<head>
+<title>C-ONE BOOT - project homepage</title>
+<meta name="keywords" content="commodore, one, c1, c-one, boot">
+<meta name="description" content="Project homepage for the C-ONE boot ROM development">
+<meta name="author" content="Per Olofsson">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<table class="noborder">
+  <tr>
+    <td align="left" valign="top" class="noborder">
+<h1>C-ONE BOOT - project homepage</h1>
+
+<p>
+
+<hr>
+
+<p align="center">
+
+OVERVIEW |
+<a href="tech.html">TECHNICAL</a> |
+<a href="http://sourceforge.net/projects/c1boot/">SF.NET PROJECT PAGE</a> |
+<a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/c1boot/">BROWSE CVS</a>
+
+</p>
+
+<hr>
+
+</p>
+
+
+
+<h2>Description</h2>
+
+This project develops the code in the C-ONE's boot ROM. The boot ROM
+is responsible for configuring the main FPGA and loading any ROM
+images that it needs to start. It can also preload applications into
+system RAM, and an animated power on logo is included as an example of
+this. Finally, it can load a program into its own environment and
+execute it after it's done booting the main system.
+
+<h3>Architecture</h3>
+
+    </td>
+    <td class="noborder">&nbsp;</td>
+    <td align="left" valign="top" class="small" width="150">
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=78686&type=1" border="0" alt="SourceForge.net Logo" align="right"></A>
+<h2>News</h2>
+
+<!--#include virtual="news.inc" -->
+    </td>
+  </tr>
+</table>
+
+
+The C-ONE motherboard has two FPGAs. The smaller one, an Altera ACEX
+EP1K30, is configured from the on board Flash ROM at power up. The
+larger FGPA, an ACEX EP1K100, needs to be configured before the
+computer can start. In order to be as flexible as possible, the
+smaller FPGA loads the configuration files from disk. This allows you
+to easily swap between several different configurations, and also has
+the benefit of keeping the cost down (compared to another 2 Mb Flash
+ROM). It also means that upgrading the C-ONE is as simple as putting
+new boot files on a floppy or your hard drive.
+
+<p>
+
+<img src="c1arch.png" align="right">
+The 1K30 includes a small 6502 CPU core that's used to execute the
+boot code. The first 64 kB of the Multimedia SIMM is used as RAM for
+the CPU core, and it's initialized from the same Flash ROM as the 1K30
+itself. Through custom opcodes it has access to the IDE interface and
+the floppy controller. It can also DMA to and from System RAM, it can
+send configuration data to the 1K100, and it can halt the 65816 by
+controlling the /DMA line.
+
+
+<h3>Boot Procedure</h3>
+
+The code starts with the first controller and selects the first
+device. It then tries to find the boot files in the first partition on
+that device. If it can't find the boot files, it proceeds to the next
+device. If there are no more devices on that controller, it proceeds
+to the next controller, until there are no more controllers.
+
+<p>
+
+The following boot devices are supported:
+
+<table>
+  <tr>
+    <th>Controller</th>
+    <th>Device</th>
+    <th>Filesystems</th>
+    <th>Status</th>
+  </tr>
+  <tr>
+    <td>Floppy</td>
+    <td>1.44 MB 3.5&quot; HD drive</td>
+    <td>FAT12</td>
+    <td>not implemented</td>
+  <tr>
+  <tr>
+    <td>IDE</td>
+    <td>Hard Disk/Compact Flash</td>
+    <td>FAT16, FAT32</td>
+    <td>working</td>
+  <tr>
+  <tr>
+    <td>IDE</td>
+    <td>CD-ROM</td>
+    <td>ISO9660</td>
+    <td>not implemented</td>
+  <tr>
+</table>
+
+<p>
+
+In order to boot successfully, the configuration files need to adhere
+to these rules:
+
+<ul>
+  <li> The configuration files should be in a dir in the root called
+       "BOOT".
+
+  <li> There can be a total of 10 configs, prefixed 0 to 9.
+
+  <li> Each config should as a bare minium have a file named
+       "xFPGA.BIN" where x is the config number. This file is sent to
+       the 1K100 as FPGA configuration data.
+
+  <li> Each config may also have up to 16 memory images named
+       "xRaaaaaa.BIN" where x is the config number and aaaaaa is the
+       24-bit address in hex where the image should be loaded.
+
+  <li> Each config may also have a file called "xDRIVE.BIN" (where x
+       is the config number) that is loaded and executed by the drive
+       CPU after the main FPGA has been successfully configured.
+
+  <li> Each config may also have a file called "xDESC.TXT" (where x is
+       the config number) which should be a plain ascii file with
+       CR/LF linebreaks that should contain a one line description of
+       the configuration, with max 32 characters. the other lines are
+       optional and should have max 39 characters per line. Only ascii
+       characters 32-126 are allowed.
+</ul>
+
+It should be noted that on FAT and ISO9660 drives, only the 8.3
+filename is used. VFAT, Joliet, and other extensions are silently
+ignored.
+
+<p>
+
+As an example, this is what the C64 mode configuration files would be
+called if they were on an MS-DOS drive mounted as D:
+
+<pre>
+D:\BOOT\0FPGA.BIN
+D:\BOOT\0R01A000.BIN
+D:\BOOT\0R01E000.BIN
+D:\BOOT\0DESC.TXT
+</pre>
+
+<p>
+
+After the FPGA has been configured and the memory images loaded, one
+of two things happen. If an xDRIVE.BIN file was found, it's loaded and
+executed. If no such file was found, the /DMA line of the 65816 is set
+high (allowing it to start), and the drive CPU sits in an endless
+loop.
+
+
+
+<h2>Known Bugs</h2>
+
+In the current version of the boot rom, the following doesn't work as
+advertised:
+
+<ul>
+  <li> Loading of xDRIVE.BIN has not been implemented yet.
+  <li> CD-ROM support has not been implemented yet.
+  <li> The floppy code has not been implemented yet.
+</ul>
+
+
+
+<h2>Developers</h2>
+
+<ul>
+  <li> Per Olofsson (<a href="mailto:MagerValp%40cling.gu.se">MagerValp&#064;cling.gu.se</a>)
+       is the main developer and project maintainer.
+  <li> Adrian Gonzalez (<a href="mailto:adrianglz%40globalpc.net">adrianglz&#064;globalpc.net</a>)
+       is working on the floppy support.
+  <li> Jeri Ellsworth (<a href="mailto:cm_easy%40yahoo.com">cm_easy&#064;yahoo.com</a>) is developing the hardware.
+</ul>
+
+
+<h2>License</h2>
+
+The C-ONE boot code is available under the standard BSD license:
+
+<blockquote>
+
+<p>
+Copyright (c) 2003, the C-ONE Boot Project<br>
+All rights reserved.
+</p>
+
+<p>
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+<ul>
+<li> Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+
+<li> Redistributions in binary form must reproduce the above copyright
+     notice, this list of conditions and the following disclaimer in
+     the documentation and/or other materials provided with the
+     distribution.
+
+<li> Neither the name of the C-ONE Boot Project nor the names of its
+     contributors may be used to endorse or promote products derived
+     from this software without specific prior written permission.
+</ul>
+</p>
+
+<p>
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</p>
+
+</blockquote>
+
+
+
+<h2>Links</h2>
+
+<dl>
+
+  <dt> <a href="http://c64upgra.de/c-one/">http://c64upgra.de/c-one/</a>
+  <dd> The official home page of the C-ONE
+
+</dl>
+
+
+</body>
+</html>
