@@ -183,6 +183,8 @@ boot:
 	lda fpgafound		; did we find an fpga config?
 	beq @error
 
+	jsr clrsram		; clear sram
+
 	jsr loadsupport		; load the support core
 	bcs @error
 
@@ -475,6 +477,26 @@ loadclusters:
 	jsr vol_next_clust
 	bcc @load
 @done:
+	rts
+
+
+; clear cpu card SRAM
+clrsram:
+	lda #0
+	sta loadaddress
+	sta loadaddress + 1
+	lda #4
+	sta loadaddress + 2
+@clear:
+	sam loadaddress
+	inc loadaddress
+	bne @clear
+	inc loadaddress + 1
+	bne @clear
+	inc loadaddress + 2
+	lda loadaddress + 2
+	cmp #6
+	bne @clear
 	rts
 
 
