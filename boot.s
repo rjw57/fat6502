@@ -51,6 +51,7 @@
 	.import bar_max
 	.import bar_curr
 
+
 	.zeropage
 
 loadptr:	.res 2	; load pointer
@@ -158,7 +159,6 @@ boot:
 	jsr @foundfpgabin
 	jmp @next
 @notfpgabin:
-
 	jsr vol_isrom		; check if it's an image file
 	bcs @next
 	jsr @foundimage
