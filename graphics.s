@@ -40,6 +40,10 @@ tempy:		.res 1
 line:		.res 1
 
 
+bgcolor = 4		; blue
+fgcolor = 10		; yellow
+
+
 	.code
 
 ; 07-sept-2004 add CPC gfx hack
@@ -179,8 +183,8 @@ _gfx_quickcls:
 
 ; clear screen
 _gfx_cls:
-        lda #%10010010          ; set hires mode
-        zout $7f
+	lda #%10010010		; set hires mode
+	zout $7f
 
 	lda #$0c		; reset screenbase, lo
 	zout $bc
@@ -192,15 +196,15 @@ _gfx_cls:
 	lda #$0
 	zout $bd
 
-        lda #%00000000          ; select pen 0
-        zout $7f
-        lda #%01011000          ; select magenta
-        zout $7f
+	lda #%00000000		; select pen 0
+	zout $7f
+	lda #$40 | bgcolor	; set color
+	zout $7f
 
-        lda #%00000001          ; select pen 1
-        zout $7f
-        lda #%01000011          ; select pale yellow
-        zout $7f
+	lda #%00000001		; select pen 1
+	zout $7f
+	lda #$40 | fgcolor	; set color
+	zout $7f
 
 	lda #$0b
 	sta gfxptr + 2
