@@ -52,9 +52,6 @@ version.s:
 	@date "+ .byte \"%Y-%m-%d %H:%M:%S %Z\"" >> version.s
 	@echo " .byte 0" >> version.s
 
-scan.bin: scan.o debug.o buffers.o vectors.o ide.o dev.o floppy.o
-	$(LD) -C $(CFG) -m scan.map -o $@ $^
-
 clean:
 	$(RM) $(OBJS) bigboot.bin test232.o debug.o test232.bin scan.o scan.bin
 
