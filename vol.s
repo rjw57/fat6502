@@ -20,10 +20,14 @@
 
 	.import fat_read_ptable
 	.import fat_cd
-	.import fat_cdroot
+	.import fat12_cdroot
+	.import fat16_cdroot
+	.import fat32_cdroot
 	.import fat_dir_first
 	.import fat_dir_next
-	.import fat_next_clust
+	.import fat12_next_clust
+	.import fat16_next_clust
+	.import fat32_next_clust
 	.import fat_read_clust
 
 
@@ -55,13 +59,31 @@ vol_read_clust_vector	= vector_table + 12
 
 	.rodata
 
-fat_vectors:
+fat12_vectors:
 	.word fat_read_ptable
 	.word fat_cd
-	.word fat_cdroot
+	.word fat12_cdroot
 	.word fat_dir_first
 	.word fat_dir_next
-	.word fat_next_clust
+	.word fat12_next_clust
+	.word fat_read_clust
+
+fat16_vectors:
+	.word fat_read_ptable
+	.word fat_cd
+	.word fat16_cdroot
+	.word fat_dir_first
+	.word fat_dir_next
+	.word fat16_next_clust
+	.word fat_read_clust
+
+fat32_vectors:
+	.word fat_read_ptable
+	.word fat_cd
+	.word fat32_cdroot
+	.word fat_dir_first
+	.word fat_dir_next
+	.word fat32_next_clust
 	.word fat_read_clust
 
 iso_vectors:
@@ -88,22 +110,20 @@ vol_read_clust:		jmp (vol_read_clust_vector)
 ; call with filesystem identifier in A
 vol_set_fs:
 	cmp #fs_fat12
-	beq @fat12
+	beq fat12
 	cmp #fs_fat16
-	beq @fat16
+	beq fat16
 	cmp #fs_fat32
-	beq @fat32
+	beq fat32
 	cmp #fs_iso9660
-	beq @iso9660
-@fat12:
+	beq iso9660
 	sec
 	rts
 
-@fat16:
-@fat32:
+fat12:
 	ldx #0
 @copyfat:
-	lda fat_vectors,x
+	lda fat12_vectors,x
 	sta vector_table,x
 	inx
 	cpx #vectablesize * 2
@@ -111,7 +131,29 @@ vol_set_fs:
 	clc
 	rts
 
-@iso9660:
+fat16:
+	ldx #0
+@copyfat:
+	lda fat16_vectors,x
+	sta vector_table,x
+	inx
+	cpx #vectablesize * 2
+	bne @copyfat
+	clc
+	rts
+
+fat32:
+	ldx #0
+@copyfat:
+	lda fat32_vectors,x
+	sta vector_table,x
+	inx
+	cpx #vectablesize * 2
+	bne @copyfat
+	clc
+	rts
+
+iso9660:
 	ldx #0
 @copyiso:
 	lda iso_vectors,x

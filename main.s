@@ -13,6 +13,8 @@
 	.import ctl_select
 	.import ctl_select_dev
 
+	.importzp fs_fat12
+	.importzp fs_fat16
 	.importzp fs_fat32
 	.import vol_set_fs
 	.import vol_read_ptable

@@ -1,7 +1,9 @@
 	.include "drivecpu.i"
 
-	.export fat_cdroot, fat_cd, fat_dir_first, fat_dir_next
-	.export fat_next_clust, fat_read_clust, fat_read_ptable
+	.export fat12_cdroot, fat16_cdroot, fat32_cdroot
+	.export fat_cd, fat_dir_first, fat_dir_next
+	.export fat12_next_clust, fat16_next_clust, fat32_next_clust
+	.export fat_read_clust, fat_read_ptable
 	.export cluster
 	.exportzp fs_fat12
 	.exportzp fs_fat16
@@ -29,6 +31,7 @@
 	.import debug_crlf
 	.import dstr_crlf
 	.import dstr_dircluster
+	.import dstr_foundfat12
 	.import dstr_foundfat16
 	.import dstr_foundfat32
 
@@ -59,11 +62,17 @@ fatcache:	.res 4	; 32-bit currently cached fat sector
 	.code
 
 ; load the root directory
-fat_cdroot:
-	lda part_fstype
-	cmp #fs_fat16
-	beq @fat16
+fat12_cdroot:
+fat16_cdroot:
+	lda #0
+	sta cluster
+	sta cluster+1
+	sta cluster+2
+	sta cluster+3
+	clc
+	rts
 
+fat32_cdroot:
 	lda part_rootdir
 	sta cluster
 	lda part_rootdir+1
@@ -72,18 +81,8 @@ fat_cdroot:
 	sta cluster+2
 	lda part_rootdir+3
 	sta cluster+3
-
-@done:
 	clc
 	rts
-
-@fat16:
-	lda #0
-	sta cluster
-	sta cluster+1
-	sta cluster+2
-	sta cluster+3
-	beq @done
 
 
 ; change directory
@@ -102,12 +101,12 @@ fat_cd:
 	cmp #$e5		; if it's $e5 it's a deleted file
 	beq @next
 
-	ldy #11		; check attrib flags
+	ldy #11			; check attrib flags
 	lda (dirptr),y
 	and #$10		; bit 4 is the dir flag
 	beq @next
 
-	dey		; compare name
+	dey			; compare name
 	jsr comparedirname
 	beq @founddir
 
@@ -129,7 +128,7 @@ fat_cd:
 
 	lda part_fstype
 	cmp #fs_fat32
-	bne @fat16
+	bne @fat16or12
 
 	ldy #$14
 	lda (dirptr),y
@@ -140,10 +139,7 @@ fat_cd:
 	clc
 	rts
 
-@fat16:
-	cmp #fs_fat16
-	bne @error
-
+@fat16or12:
 	lda #0
 	sta cluster+2
 	sta cluster+3
@@ -175,16 +171,17 @@ fat_dir_return:
 	rts
 
 
+
 fat_dir_next:
 	lda dirptr		; advance pointer 32 bytes to the
-	clc		; next entry
+	clc			; next entry
 	adc #32
 	sta dirptr
 	bcc @skip
 	inc dirptr+1
 @skip:
 	lda part_secperclus	; check if we've parsed the whole
-	asl		; cluster
+	asl			; cluster
 	;clc
 	adc #>clusterbuf
 	cmp dirptr+1
@@ -203,20 +200,31 @@ next_dir_entry:
 	rts
 
 
-; find the next linked cluster from the FAT
-fat_next_clust:
-	lda part_fstype		; check for FAT16/FAT32
-	cmp #fs_fat32
-	beq f32_next_clust
-	cmp #fs_fat16
-	beq f16_next_clust
-
-	sec		; then what is it?
+fat12_next_clust:
+	inc cluster		; fixme. badly.
+	bne @done
+	inc cluster+1
+	bne @done
+	inc cluster+2
+	bne @done
+	inc cluster+3
+@done:
+	clc
 	rts
 
-f16_next_clust:
+
+fat_next_clust:
+	lda part_fstype
+	cmp #fs_fat12
+	beq fat12_next_clust
+	cmp #fs_fat32
+	beq fat32_next_clust
+
+
+; find the next linked cluster from the FAT
+fat16_next_clust:
 	lda cluster+1		; there are 2 bytes for each entry
-	sta lba		; in the FAT this gives us 256
+	sta lba			; in the FAT this gives us 256
 	lda cluster+2		; entries in every FAT sector so
 	sta lba+1		; bits 31..8 of the current cluster
 	lda cluster+3		; address gives us the sector to
@@ -286,7 +294,7 @@ f16_next_clust:
 	rts
 
 
-f32_next_clust:
+fat32_next_clust:
 	lda cluster+1		; there are 4 bytes for each entry
 	sta lba		; in the FAT this gives us 128 entries
 	lda cluster+2		; in every FAT sector so bits 31..7 of
@@ -408,7 +416,7 @@ isfatcached:
 
 
 ; load the specified cluster to memory
-; with ugly, ugly special case for FAT16 root directory
+; with ugly, ugly special case for FAT12/16 root directory
 	.bss
 rctemp:	.res 1			; ugly, ugly fat16
 	.code
@@ -431,10 +439,10 @@ fat_read_clust:
 	bne @notclusterzero
 
 	lda part_fstype
-	cmp #fs_fat16
-	bne @notclusterzero
+	cmp #fs_fat32
+	beq @notclusterzero
 
-	lda part_rootdir
+	lda part_rootdir	; fat12/16 
 	sta lba
 	lda part_rootdir+1
 	sta lba+1
@@ -534,6 +542,8 @@ fat_read_ptable:
 	ldy #4
 @checktype:
 	lda (ptr),y		; check file system type
+	cmp #$01
+	beq foundfat12		; fat12 uses $01
 	cmp #$04		; fat16 uses $04, $06, or $0e
 	beq foundfat16
 	cmp #$06
@@ -562,6 +572,20 @@ _foundfat32:
 	jmp foundfat32		; branch range. bah.
 
 
+foundfat12:
+	inx
+	stx part_num
+
+	dputs dstr_foundfat12
+	txa
+	dputdigit
+	dputs dstr_crlf
+
+	lda #fs_fat12		; store partition type
+	sta part_fstype
+
+	jmp cont12		; continue as if FAT16
+
 foundfat16:
 	inx
 	stx part_num		; save partition number
@@ -574,6 +598,7 @@ foundfat16:
 	lda #fs_fat16		; store partition type
 	sta part_fstype
 
+cont12:
 	jsr loadvolid
 	bcc @noerror
 
