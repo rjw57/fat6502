@@ -5,6 +5,7 @@
 	.include "drivecpu.i"
 
 	.export reseth
+	.export warmstart
 
 	.import timestamp
 
@@ -51,6 +52,7 @@ ctr2: 	.res 1
 	.code
 
 reseth:
+warmstart:
 	sei
 	cld
 	ldx #$ff

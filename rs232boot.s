@@ -1,6 +1,7 @@
 	.include "drivecpu.i"
 
 	.export reseth
+	.export warmstart
 
 	.import relocate
 
@@ -20,6 +21,7 @@
 	.code
 
 reseth:
+warmstart:
 	sei
 	cld
 	ldx #$ff
