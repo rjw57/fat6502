@@ -125,7 +125,11 @@ A16550BASE	= $3f20
 
 ; --- Keyboard ---
 
-; load keyboard scancode. carry set if fifo is empty (and A invalid)
+; load keyboard scancode
+; carry clear = valid key, set = invalid data in a
+; overflow clear = normal key, set = extended key
+; negative clear = make code, set = break code
+
 	.macro lka
 	.byte $32
 	.endmacro

@@ -617,8 +617,10 @@ SAF sends the current value in A to the config port of the 1K100.
 
 <h3>LKA, load keyboard</h3>
 
-LKA loads the next byte from the PS/2 keyboard FIFO into A. Carry is
-set if the FIFO is empty (and the contents of A invalid).
+LKA loads the next byte from the PS/2 keyboard FIFO into A. If there
+is no valid data the carry is set. The overflow flag is set if it's an
+extended ($e0) key code. The negative flag is clear if it's a make
+code, and set if it's a break code.
 
 
 <h3>ZIN</h3>
