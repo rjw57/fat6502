@@ -83,10 +83,10 @@ reseth:
 warmstart:
 	jsr clrbss		; clear BSS segment
 
-	;jsr gfx_cls		; clear graphics screen
+	jsr gfx_cls		; clear graphics screen
 	jsr gfx_drawlogo	; print C-ONE logo
-	ldy #29
-	ldx #65
+	ldy #3
+	ldx #66
 	jsr gfx_gotoxy
 	ldax msg_bootromv
 	jsr gfx_puts
