@@ -5,6 +5,7 @@
 
 	.import cluster
 	.import clusterbuf
+	.import flashbuf
 	.import vol_cdboot
 	.import vol_cdroot
 	.import vol_dir_first
@@ -15,7 +16,7 @@
 	.import vol_isrom
 	.import vol_isfpgabin
 	.import vol_isdrivebin
-;	.import vol_isflashbin
+	.import vol_isflashbin
 	.import vol_firstnamechar
 	.import vol_endofdir
 
@@ -24,7 +25,7 @@
 	.import stat_cluster
 	.import vol_secperclus
 
-	.importzp clusterptr
+	.importzp clusterptr, ptr
 
 	.import debug_puts
 	.import debug_crlf
@@ -111,6 +112,11 @@ boot:
 	bcs @error		; no boot directory? fux0red
 
 	jsr vol_dir_first	; find the first dir entry
+
+	lda bootconfig
+	cmp #'F'
+	bne @checkentry
+	jmp bootflash		; load flash image instead
 
 @checkentry:
 	jsr vol_endofdir	; check for end of dir
@@ -285,6 +291,69 @@ asciitohex:
 	rts
 
 
+; load FLASH.BIN
+bootflash:
+@checkentry:
+	jsr vol_endofdir	; check for end of dir
+	bne @check
+	sec
+	rts
+@check:
+	jsr vol_isflashbin	; check if it's FLASH.BIN
+	bcs @next
+	jmp @loadflashbin
+@next:
+	jsr vol_dir_next	; find the next dir entry
+	bcc @checkentry		; premature end of dir
+
+@error:
+	sec
+	rts
+
+@loadflashbin:
+	ldax msg_foundflashbin
+	jsr debug_puts
+	jsr vol_stat
+	ldx #3
+:	lda stat_cluster,x
+	sta cluster,x
+	dex
+	bpl :-
+	lsr stat_length+2	; divide by 2
+	ror stat_length+1	; gives us the number of 512 byte sectors in s_l+1
+
+	lda vol_secperclus	; divide by number of sectors per cluster
+:	lsr
+	bcs :+
+	lsr stat_length+1
+	jmp :-
+:	lda stat_length+1
+	sta loadend
+	ldax clusterbuf
+	stax clusterptr
+	jsr loadclusters
+	bcc @ok
+	rts
+@ok:
+	ldax clusterbuf		; copy code to $2000
+	stax clusterptr
+	ldax flashbuf
+	stax ptr
+	ldx #$1f
+	ldy #0
+@copy:
+	lda (clusterptr),y
+	sta (ptr),y
+	iny
+	bne @copy
+	inc clusterptr+1
+	inc ptr+1
+	dex
+	bne @copy
+
+	jmp flashbuf		; lock and load
+
+
 ; load drive code to clusterbuf and execute
 loaddrivebin:
 	ldax msg_loadingdrivebin
@@ -303,21 +372,26 @@ loaddrivebin:
 	bcs :+
 	lsr drivebinlength+1
 	jmp :-
-:
+:	lda drivebinlength+1
+	sta loadend
 
 	ldax clusterbuf
 	stax clusterptr
+	jsr loadclusters
+	jmp clusterbuf		; point of no return
+
+
+; load clusters
+loadclusters:
 @load:
 	jsr vol_read_clust
-	bcs @fail
-	dec drivebinlength+1
+	bcs @done
+	dec loadend
 	beq @done
 	jsr vol_next_clust
 	bcc @load
-@fail:
-	rts
 @done:
-	jmp clusterbuf		; point of no return
+	rts
 
 
 ; load fpga config
@@ -559,6 +633,8 @@ msg_foundrom:
 	.byte "Found ROM image: ",0
 msg_founddrivebin:
 	.byte "Found drive code binary",13,10,0
+msg_foundflashbin:
+	.byte "Found FLASH.BIN",13,10,0
 msg_cdroot:
 	.byte "cd /",13,10,0
 msg_cdboot:
