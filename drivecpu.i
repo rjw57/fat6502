@@ -55,20 +55,6 @@ A16550BASE	= $3f20
 	.endmacro
 
 
-; --- Floppy ---
-
-; Floppy control, all active low
-; bit 0    direction
-; bit 1    step
-; bit 2    drv_sel_a
-; bit 3    drv_sel_b
-; bit 4    motor
-
-	.macro flp
-	.byte $0c
-	.endmacro
-
-
 ; --- System config ---
 
 ; System control
@@ -81,49 +67,20 @@ A16550BASE	= $3f20
 	.byte $0b
 	.endmacro
 
-; system ram memory bank select
-	.macro sab
-	nop
-	;.byte $52
+
+; load accumulator indirect from memory
+	.macro lam ptraddr
+	.byte $d2, <ptraddr, >ptraddr
 	.endmacro
 
-; system ram memory address msb
-	.macro sau
-	nop
-	;.byte $72
-	.endmacro
-
-; system ram memory address lsb
-	.macro sal
-	nop
-	;.byte $92
-	.endmacro
-
-; read from system ram pointed to by sab/sau/sal
-	.macro mld
-	nop
-	;.byte $d2
-	.endmacro
-
-; write to system ram pointed to by sab/sau/sal
-	.macro mst
-	nop
-	;.byte $f2
+; store accumulator indirect from memory
+	.macro sam ptraddr
+	.byte $f2, <ptraddr, >ptraddr
 	.endmacro
 
 ; store accumulator in FPGA config
 	.macro saf
 	.byte $12
-	.endmacro
-
-; load accumulator indirect from memory
-	.macro lam addr
-	.byte $d2, <addr, >addr
-	.endmacro
-
-; store accumulator indirect from memory
-	.macro sam addr
-	.byte $f2, <addr, >addr
 	.endmacro
 
 
@@ -133,6 +90,48 @@ A16550BASE	= $3f20
 	.macro lka
 	.byte $32
 	.endmacro
+
+; util
+	.macro ldax address
+	lda #<address
+	ldx #>address
+	.endmacro
+
+	.macro stax dest
+	sta dest
+	stx dest+1
+	.endmacro
+
+
+; --- Graphics ---
+;
+; gax => addr(9..2)
+; gab(0) => addr(10)
+; gay => addr(18..11)
+; gab(5..1) => addr(23..19)
+
+; 7-sept-2004 macros for CPC gfx hack:
+; add .import gfx_x or they won't work
+
+; set graphics cursor x position
+        .macro gax
+;       .byte $02
+        stx gfx_x       ;!!!!!!!
+	;stx $3f00
+        .endmacro
+
+; set graphics cursor y position, bits 1..8
+        .macro gay
+;       .byte $03
+        sty gfx_x+1     ;!!!!!!!
+	;sty $3f01
+        .endmacro
+
+; write to graphics ram
+        .macro gst
+;       .byte $04
+        jsr gfx_x+8 ;didn't want to export another label
+        .endmacro
 
 
 ; --- RS-232 Debugging ---
@@ -203,45 +202,3 @@ A16550BASE	= $3f20
 	pla
 	plp
 	.endmacro
-
-; util
-	.macro ldax address
-	lda #<address
-	ldx #>address
-	.endmacro
-
-	.macro stax dest
-	sta dest
-	stx dest+1
-	.endmacro
-
-
-; --- Graphics ---
-;
-; gax => addr(9..2)
-; gab(0) => addr(10)
-; gay => addr(18..11)
-; gab(5..1) => addr(23..19)
-
-; 7-sept-2004 macros for CPC gfx hack:
-; add .import gfx_x or they won't work
-
-; set graphics cursor x position
-        .macro gax
-;       .byte $02
-        stx gfx_x       ;!!!!!!!
-	;stx $3f00
-        .endmacro
-
-; set graphics cursor y position, bits 1..8
-        .macro gay
-;       .byte $03
-        sty gfx_x+1     ;!!!!!!!
-	;sty $3f01
-        .endmacro
-
-; write to graphics ram
-        .macro gst
-;       .byte $04
-        jsr gfx_x+8 ;didn't want to export another label
-        .endmacro
