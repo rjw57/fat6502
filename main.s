@@ -87,7 +87,7 @@ reseth:
 	cmp #'F'
 	bne @debuginit
 
-	lda #%00000110		; keep /DMA high or we can't flash later
+	lda #%00000111		; keep /DMA high or we can't flash later
 	ctl
 	jsr debug_done		; disable rs-232
 	jmp @configdone
