@@ -93,3 +93,4 @@ clean:
 
 distclean: clean
 	$(RM) *~
+	$(RM) homepage/*~
