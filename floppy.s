@@ -32,6 +32,8 @@ floppy_init:
 	sec
 	rts
 
+	.if 0
+
 	pha
 	ldax msg_init
 	jsr debug_puts
@@ -126,6 +128,8 @@ floppy_init:
 	jsr debug_puts
 
 	rts
+	.endif
+
 
 
 floppy_read_sector:
