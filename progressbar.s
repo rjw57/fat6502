@@ -25,7 +25,7 @@ bar_curr:	.res 4		; current value
 lastpos:	.res 1		; last character printed
 
 
-progbarline	= 26
+progbarline	= 24
 
 
 	.code

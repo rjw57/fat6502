@@ -450,7 +450,7 @@ loadfpga:
 	jsr bar_init		; initialize empty progress bar
 
 	ldx #40 - 8
-	ldy #24
+	ldy #22
 	jsr gfx_gotoxy
 	ldax msg_bootfpga
 	jsr gfx_puts
@@ -544,7 +544,7 @@ loadfpga:
 	jsr bar_done		; erase progress bar
 
 	ldx #40 - 14		; erase message
-	ldy #24
+	ldy #22
 	jsr gfx_gotoxy
 	ldax msg_bootnone
 	jsr gfx_puts
@@ -559,7 +559,7 @@ loadimage:
 	jsr bar_init		; initialize empty progress bar
 
 	ldx #40 - 14
-	ldy #24
+	ldy #22
 	jsr gfx_gotoxy
 	ldax msg_bootrom
 	jsr gfx_puts
@@ -688,7 +688,7 @@ loadimage:
 	jsr bar_done		; erase progress bar
 
 	ldx #40 - 14		; erase message
-	ldy #24
+	ldy #22
 	jsr gfx_gotoxy
 	ldax msg_bootnone
 	jsr gfx_puts
