@@ -1,0 +1,129 @@
+C1 drive CPU simulator v0.1
+Based on the M6502 core by Marat Fayzullin
+
+loading bigboot.bin at 0x0000
+executing from 0xe000
+
+C-ONE debug init
+C-ONE boot rom initializing
+Erasing FPGA
+Initializing IDE interface
+Reading partition table
+Found FAT16 partition number 01
+Selecting config: 00
+Booting
+cd /
+cd boot/
+Loading dir cluster 00000000
+Reading directory
+Loading dir cluster 00000002
+Found FPGA config file
+Found ROM image: 005bfe
+Found ROM image: 01a000
+Found ROM image: 01e000
+Uploading FPGA config
+Reading cluster: 00000003
+Loading byte 00000000
+Reading cluster: 00000004
+Loading byte 00001000
+Reading cluster: 00000005
+Loading byte 00002000
+Reading cluster: 00000006
+Loading byte 00003000
+Reading cluster: 00000007
+Loading byte 00004000
+Reading cluster: 00000008
+Loading byte 00005000
+Reading cluster: 00000009
+Loading byte 00006000
+Reading cluster: 0000000a
+Loading byte 00007000
+Reading cluster: 0000000b
+Loading byte 00008000
+Reading cluster: 0000000c
+Loading byte 00009000
+Reading cluster: 0000000d
+Loading byte 0000a000
+Reading cluster: 0000000e
+Loading byte 0000b000
+Reading cluster: 0000000f
+Loading byte 0000c000
+Reading cluster: 00000010
+Loading byte 0000d000
+Reading cluster: 00000011
+Loading byte 0000e000
+Reading cluster: 00000012
+Loading byte 0000f000
+Reading cluster: 00000013
+Loading byte 00010000
+Reading cluster: 00000014
+Loading byte 00011000
+Reading cluster: 00000015
+Loading byte 00012000
+Reading cluster: 00000016
+Loading byte 00013000
+Reading cluster: 00000017
+Loading byte 00014000
+Reading cluster: 00000018
+Loading byte 00015000
+Reading cluster: 00000019
+Loading byte 00016000
+Reading cluster: 0000001a
+Loading byte 00017000
+Reading cluster: 0000001b
+Loading byte 00018000
+Reading cluster: 0000001c
+Loading byte 00019000
+Reading cluster: 0000001d
+Loading byte 0001a000
+Reading cluster: 0000001e
+Loading byte 0001b000
+Reading cluster: 0000001f
+Loading byte 0001c000
+Reading cluster: 00000020
+Loading byte 0001d000
+Reading cluster: 00000021
+Loading byte 0001e000
+Reading cluster: 00000022
+Loading byte 0001f000
+Reading cluster: 00000023
+Loading byte 00020000
+Reading cluster: 00000024
+Loading byte 00021000
+Reading cluster: 00000025
+Loading byte 00022000
+Reading cluster: 00000026
+Loading byte 00023000
+Reading cluster: 00000027
+Loading byte 00024000
+Reading cluster: 00000028
+Loading byte 00025000
+Reading cluster: 00000029
+Loading byte 00026000
+Reading cluster: 0000002a
+Loading byte 00027000
+Reading cluster: 0000002b
+Loading byte 00028000
+Load done, last byte + 1 =  00028c35
+OK, since FPGA upload went smoothly, I'll now try the ROMs
+Uploading ROM image from 0001e000 to 00020000 from cluster 00000032
+Reading cluster: 00000032
+Loading byte 0001e000
+Reading cluster: 00000033
+Loading byte 0001f000
+Load done, last byte + 1 =  00020000
+Uploading ROM image from 0001a000 to 0001c000 from cluster 00000030
+Reading cluster: 00000030
+Loading byte 0001a000
+Reading cluster: 00000031
+Loading byte 0001b000
+Load done, last byte + 1 =  0001c000
+Uploading ROM image from 00005bfe to 0000825b from cluster 0000002d
+Reading cluster: 0000002d
+Loading byte 00005bfe
+Reading cluster: 0000002e
+Loading byte 00006bfe
+Reading cluster: 0000002f
+Loading byte 00007bfe
+Load done, last byte + 1 =  0000825b
+Success, starting 65816

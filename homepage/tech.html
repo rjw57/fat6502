@@ -1,0 +1,123 @@
+<html>
+<head>
+<title>C-ONE BOOT - project homepage</title>
+<meta name="keywords" content="commodore, one, c1, c-one, boot">
+<meta name="description" content="Project homepage for the C-ONE boot ROM development">
+<meta name="author" content="Per Olofsson">
+<link rel="stylesheet" href="default.css" type="text/css">
+</head>
+
+<body>
+
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=78686&type=1" border="0" alt="SourceForge.net Logo" align="right"></A>
+<h1>C-ONE BOOT - technical details</h1>
+
+<p>
+
+<hr>
+
+<p align="center">
+
+<a href="index.html">OVERVIEW</a> |
+TECHNICAL |
+<a href="index.html">DOWNLOAD</a>
+
+</p>
+
+<hr>
+
+</p>
+
+
+
+<h2>Disclaimer</h2>
+
+Please remember that all this is subject to change. More details will
+be added later on.
+
+
+
+<h2>The Drive CPU</h2>
+
+The CPU core in the 1K30 is referred to as the drive CPU. When the
+main system is up and running, the 6502 core works as a
+coprocessor. Currently the core is running at 2 MHz, but I have no
+idea if the instruction timings are identical to that of a real 6502.
+At the time of writing, the core differs from a genuine 6502 in the
+following ways:
+
+<ul>
+  <li> There are no IRQs
+  <li> A number of custom instructions have been added.
+</ul>
+
+
+
+<h3>Memory Map</h3>
+
+<pre>  $0000-$00ff   Zero Page RAM
+  $0100-$01ff   Stack RAM
+  $0200-$3eff   RAM
+  $3f00-$3f1f   Clock Port 1
+  $3f20-$3f3f   Clock Port 2 (RS-232)
+  $3f40-$3fff   reserved
+  $4000-$ffff   RAM</pre>
+
+
+
+<h3>Custom Instructions</h3>
+
+<h4>CSA, control and select address</h4>
+
+CSA uses the value in the accumulator to control various I/O pins:
+
+<pre>  bit 0-2  IDE interface A0-A2
+  bit 3    select IDE channel, 0 = primary, 1 = secondary
+  bit 4    CPU DMA control line, active low
+  bit 5    strobe 0 to erase FPGA, keep set to 1
+  bit 6    CPU RESET control line, active low
+  bit 7    unused, set to 0</pre>
+
+
+<h4>ILD, IDE load from register</h4>
+
+Loads A and X from the currently selected IDE register. The LSB ends
+up in A, and if register 0 is read the MSB ends up in X, otherwise X
+is trashed.
+
+
+<h4>IST, IDE store to register</h4>
+
+Stores A and X to the currently selected IDE register, see ILD.
+
+
+<h4>SAB, system address bank</h4>
+<h4>SAU, system address upper</h4>
+<h4>SAL, system address lower</h4>
+
+SAB/SAU/SAL are used to select an address in the main CPU RAM. SAB sets
+bits 16-23 from A, SAU sets bits 8-15 from A, SAL sets bits 0-7 from A.
+
+
+<h4>MLD, memory load</h4>
+
+MLD loads the byte pointed to by SAB/SAU/SAL from main CPU RAM into A.
+
+
+<h4>MST, memory store</h4>
+
+MST stores the byte in A to the address pointed to by SAB/SAU/SAL.
+
+
+<h4>SAF, store accumulator to FPGA</h4>
+
+SAF sends the current value in A to the config port of the 1K100.
+
+
+<h4>LKA, load keyboard</h4>
+
+LKA loads the next byte from the PS/2 keyboard FIFO into A. 0 means
+that the FIFO is empty.
+
+</body>
+</html>

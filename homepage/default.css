@@ -1,0 +1,19 @@
+h2 {
+	margin-top: 2em;
+}
+h3 {
+	margin-top: 2em;
+}
+table {
+	border: 1px solid #000000;
+	border-spacing: 0px;
+	margin: 10px;
+}
+td {
+	border: 1px solid #000000;
+	padding: 5px;
+}
+th {
+	border: 1px solid #000000;
+	padding: 5px;
+}
