@@ -106,10 +106,13 @@ romfs_read_volid:
 	sta volname,x
 
 	ldx #3
-:	lda clusterbuf + 4
+:	lda clusterbuf + 4,x
 	sta rootdir,x
 	dex
 	bpl :-
+
+	lda #1
+	sta vol_secperclus
 
 	clc
 	rts
@@ -124,7 +127,7 @@ romfs_write_clust:
 ; go to root directory
 romfs_cdroot:
 	ldx #3
-:	lda rootdir
+:	lda rootdir,x
 	sta cluster,x
 	dex
 	bpl :-
