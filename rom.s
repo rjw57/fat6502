@@ -12,11 +12,6 @@
 	.importzp sectorptr
 
 
-	.import debug_put
-	.import debug_puts
-	.import debug_crlf
-
-
 	.bss
 
 devtype_rom	= $04
