@@ -22,9 +22,11 @@
 	.importzp devtype_hd
 	.importzp devtype_cd
 	.importzp devtype_floppy
+	.importzp devtype_rom
 
 	.import vol_set_fs
 	.importzp fs_fat12
+	.importzp fs_fat16
 	.importzp fs_fat32
 	.importzp fs_iso9660
 
@@ -68,6 +70,8 @@ _ctl_select:
 	beq @select_floppy
 	cmp #1
 	beq @select_ide
+	cmp #2
+	beq @select_rom
 	sec
 	rts
 
@@ -78,10 +82,27 @@ _ctl_select:
 	lda #fs_fat12		; kludge, fixme
 	jsr vol_set_fs		; gotta put fs detection in the right place
 
-	lda #devtype_floppy	; two floppy drives
+	lda #devtype_floppy	; one floppy drive
 	sta devmap
-	sta devmap + 1
 	lda #0
+	sta devmap + 1
+	sta devmap + 2
+	sta devmap + 3
+	lda #1			; one device on this controller
+	clc
+	rts
+
+@select_rom:
+	ldax #rommsg
+	jsr debug_puts
+
+	lda #fs_fat16		; kludge, fixme
+	jsr vol_set_fs		; gotta put fs detection in the right place
+
+	lda #devtype_rom	; one rom drive
+	sta devmap
+	lda #0
+	sta devmap + 1
 	sta devmap + 2
 	sta devmap + 3
 	lda #1			; one device on this controller
@@ -456,5 +477,7 @@ floppymsg:
 	.byte "Searching for boot devices on floppy controller",13,10,0
 idemsg:
 	.byte "Searching for boot devices on IDE controller",13,10,0
+rommsg:
+	.byte "Searching for boot devices in flash rom",13,10,0
 cdmsg:
 	.byte " (CD-ROM)",0

@@ -33,6 +33,12 @@
 	.import floppy_write_sector
 	.importzp devtype_floppy
 
+	.import rom_init		; rom disks
+	.import rom_read_sector
+	.import rom_write_sector
+	.importzp devtype_rom
+
+
 	.bss
 
 volsector:		.res 4	; 32-bit LBA start address of active partition
@@ -62,6 +68,11 @@ floppy_vectors:
 	.word floppy_init
 	.word floppy_read_sector
 	.word floppy_write_sector
+
+rom_vectors:
+	.word rom_init
+	.word rom_read_sector
+	.word rom_write_sector
 
 
 	.segment "DEVVECTORS"
@@ -98,6 +109,8 @@ _dev_set:
 	beq @atapi
 	cmp #devtype_floppy
 	beq @floppy
+	cmp #devtype_rom
+	beq @rom
 	sec
 	rts
 
@@ -131,6 +144,17 @@ _dev_set:
 	inx
 	cpx #vectablesize * 2
 	bne @copyfloppy
+	clc
+	rts
+
+@rom:
+	ldx #0
+@copyrom:
+	lda rom_vectors,x
+	sta vector_table,x
+	inx
+	cpx #vectablesize * 2
+	bne @copyrom
 	clc
 	rts
 
@@ -168,6 +192,16 @@ _dev_find_volume:
 	dex
 	bpl :-
 	lda #$12		; then it's a FAT12 floppy
+	clc
+	rts
+
+@rom:
+	lda #0			; hardcoding is fun
+	sta volsector
+	sta volsector+1
+	sta volsector+2
+	sta volsector+3
+	lda #$16		; FAT16 for now
 	clc
 	rts
 
@@ -229,7 +263,7 @@ readsector0:
 :	sta lba,x
 	dex
 	bpl :-
-	ldax #clusterbuf		; load data into clusterbuf
+	ldax #clusterbuf	; load data into clusterbuf
 	stax sectorptr
 	jsr dev_read_sector	; read sector 0
 	bcc @check
