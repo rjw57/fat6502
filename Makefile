@@ -37,13 +37,16 @@ INCS = \
 	ide.i
 
 
-all: bigboot.bin boot232.bin
+all: bigboot.bin boot232.bin testkbd.bin
 
 bigboot.bin: $(OBJS) $(INCS)
 	$(LD) -C $(CFG) -m bigboot.map -o $@ $(OBJS)
 
 boot232.bin: rs232boot.o rs232boot_reloc.o debug.o buffers.o vectors.o version.o
 	$(LD) -C $(CFG) -m boot232.map -o $@ $^
+
+testkbd.bin: testkbd.o debug.o buffers.o vectors.o
+	$(LD) -C $(CFG) -m testkbd.map -o $@ $^
 
 .PHONY: version.s
 version.s:
