@@ -65,13 +65,106 @@ ways:
 
 <h3>Memory Map</h3>
 
-<pre>  $0000-$00ff   Zero Page RAM
-  $0100-$01ff   Stack RAM
-  $0200-$3eff   RAM
-  $3f00-$3f1f   Clock Port 2
-  $3f20-$3f3f   Clock Port 1 (RS-232)
-  $3f40-$3fff   reserved
-  $4000-$ffff   RAM</pre>
+There are two free memory ranges in the address space, $0080-$00bf,
+and $2000-$3eff. If you call any provided routines from your code,
+these are the only areas that are guaranteed not to be overwritten.
+The cluster buffer ($4000-$bfff) is free to be used, but some routines
+overwrite it (notably the vol_dir_* routines).
+
+
+<pre><b>LORAM AREA</b>
+
+system zp		0000-007f	; reserved for system use
+application zp		0080-00bf	; free for application use
+(reserved)    	    	00c0-00df
+sectorptr		00e0-00e1	; where dev_read_sector stores data
+(reserved)		00e2-00ef
+dirptr			00f0-00f1	; pointer to current dir entry
+clusterptr		00f2-00f3	; where vol_read_clust stores data
+(reserved)		00f4-00ff
+
+system stack		0100-01ff	; CPU stack
+
+system variable storage	0200-1eff	; reserved for system use
+romaddr			1f00-1f05	; ascii address set by vol_isrom
+stat_length		1f06-1f09	; length, set by vol_stat
+stat_cluster		1f0a-1f0d	; first cluster, set by vol_stat
+vol_fstype		1f0e		; file system type, one of:
+					;   $12 = FAT12
+					;   $16 = FAT16
+					;   $32 = FAT32
+					;   $96 = ISO9660
+vol_secperclus		1f0f		; # of 512 byte sectors in one cluster
+cluster			1f10		; set before calling vol_read_clust
+					; or vol_next_clust
+(reserved)		1f14-1f3f
+lba			1f40		; set before calling dev_read_sector
+(reserved)		1f44-1fff
+flashbuf		2000-3eff	; reserved for flash code or
+					; application code
+
+
+<b>MEMORY MAPPED I/O AREA</b>
+
+clock port 2		3f00-3f1f	; clock port 2 is mapped here
+clock port 1		3f20-3f3f	; clock port 1 is mapped here
+					; a silver surfer plugged in here is
+					; used by the debug_* routines
+
+<b>HIRAM AREA</b>
+
+clusterbuf		4000-bfff	; used by vol_*
+
+
+<b>ROM AREA</b>
+
+system code		c000-feff	; reserved for system code
+jump table		ff00-fff9	; system jump table
+irq vector		fffa-fffb	; CPU IRQ vector (not used)
+reset vector		fffc-fffd	; CPU reset vector
+nmi vector		fffe-ffff	; CPU NMI vector
+
+
+<b>SYSTEM JUMP TABLE</b>
+
+vol_set_fs		ff00		; activate filesystem
+vol_read_ptable		ff03		; read volume info
+vol_cdboot		ff06		; change to boot directory
+vol_cdroot		ff09		; set cluster to root dir
+vol_dir_first		ff0c		; set dirptr to first dir entry
+vol_dir_next		ff0f		; advance dirptr to the next entry
+vol_next_clust		ff12		; find the next cluster in the chain
+vol_read_clust		ff15		; read cluster
+vol_endofdir		ff18		; check for end of dir
+vol_isfpgabin		ff1b		; check if entry is ?FPGA.BIN
+vol_isrom		ff1e		; check if entry is ?R??????.BIN
+vol_isflashbin		ff21		; check if entry is FLASH.BIN
+vol_isdrivebin		ff24		; check if entry is ?DRIVE.BIN
+vol_stat		ff27		; copy cluster and length
+vol_firstnamechar	ff2a		; return first char in filename
+
+dev_init		ff40		; initialize device
+dev_read_sector		ff43		; read sector
+dev_set			ff46		; activate device
+
+ctl_select		ff50		; activate controller
+ctl_select_dev		ff53		; select device
+
+debug_init		ff60		; initialize rs-232 debugging
+debug_done		ff63		; disable rs-232 debugging
+debug_puts		ff66		; print string
+debug_get		ff69		; get character
+debug_put		ff6c		; print character
+debug_puthex		ff6f		; print hex number
+debug_putdigit		ff72		; print digit
+debug_crlf		ff75		; print cr+lf
+
+gfx_cls			ff80		; clear the screen
+gfx_drawlogo		ff83		; draw C-ONE logo
+gfx_gotoxy		ff86		; set cursor position
+gfx_puts		ff89		; print string
+gfx_putchar		ff8c		; print character
+</pre>
 
 
 
