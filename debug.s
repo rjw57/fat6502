@@ -6,6 +6,7 @@
 	.export debug_init
 	.export debug_done
 	.export debug_puts
+	.export debug_get
 	.export debug_put
 	.export debug_puthex
 	.export debug_putdigit
@@ -99,7 +100,7 @@ debug_init:
 	;sta fifo_scratch
 
 	; set baudrate
-	lda #baud_9600
+	lda #baud_38400
 	jsr debug_setbaud
 
 	;lda fifo_scratch
