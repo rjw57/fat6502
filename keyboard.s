@@ -193,7 +193,7 @@ pongmain:
 
 
 delay:
-	ldy #16
+	ldy #10
 	ldx #0
 :	inx
 	bne :-
