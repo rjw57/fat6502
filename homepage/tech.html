@@ -133,7 +133,7 @@ nmi vector		fffe-ffff	; CPU NMI vector
 <b>SYSTEM JUMP TABLE</b>
 
 vol_set_fs		ff00		; activate filesystem
-vol_read_ptable		ff03		; read volume info
+vol_read_volid		ff03		; read volume info
 vol_cdboot		ff06		; change to boot directory
 vol_cdroot		ff09		; set cluster to root dir
 vol_dir_first		ff0c		; set dirptr to first dir entry
@@ -151,6 +151,7 @@ vol_firstnamechar	ff2a		; return first char in filename
 dev_init		ff40		; initialize device
 dev_read_sector		ff43		; read sector
 dev_set			ff46		; activate device
+dev_find_volume		ff49		; inspect filesystem
 
 ctl_select		ff50		; activate controller
 ctl_select_dev		ff53		; select device
