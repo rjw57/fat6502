@@ -115,6 +115,12 @@ The following boot devices are supported:
     <td>ISO9660</td>
     <td>working</td>
   </tr>
+  <tr>
+    <td>ROM</td>
+    <td>Flash ROM</td>
+    <td>Custom ROMFS</td>
+    <td>working</td>
+  </tr>
 </table>
 
     </td>
