@@ -105,6 +105,9 @@ calc:
 	rol n
 	rol n + 1
 
+
+; 32/16 = 16.16 routine by Garth Wilson
+
 	sec		; Detect overflow or /0 condition.
 	lda n+2		; Divisor must be more than high cell of dividend.  To
 	sbc n		; find out, subtract divisor from high cell of dividend;
