@@ -32,8 +32,6 @@
 	.exportzp devtype_hd
 	.exportzp devtype_cd
 
-	.importzp sectorptr
-
 	.import debug_puts
 	.import debug_puthex
 	.import debug_putdigit
