@@ -138,7 +138,7 @@ boot:
 	jsr vol_dir_first
 
 @drawicon:
-	ldx #36			; print booting
+	ldx #28			; print booting
 	ldy #12
 	jsr gfx_gotoxy
 	ldax msg_bootingfrom
@@ -686,4 +686,4 @@ msg_endcluster:
 	.byte "End cluster:  ",0
 
 msg_bootingfrom:
-	.byte "Booting...",0
+	.byte "        Booting...       ",0
