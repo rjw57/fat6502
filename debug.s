@@ -28,18 +28,18 @@ debug_crlf:		jmp _debug_crlf
 
 
 ;Tobix was here
-fifo_rxd	= 0	; (r)
-fifo_txd	= 0	; (w)
-fifo_dll	= 0
-fifo_dlm	= 1
-fifo_ier	= 1
-fifo_fcr	= 2	; (w)
-fifo_iir	= 2	; (r)
-fifo_lcr	= 3
-fifo_mcr	= 4
-fifo_lsr	= 5
-fifo_msr	= 6	; (r)
-fifo_scratch	= 7	; (r/w)
+fifo_rxd	= 0 + 8	; (r)
+fifo_txd	= 0 + 8	; (w)
+fifo_dll	= 0 + 8
+fifo_dlm	= 1 + 8
+fifo_ier	= 1 + 8
+fifo_fcr	= 2 + 8	; (w)
+fifo_iir	= 2 + 8	; (r)
+fifo_lcr	= 3 + 8
+fifo_mcr	= 4 + 8
+fifo_lsr	= 5 + 8
+fifo_msr	= 6 + 8	; (r)
+fifo_scratch	= 7 + 8	; (r/w)
 
 
 	.zeropage
