@@ -147,6 +147,9 @@ debug_done:
 	; deactivate dtr
 	sta fifo_mcr
 
+	lda #0			; no more rs-232
+	sta sspresent
+
 	clc
 	rts
 

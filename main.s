@@ -31,6 +31,7 @@
 
 	.import debug_init
 	.import debug_done
+	.import debug_put
 	.import debug_puts
 	.import debug_putdigit
 	.import debug_crlf
@@ -40,6 +41,7 @@
 
 currdev:	.res 1
 currctl:	.res 1
+entermenu:	.res 1
 
 
 	.segment "RELOC"
@@ -55,9 +57,6 @@ reseth:
 	ldx #$ff
 	txs
 
-	lda #%00000110
-	ctl
-
 	ldx #0			; clear zp and stack
 	txa
 :	sta $00,x
@@ -67,12 +66,34 @@ reseth:
 
 	jsr clrbss		; clear BSS segment
 
-	lda #$ff
+
+	lda #0			; flag whether we should display boot menu
+	sta entermenu
+
+	jsr select_config	; check which config to boot (0-9)
 	sta bootconfig
+	bcs @default		; is holding a config key?
 
-	jsr debug_init
+	cmp #'F'
+	bne @debuginit
 
-	ldax msg_init1
+	lda #%00000110		; keep /DMA high or we can't flash later
+	ctl
+	jsr debug_done		; disable rs-232
+	jmp @configdone
+
+@default:
+	dec entermenu		; enter menu later
+	jmp @debuginit
+
+@debuginit:
+	lda #%00000110		; pull /DMA low or rs-232 won't work
+	ctl
+	jsr debug_init		; initialize rs-232
+@configdone:
+
+
+	ldax msg_init1		; print version number
 	jsr debug_puts
 	ldax ver_str
 	jsr debug_puts
@@ -100,62 +121,54 @@ reseth:
 	ldax ver_str
 	jsr gfx_puts
 
-	lda #0
+	lda #0			; start with controller 0
 	sta currctl
 @nextctl:
-	jsr ctl_select
-	bne @devpresent
+	jsr ctl_select		; select
+	bne @devpresent		; returns number of connected devices
 
 	jmp @failedctl
 
 @devpresent:
-	lda #0
+	lda #0			; start with dev 0
 	sta currdev
 
 @tryboot:
-	jsr ctl_select_dev
+	jsr ctl_select_dev	; select
 	bcc @selected
 	jmp @next
 @selected:
 	lda currdev
-	jsr dev_init		; initialize IDE routines
+	jsr dev_init		; initialize low level routines
 	bcs @next
 
-	ldax msg_bootingfrom
+	ldax msg_bootingfrom	; print device number that we're booting from
 	jsr debug_puts
 	lda currdev
 	jsr debug_putdigit
 	jsr debug_crlf
 
-	ldax msg_readptable
+	ldax msg_readptable	; read volume info
 	jsr debug_puts
-	lda vol_fstype
+
+	lda vol_fstype		; save the fstype
 	pha
 	jsr vol_read_ptable	; find the boot partition
 	pla
 	bcs @nextfailed
 
-	cmp vol_fstype
+	cmp vol_fstype		; see if it changed
 	beq @fsdidntchange
 
-	lda vol_fstype
-	jsr vol_set_fs
+	lda vol_fstype		; can happen with FAT
+	jsr vol_set_fs		; set the new fs
 @fsdidntchange:
 
-	bit bootconfig		; no need to grab it twice
-	bpl @wehaveaconfig
-	jsr select_config	; check which config to boot (0-9)
-	sta bootconfig
-	bcs @default
-	ldax msg_selectconfig
+	ldax msg_selectconfig	; print config number
 	jsr debug_puts
-	jsr debug_putdigit
+	lda bootconfig
+	jsr debug_put
 	jsr debug_crlf
-	jmp @wehaveaconfig
-@default:
-	ldax msg_defaultconfig
-	jsr debug_puts
-@wehaveaconfig:
 
 	ldax msg_boot
 	jsr debug_puts
@@ -165,18 +178,18 @@ reseth:
 	ldax msg_done
 	jsr debug_puts
 	jsr debug_done
-	lda #%00000010		; reset 65816
+	lda #%00000010		; reset main CPU
 	ctl
 	nop
 	nop
 	nop
-	lda #%00000111		; start 65816
+	lda #%00000111		; start main CPU
 	ctl
 	jmp *			; success
 
 
 @nextfailed:
-	ldax msg_failed
+	ldax msg_failed		; soft failure
 	jsr debug_puts
 @next:
 	inc currdev
@@ -186,20 +199,20 @@ reseth:
 	jmp @tryboot
 
 @failedctl:
-	inc currctl
+	inc currctl		; all devs on controller failed
 	lda currctl
 	cmp #2
 	beq failure
 	jmp @nextctl
 
 failure:
-	ldax msg_allfailed
+	ldax msg_allfailed	; now we're screwed
 	jsr debug_puts
 
 	jmp *			; failure
 
 
-; clear BSS segment
+; clear BSS segment aka initialize variable space
 clrbss:
 	lda #<__BSS_RUN__
 	sta ptr
@@ -246,8 +259,6 @@ msg_readptable:
 	.byte "Reading partition table",13,10,0
 msg_selectconfig:
 	.byte "Selecting config ",0
-msg_defaultconfig:
-	.byte "Selecting default config",13,10,0
 msg_boot:
 	.byte "Booting",13,10,0
 msg_done:
