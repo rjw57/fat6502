@@ -17,13 +17,13 @@ cksum:		.res 1
 
 rs232boot:
 	ldax waitingmsg1
-	jsr debug_puts
+	jsr rs232_puts
 	lda #>__ROM_SIZE__
-	jsr debug_puthex
+	jsr rs232_puthex
 	lda #0
-	jsr debug_puthex
+	jsr rs232_puthex
 	ldax waitingmsg2
-	jsr debug_puts
+	jsr rs232_puts
 
 	ldax __ROM_START__
 	stax dest
@@ -32,7 +32,7 @@ rs232boot:
 	sty cksum
 
 @getbyte:
-	jsr debug_get
+	jsr rs232_get
 	sta (dest),y
 	clc
 	adc cksum
@@ -40,18 +40,21 @@ rs232boot:
 	iny
 	bne @getbyte
 
+	lda #'.'
+	jsr rs232_put
+
 	inc dest+1
 	dex
 	bne @getbyte
 
 	ldax checkmsg
-	jsr debug_puts
+	jsr rs232_puts
 	lda cksum
-	jsr debug_puthex
+	jsr rs232_puthex
 	ldax execmsg
-	jsr debug_puts
+	jsr rs232_puts
 
-	jsr debug_done
+	jsr rs232_done
 	jmp (resetvector)
 
 
@@ -60,6 +63,7 @@ waitingmsg1:
 waitingmsg2:
 	.byte " bytes of ROM code",13,10,0
 checkmsg:
+	.byte 13,10
 	.byte "ADC checksum = $",0
 execmsg:
 	.byte 13,10
@@ -84,7 +88,7 @@ fifo_scratch	= A16550BASE + 7	; (r/w)
 
 	.zeropage
 
-debug_ptr:	.res 2
+rs232_ptr:	.res 2
 
 
 baud_50		= 0
@@ -103,22 +107,22 @@ baud_115200	= 12
 baud_230400	= 13
 
 
-	.code
+	.segment "RELOC"
 
-debug_puts:
-	sta debug_ptr
-	stx debug_ptr+1
+rs232_puts:
+	sta rs232_ptr
+	stx rs232_ptr+1
 	ldy #0
 @print:
-	lda (debug_ptr),y
+	lda (rs232_ptr),y
 	beq @done
-	jsr debug_put
+	jsr rs232_put
 	iny
 	bne @print
 @done:	rts
 
 
-debug_done:
+rs232_done:
 	; disable nmi's from ssurfer
 	lda #0
 	sta fifo_ier
@@ -130,7 +134,7 @@ debug_done:
 	rts
 
 
-debug_get:
+rs232_get:
 	lda fifo_lsr  ; check if byte available
 	and #1
 	bne @byteready ; yes
@@ -155,7 +159,7 @@ debug_get:
 	rts
 
 
-debug_put:
+rs232_put:
 	pha
 	; transmit buf ready?
 @waitbuf:
@@ -175,7 +179,7 @@ debug_put:
 	rts
 
 
-debug_puthex:
+rs232_puthex:
 	pha
 	stx @xtemp
 	lsr
@@ -184,13 +188,13 @@ debug_puthex:
 	lsr
 	tax
 	lda hextoascii,x
-	jsr debug_put
+	jsr rs232_put
 	pla
 	and #$0f
 	tax
 	lda hextoascii,x
 	ldx @xtemp
-	jmp debug_put
+	jmp rs232_put
 
 	.bss
 
