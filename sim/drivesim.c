@@ -426,7 +426,7 @@ byte Patch6502(register byte Op,register M6502 *R) {
     }
     if (!silent) printf("!ide_addr = %d, ide_channel = %d, cpudma = %d\n",
 	   C1IO.ide_addr, C1IO.ide_channel, C1IO.cpudma);
-    if (C1IO.cpudma) exitnow = 1;
+    //if (C1IO.cpudma) exitnow = 1;
     break;
 
   case 0x72: /* sau */
