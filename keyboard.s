@@ -72,7 +72,7 @@ mrt:
 	ldx #$0f		; copy palette
 :	txa
 	zout $7f
-	lda clusterbuf + 0x3ff0,x
+	lda clusterbuf + $3ff0,x
 	ora #$40
 	zout $7f
 	dex
