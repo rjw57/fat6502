@@ -58,6 +58,11 @@ timestamp.s:
 	@date "+ .byte \"%Y-%m-%d %H:%M:%S %Z\"" >> timestamp.s
 	@echo " .byte 0" >> timestamp.s
 
+jeri: bigboot.bin boot232.bin
+	cat 0s mrt512.bin bigboot.bin > ../bigboot.bin
+	cat 0s mrt512.bin boot232.bin > ../boot232.bin
+
+
 clean:
 	$(RM) $(OBJS) \
 		timestamp.s \
