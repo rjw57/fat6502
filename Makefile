@@ -25,6 +25,7 @@ OBJS = \
 	rom.o \
 	fat.o \
 	iso9660.o \
+	romfs.o \
 	boot.o \
 	buffers.o \
 	debug.o \
@@ -59,7 +60,7 @@ boot232.bin: rs232boot.o rs232boot_reloc.o init232boot.o relocate.o debug.o buff
 bootflash.bin: bootflash.o graphics.o debug.o buffers.o vectors.o version.o timestamp.o checksum.o crc32.o
 	$(LD) -C $(CFG) -m bootflash.map -o $@ $^
 
-testcpc.bin: testcpc.o debug.o buffers.o vectors.o version.o checksum.o controller.o dev.o vol.o fat.o ide.o iso9660.o floppy.o zeropage.o dsk.o rom.o
+testcpc.bin: testcpc.o debug.o buffers.o vectors.o version.o checksum.o controller.o dev.o vol.o fat.o ide.o iso9660.o floppy.o zeropage.o dsk.o rom.o romfs.o
 	$(LD) -C $(CFG) -m testcpc.map -o $@ $^
 
 .PHONY: timestamp.s

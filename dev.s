@@ -201,7 +201,7 @@ _dev_find_volume:
 	sta volsector+1
 	sta volsector+2
 	sta volsector+3
-	lda #$16		; FAT16 for now
+	lda #$01		; romfs
 	clc
 	rts
 

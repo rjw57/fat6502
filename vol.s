@@ -76,6 +76,26 @@
 	.import iso_volname
 	.import iso_write_clust
 
+	.importzp fs_romfs		; romfs support
+
+	.import romfs_read_volid
+	.import romfs_cdboot
+	.import romfs_cdroot
+	.import romfs_dir_first
+	.import romfs_dir_next
+	.import romfs_next_clust
+	.import romfs_read_clust
+	.import romfs_endofdir
+	.import romfs_isfpgabin
+	.import romfs_isrom
+	.import romfs_isflashbin
+	.import romfs_isdrivebin
+	.import romfs_stat
+	.import romfs_firstnamechar
+	.import romfs_isdesc
+	.import romfs_volname
+	.import romfs_write_clust
+
 
 ; stat_type file types
 type_other	= 0
@@ -233,6 +253,25 @@ iso_vectors:
 	.word iso_volname
 	.word iso_write_clust
 
+romfs_vectors:
+	.word romfs_read_volid
+	.word romfs_cdboot
+	.word romfs_cdroot
+	.word romfs_dir_first
+	.word romfs_dir_next
+	.word romfs_next_clust
+	.word romfs_read_clust
+	.word romfs_endofdir
+	.word romfs_isfpgabin
+	.word romfs_isrom
+	.word romfs_isflashbin
+	.word romfs_isdrivebin
+	.word romfs_stat
+	.word romfs_firstnamechar
+	.word romfs_isdesc
+	.word romfs_volname
+	.word romfs_write_clust
+
 
 	.code
 
@@ -248,6 +287,8 @@ _vol_set_fs:
 	beq fat32
 	cmp #fs_iso9660
 	beq iso9660
+	cmp #fs_romfs
+	beq romfs
 	sec
 	rts
 
@@ -292,5 +333,16 @@ iso9660:
 	inx
 	cpx #vectablesize * 2
 	bne @copyiso
+	clc
+	rts
+
+romfs:
+	ldx #0
+@copyromfs:
+	lda romfs_vectors,x
+	sta vector_table,x
+	inx
+	cpx #vectablesize * 2
+	bne @copyromfs
 	clc
 	rts
