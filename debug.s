@@ -97,16 +97,16 @@ baud_230400	= 13
 	.code
 
 debug_init:
-	;lda #$55
-	;sta fifo_scratch
+	lda #$55
+	sta fifo_scratch
 
 	; set baudrate
 	lda #baud_38400
 	jsr debug_setbaud
 
-	;lda fifo_scratch
-	;cmp #$55
-	;bne @noss
+	lda fifo_scratch
+	cmp #$55
+	bne @noss
 
 	lda #$80		; we found a silver surfer
 	sta sspresent
@@ -119,6 +119,19 @@ debug_init:
 	lda #1
 	sta fifo_mcr
 
+	ldx #0
+	ldy #0
+@waitrecv:			; check if receiver is ready
+	lda fifo_msr
+	and #%00010000
+	bne @ready
+	inx
+	bne @waitrecv
+	iny
+	bne @waitrecv
+	beq @noss		; timeout
+
+@ready:
 	lda #<@initstr
 	ldx #>@initstr
 	jsr debug_puts
@@ -126,11 +139,11 @@ debug_init:
 	clc
 	rts
 
-;@noss:
-	;lda #0			; no silver surfer found
-	;sta sspresent
-	;clc
-	;rts
+@noss:
+	lda #0			; no silver surfer found
+	sta sspresent
+	clc
+	rts
 
 @initstr:
 	.byte 13,10,"C-ONE debug init",13,10,0
