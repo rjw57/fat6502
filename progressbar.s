@@ -60,17 +60,18 @@ bar_update:
 	beq @done
 	bcc @done
 
-	tax
 	pha
-	sec
-	sbc lastpos
-	stx lastpos
-	;clc
-	adc #6
+	lda lastpos
+	clc
+	adc #8
 	tax
 	ldy #28
 	jsr gfx_gotoxy
 	pla
+	tax
+	sec
+	sbc lastpos
+	stx lastpos
 	tax
 	lda #$81
 :	jsr gfx_putchar
