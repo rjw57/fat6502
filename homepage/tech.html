@@ -221,6 +221,49 @@ emulation differs from a genuine 6502 in the following ways:
 
 
 
+<h2>I/O Port Addresses</h2>
+
+<table>
+
+  <tr>
+    <td class="hexaddr">$7f</td>
+    <td>
+      Gate array and memory management.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$bc..$bf</td>
+    <td>
+      6845 CRTC.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$df</td>
+    <td>
+      ROM select.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$ef</td>
+    <td>
+      Printer port.
+    </td>
+  </tr>
+
+  <tr>
+    <td class="hexaddr">$f4..f7</td>
+    <td>
+      PPI.
+    </td>
+  </tr>
+
+</table>
+
+
+
 <h2>6502 Memory Map</h2>
 
 There are two free memory ranges in the address space, $0080-$00bf,
@@ -352,6 +395,7 @@ gfx_puthex		ff95		; print hex byte
 </pre>
 
 
+
 <!--
 <h2>How to program the Flash ROM</h2>
 
@@ -430,6 +474,17 @@ SAF sends the current value in A to the config port of the 1K100.
 
 LKA loads the next byte from the PS/2 keyboard FIFO into A. Carry is
 set if the FIFO is empty (and the contents of A invalid).
+
+
+<h3>ZIN</h3>
+
+ZIN reads a byte from the Z80 I/O address space.
+
+
+<h3>ZOUT</h3>
+
+ZOUT writes a byte to the Z80 I/O address space.
+
 
 
 </body>
