@@ -52,6 +52,8 @@
 	.import bar_max
 	.import bar_curr
 
+	.import support_core_load
+
 
 	.zeropage
 
@@ -181,7 +183,10 @@ boot:
 	lda fpgafound		; did we find an fpga config?
 	beq @error
 
-	jsr loadfpga		; upload it
+	jsr loadsupport		; load the support core
+	bcs @error
+
+	jsr loadfpga		; upload fpga core
 	bcs @error
 
 	ldx imagenum		; check list of found images
@@ -470,6 +475,38 @@ loadclusters:
 	jsr vol_next_clust
 	bcc @load
 @done:
+	rts
+
+
+; load support core
+loadsupport:
+	ldx #40 - 10		; draw message
+	ldy #22
+	jsr gfx_gotoxy
+	ldax #msg_bootsupport
+	jsr gfx_puts
+
+	lda #%00000100		; halt 65816 and erase FPGA
+	ctl
+	;ldx #$ff
+:	dex
+	bne :-
+	lda #%00000110		; halt 65816
+	ctl
+
+	ldax #msg_loadingsupport
+	jsr debug_puts
+	jsr support_core_load
+
+	php			; save result
+
+	ldx #40 - 14		; erase message
+	ldy #22
+	jsr gfx_gotoxy
+	ldax #msg_bootnone
+	jsr gfx_puts
+
+	plp
 	rts
 
 
@@ -871,6 +908,8 @@ msg_loadfailed:
 	.byte "Load failed",13,10,0
 msg_romtoaddr:
 	.byte " to ",0
+msg_loadingsupport:
+	.byte "Loading support core",13,10,0
 msg_loadingroms:
 	.byte "Loading ROM images",13,10,0
 msg_loadingrom:
@@ -902,6 +941,8 @@ msg_endcluster:
 
 msg_bootingfrom:
 	.byte "        Booting...       ",0
+msg_bootsupport:
+	.byte "Loading support core",0
 msg_bootfpga:
 	.byte "Configuring FPGA",0
 msg_bootrom:

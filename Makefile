@@ -43,7 +43,8 @@ OBJS = \
 	relocate.o \
 	checksum.o \
 	alternaterom.o \
-	dsk.o
+	dsk.o \
+	supportcore.o
 
 INCS = \
 	drivecpu.i \
