@@ -197,12 +197,12 @@ cpuspeed	= 2
 	.endmacro
 
 	.macro gab_even
-	lda #0
+	lda #$10
 	gab
 	.endmacro
 
 	.macro gab_odd
-	lda #1
+	lda #$11
 	gab
 	.endmacro
 
