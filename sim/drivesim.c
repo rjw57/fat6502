@@ -12,7 +12,7 @@
 #define Op6502(A) Rd6502(A)
 #endif
 
-
+// the emulated processor speed, in MHz
 #define CPUSPEED 2
 
 static byte ident_hd[512] = {
