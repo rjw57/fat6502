@@ -30,6 +30,7 @@
 	.import stat_length
 	.import stat_cluster
 	.import vol_secperclus
+	.import vol_rleflag
 
 	.importzp clusterptr, ptr
 
@@ -78,6 +79,8 @@ drivebinfound:		.res 1	; flag if drive bin found
 imagenum:		.res 1	; pointer to the image table
 bootconfig:		.res 1	; selected configuration (ASCII)
 entermenu:		.res 1	; non-0 if we should display boot menu
+fpgarle:		.res 1	; flag if fpga core is rle compressed
+lastbyte:		.res 1	; last byte in rle stream
 
 
 	.code
@@ -235,6 +238,8 @@ boot:
 	sta fpgalength,x
 	dex
 	bpl :-
+	lda vol_rleflag		; copy rle flag
+	sta fpgarle
 	inc fpgafound		; mark it as found
 	rts
 
@@ -516,12 +521,68 @@ loadfpga:
 	ldax #clusterbuf
 	stax clusterptr
 	jsr vol_read_clust	; read the first cluster
-	bcs @error
-
+	bcc :+
+	jmp @error
+:
 	lda #<clusterbuf	; point to the buffer
 	sta loadptr
 	lda #>clusterbuf
 	sta loadptr+1
+
+	bit fpgarle		; check if core is rle compressed
+	bpl @upload
+
+@loadrle:
+	ldy #0
+@next:
+	jsr @rle_read		; grab a byte
+	sta lastbyte		; save as last byte
+	saf 			; store
+@unpack:
+	jsr @rle_read		; read next byte
+	cmp lastbyte		; same as last one?
+	beq @rle		; yes, unpack
+	sta lastbyte		; save as last byte
+	saf			; store
+	jmp @unpack		; next
+@rle:
+	jsr @rle_read		; read byte count
+	tax
+	beq @end		; 0 = end of stream
+	lda lastbyte
+@read:
+	saf			; store X bytes
+	dex
+	bne @read
+	beq @unpack		; next
+@end:
+
+@rle_read:
+	dec loadleft
+	lda loadleft
+	cmp #$ff
+	bne @checkend
+	dec loadleft + 1
+	cmp #$ff
+	bne @checkend
+	dec loadleft + 2
+	; don't care if loadleft + 2 underflows
+@checkend:
+	lda vol_secperclus	; check for end of cluster
+	asl
+	;clc
+	adc #>clusterbuf
+	cmp loadptr+1
+	bne @getbyte
+	jmp @nextclust
+
+@getbyte:
+	lda (loadptr),y
+	inc loadptr
+	bne :+
+	inc loadptr + 1
+:	rts
+
 
 @upload:
 	lda loadleft + 1	; any 256-byte pages left?
@@ -541,6 +602,7 @@ loadfpga:
 	dec loadleft + 2
 :	inc loadptr+1		; increment load ptr
 
+@nextclust:
 	lda vol_secperclus	; check for end of cluster
 	asl
 	;clc
@@ -550,7 +612,8 @@ loadfpga:
 
 	jsr vol_next_clust	; find next cluster in chain
 	bcs @error
-	bne @nextcluster
+	beq @error
+	jmp @nextcluster
 
 @error:
 	ldax #msg_loadfailed
