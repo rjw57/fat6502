@@ -32,6 +32,7 @@
 
 	.import romaddr
 	.import vol_secperclus
+	.import vol_rleflag
 	.importzp dirptr
 	.importzp nameptr
 
@@ -195,7 +196,8 @@ romfs_dir_next:
 	sta dirptr
 	bcc :+
 	iny
-:	cpy #2 + >clusterbuf
+:	sty dirptr + 1
+	cpy #2 + >clusterbuf
 	bne @done
 
 	jsr romfs_next_clust
@@ -223,7 +225,7 @@ romfs_firstnamechar:
 	rts
 
 
-; check if dir entry is xFPGA.BIN
+; check if dir entry is xFPGA.BIN or xFPGA.RLE
 romfs_isfpgabin:
 	ldy #1
 	lda (dirptr),y
@@ -233,11 +235,18 @@ romfs_isfpgabin:
 	sec
 	rts
 @maybe:
+	lda #0
+	sta vol_rleflag
 	ldax #fpgabinname - $10
 	stax nameptr
 	jsr comparedirname
-	bne @no
+	beq returnconfig
 	; fall through
+	ldax #fpgarlename - $10
+	stax nameptr
+	jsr comparedirname
+	bne @no
+	dec vol_rleflag
 
 returnconfig:
 	ldy #$10
@@ -286,10 +295,8 @@ romfs_isflashbin:
 
 ; check if dir entry is a rom image
 romfs_isrom:
-	ldy #32
+	ldy #1
 	lda (dirptr),y
-	cmp #14
-	beq @maybe
 	cmp #12
 	beq @maybe
 @no:
@@ -301,7 +308,7 @@ romfs_isrom:
 	jsr comparedirname
 	bne @no
 
-	ldy #$12
+	ldy #$17
 	ldx #5
 :	lda (dirptr),y
 	sta romaddr,x
@@ -430,6 +437,8 @@ bootdirname:
 	.byte "BOOT"
 fpgabinname:
 	.byte "?FPGA.BIN"
+fpgarlename:
+	.byte "?FPGA.RLE"
 romname:
 	.byte "?R??????.BIN"
 flashbinname:
