@@ -54,10 +54,9 @@ EP1K30, is configured from the on board Flash ROM at power up. The
 larger FGPA, an ACEX EP1K100, needs to be configured before the
 computer can start. In order to be as flexible as possible, the
 smaller FPGA loads the configuration files from disk. This allows you
-to easily swap between several different configurations, and also has
-the benefit of keeping the cost down (compared to another 2 Mb Flash
+to easily swap between several different configurations.
 <img src="c1arch.png" align="right">
-ROM). It also means that upgrading the C-ONE is as simple as putting
+It also means that upgrading the C-ONE is as simple as putting
 new boot files on a floppy or your hard drive.
 
 <p>
@@ -69,6 +68,12 @@ itself. Through custom opcodes it has access to the IDE interface and
 the floppy controller. It can also DMA to and from System RAM, it can
 send configuration data to the 1K100, and it can halt the 65816 by
 controlling the /DMA line.
+
+<p>
+
+A late addition is the ability to program the on board Flash ROM in
+system. This means that every aspect of the C1 is now user
+upgradeable, except for the CPLD.
 
 
 <h3>Boot Procedure</h3>
