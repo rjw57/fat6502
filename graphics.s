@@ -161,14 +161,15 @@ gfx_nextchar:
 gfx_plotchar:
 	ldx cursx
 	gax
-	and #$3f		; limit to 64 chars for now
 	asl
-	asl			; fixme
+	asl
+	bcs @upper
+
+@lower:
 	asl
 	tax
-	bcs numbers
-
-letters:
+	bcs @num
+@sym:
 	lda cursy
 	asl
 	asl
@@ -177,17 +178,16 @@ letters:
 	clc
 	adc #8
 	sta ystop
-@next:
-	gay
-	lda font_AZ,x
+:	gay
+	lda font_sym,x
 	gst
 	inx
 	iny
 	cpy ystop
-	bne @next
+	bne :-
 	rts
 
-numbers:
+@num:
 	lda cursy
 	asl
 	asl
@@ -196,14 +196,53 @@ numbers:
 	clc
 	adc #8
 	sta ystop
-@next:
-	gay
+:	gay
 	lda font_num,x
 	gst
 	inx
 	iny
 	cpy ystop
-	bne @next
+	bne :-
+	rts
+
+@upper:
+	asl
+	tax
+	bcs @az
+@AZ:
+	lda cursy
+	asl
+	asl
+	asl
+	tay
+	clc
+	adc #8
+	sta ystop
+:	gay
+	lda font_AZ,x
+	gst
+	inx
+	iny
+	cpy ystop
+	bne :-
+	rts
+
+@az:
+	lda cursy
+	asl
+	asl
+	asl
+	tay
+	clc
+	adc #8
+	sta ystop
+:	gay
+	lda font_az,x
+	gst
+	inx
+	iny
+	cpy ystop
+	bne :-
 	rts
 
 
@@ -221,10 +260,10 @@ msg_cone3:
 	.align 256
 bootfont:
 	.incbin "bootfont.bin"
+font_sym	= bootfont
 font_num	= bootfont + 256
-font_AZ		= bootfont
-font_az		= bootfont + 512
-font_symbol	= bootfont + 768
+font_AZ		= bootfont + 512
+font_az		= bootfont + 768
 
 
 logo1:
