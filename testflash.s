@@ -2,6 +2,11 @@
 ; this code assumes that no dummy reads are done with lda addr,x and sta addr,x!!!
 
 
+;rs232		= 1
+ps2		= 1
+;testscript	= 1
+
+
 	.include "drivecpu.i"
 
 	.export reseth
@@ -12,14 +17,44 @@
 	.import __RELOC_RUN__
 	.import __RELOC_LOAD__
 
+	.ifdef rs232
 	.import debug_init
 	.import debug_puts
 	.import debug_puthex
 	.import debug_crlf
 	.import debug_putdigit
 	.import debug_put
-;	.import debug_get
-debug_get	= test_debug_get
+	.import debug_get
+	.endif
+
+	.ifdef ps2
+	.import gfx_cls
+	.import gfx_drawlogo
+	.import gfx_gotoxy
+	.import gfx_puts
+	.import gfx_putchar
+	.import gfx_quickcls
+	.import gfx_drawicon
+	.import gfx_puthex
+	.endif
+
+	.ifdef rs232
+real_io_get	= debug_get     
+	.endif
+
+	.ifdef ps2
+real_io_get	= kbd_get 
+io_put		= gfx_putchar
+io_puts		= gfx_puts
+io_puthex	= gfx_puthex
+io_putdigit	= gfx_putdigit
+	.endif
+
+	.ifdef testscript
+io_get		= test_io_get
+	.else
+io_get		= real_io_get
+	.endif
 
 
 	.segment "VOLZP", zeropage
@@ -34,11 +69,11 @@ debug_get	= test_debug_get
 	.segment "RELOC"
 
 
-flash_clear	= $3f60
-flash_clear15	= $3f62
-flash_shift	= $3f66
-flash_inc	= $3f68
-flash_data	= $3f6c
+flash_clear	= $3f20
+flash_clear15	= $3f22
+flash_shift	= $3f26
+flash_inc	= $3f28
+flash_data	= $3f2c
 
 
 	.zeropage
@@ -60,7 +95,11 @@ reseth:
 	lda #%00000110		; initalize ctl reg
 	ctl
 
+	.ifdef rs232
 	jsr debug_init
+	.else
+	jsr gfx_cls
+	.endif
 
 	lda #0
 	sta getctr
@@ -72,13 +111,18 @@ reseth:
 	lda #$45
 	sta addr
 
+	.ifdef ps2
+	ldx #0
+	ldy #0
+	jsr gfx_gotoxy
+	.endif
 	ldax initmsg
-	jsr debug_puts
+	jsr io_puts
 
 main:
 	jsr print_status
 
-	jsr debug_get
+	jsr io_get
 	bcc @check
 	jmp end
 
@@ -141,34 +185,59 @@ f_bank:
 	jmp main
 
 f_read:
+	.ifdef ps2
+	ldx #0
+	ldy #10
+	jsr gfx_gotoxy
+	.endif
 	ldax readmsg
-	jsr debug_puts
+	jsr io_puts
 	jsr print_addr
 	ldax equalsmsg
-	jsr debug_puts
+	jsr io_puts
 	ldx bank
 	lda flash_data,x
-	jsr debug_puthex
+	jsr io_puthex
+	.ifdef rs232
 	jsr debug_crlf
+	.else
+	lda #' '
+	jsr io_put
+	.endif
 	jmp main
 
 f_write:
+	.ifdef ps2
+	ldx #0
+	ldy #10
+	jsr gfx_gotoxy
+	.endif
 	ldax writemsg
-	jsr debug_puts
+	jsr io_puts
 	jsr print_addr
 	ldax equalsmsg
-	jsr debug_puts
-	jsr debug_get
-	jsr debug_put
+	jsr io_puts
+	.ifdef ps2
+	lda #' '
+	jsr io_put
+	jsr io_put
+	ldx #24
+	ldy #10
+	jsr gfx_gotoxy
+	.endif
+	jsr io_get
+	jsr io_put
 	jsr asciitohex
 	asl
 	asl
 	asl
 	asl
 	sta byte
-	jsr debug_get
-	jsr debug_put
+	jsr io_get
+	jsr io_put
+	.ifdef rs232
 	jsr debug_crlf
+	.endif
 	jsr asciitohex
 	ora byte
 	ldx bank
@@ -177,37 +246,50 @@ f_write:
 
 
 end:
+	.ifdef ps2
+	ldx #0
+	ldy #12
+	jsr gfx_gotoxy
+	.endif
 	ldax endmsg
-	jsr debug_puts
+	jsr io_puts
 
 	jmp *
 
 
 print_status:
+	.ifdef ps2
+	ldx #0
+	ldy #9
+	jsr gfx_gotoxy
+	.endif
 	ldax statusmsg1
-	jsr debug_puts
+	jsr io_puts
 
 	lda bank
-	jsr debug_putdigit
+	jsr io_putdigit
 
 	ldax statusmsg2
-	jsr debug_puts
+	jsr io_puts
 
+	.ifdef rs232
 	jsr print_addr
-
 	jmp debug_crlf
+	.else
+	jmp print_addr
+	.endif
 
 
 print_addr:
 	lda addr+2
 	and #1
-	jsr debug_putdigit
+	jsr io_putdigit
 
 	lda addr+1
-	jsr debug_puthex
+	jsr io_puthex
 
 	lda addr
-	jmp debug_puthex
+	jmp io_puthex
 
 
 asciitohex:
@@ -222,7 +304,7 @@ asciitohex:
 	rts
 
 
-test_debug_get:
+test_io_get:
 	ldx getctr
 	lda inputdata,x
 	bne :+
@@ -233,7 +315,76 @@ test_debug_get:
 	rts
 
 
+kbd_get:
+:	lka			; get byte from kbdfifo
+	bcs :-			; carry = empty
+
+	cmp #$f0		; break code?
+	bne @make
+@break:
+:	lka			; eat next key
+	bcs :-
+	bcc kbd_get
+@make:
+	cmp #$e0		; cursor keys are extended codes
+	beq @extended
+
+	ldx #0
+:	cmp scantable,x
+	beq :+
+	inx
+	bne :-
+:	lda scantoasc,x
+	clc
+	rts
+
+@extended:
+:	lka			; eat next key
+	bcs :-
+	cmp #$f0
+	beq @break
+
+	lda #0			; no extended codes
+	clc
+	rts
+
+	ldx #0
+:	cmp exttable,x
+	beq :+
+	inx
+	bne :-
+:	lda exttoasc,x
+	clc
+	rts
+
+
+gfx_putdigit:
+	php
+	pha
+	clc
+	adc #'0'
+	jsr gfx_putchar
+	pla
+	plp
+	rts
+ 
+
 	.rodata
+
+scantable:
+	.byte 0
+	.byte $45,$16,$1e,$26,$25,$2e,$36,$3d,$3e,$46
+	.byte $1c,$32,$21,$23,$24,$2b
+	.byte $2d,$1d
+scantoasc:
+	.byte 0,"0123456789"
+	.byte "abcdef"
+	.byte "rw"
+exttable:
+	.byte 0
+exttoasc:
+	.byte 0
+
 
 inputdata:
 	.byte "01221221221221221221221"

@@ -55,7 +55,7 @@ testkbd.bin: testkbd.o debug.o buffers.o vectors.o version.o
 test1280.bin: test1280.o buffers.o vectors.o version.o graphics.o
 	$(LD) -C $(CFG) -m test1280.map -o $@ $^
 
-testflash.bin: testflash.o  debug.o buffers.o vectors.o version.o timestamp.o
+testflash.bin: testflash.o graphics.o debug.o buffers.o vectors.o version.o timestamp.o
 	$(LD) -C $(CFG) -m boot232.map -o $@ $^
 
 .PHONY: timestamp.s
