@@ -56,12 +56,12 @@ computer can start. In order to be as flexible as possible, the
 smaller FPGA loads the configuration files from disk. This allows you
 to easily swap between several different configurations, and also has
 the benefit of keeping the cost down (compared to another 2 Mb Flash
+<img src="c1arch.png" align="right">
 ROM). It also means that upgrading the C-ONE is as simple as putting
 new boot files on a floppy or your hard drive.
 
 <p>
 
-<img src="c1arch.png" align="right">
 The 1K30 includes a small 6502 CPU core that's used to execute the
 boot code. The first 64 kB of the Multimedia SIMM is used as RAM for
 the CPU core, and it's initialized from the same Flash ROM as the 1K30
@@ -110,6 +110,18 @@ The following boot devices are supported:
   <tr>
 </table>
 
+
+    </td>
+    <td class="noborder">&nbsp;</td>
+    <td align="left" valign="top" class="small" width="150">
+<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=78686&type=1" border="0" alt="SourceForge.net Logo" align="right"></A>
+<h2>News</h2>
+
+<!--#include virtual="news.inc" -->
+    </td>
+  </tr>
+</table>
+
 <p>
 
 In order to boot successfully, the configuration files need to adhere
@@ -145,17 +157,7 @@ It should be noted that on FAT and ISO9660 drives, only the 8.3
 filename is used. VFAT, Joliet, and other extensions are silently
 ignored.
 
-
-    </td>
-    <td class="noborder">&nbsp;</td>
-    <td align="left" valign="top" class="small" width="150">
-<a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=78686&type=1" border="0" alt="SourceForge.net Logo" align="right"></A>
-<h2>News</h2>
-
-<!--#include virtual="news.inc" -->
-    </td>
-  </tr>
-</table>
+<p>
 
 As an example, this is what the C64 mode configuration files would be
 called if they were on an MS-DOS drive mounted as D:
