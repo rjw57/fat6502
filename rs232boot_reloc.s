@@ -2,7 +2,7 @@
 
 	.export rs232boot
 
-	.importzp src, dest
+	.importzp dest
 
 	.import resetvector
 
@@ -17,7 +17,7 @@ rs232_ptr:	.res 2
 
 	.segment "RELOC"
 
-cksum:		.res 1
+;cksum:		.res 1
 
 
 rs232boot:
@@ -34,14 +34,14 @@ rs232boot:
 	stax dest
 	ldx #>__ROM_SIZE__
 	ldy #0
-	sty cksum
+;	sty cksum
 
 @getbyte:
 	jsr rs232_get
 	sta (dest),y
-	clc
-	adc cksum
-	sta cksum
+	;clc
+	;adc cksum
+	;sta cksum
 	iny
 	bne @getbyte
 
@@ -52,10 +52,10 @@ rs232boot:
 	dex
 	bne @getbyte
 
-	ldax checkmsg
-	jsr rs232_puts
-	lda cksum
-	jsr rs232_puthex
+	;ldax checkmsg
+	;jsr rs232_puts
+	;lda cksum
+	;jsr rs232_puthex
 	ldax execmsg
 	jsr rs232_puts
 
@@ -67,9 +67,9 @@ waitingmsg1:
 	.byte "Waiting for $",0
 waitingmsg2:
 	.byte " bytes of ROM code",13,10,0
-checkmsg:
-	.byte 13,10
-	.byte "ADC checksum = $",0
+;checkmsg:
+;	.byte 13,10
+;	.byte "ADC checksum = $",0
 execmsg:
 	.byte 13,10
 	.byte "Executing...",13,10

@@ -44,6 +44,8 @@
 	.import debug_putdigit
 	.import debug_crlf
 
+	.import init232boot
+
 
 	.bss
 
@@ -51,7 +53,7 @@ currdev:	.res 1
 currctl:	.res 1
 
 
-	.segment "RELOC"
+;	.segment "RELOC"
 
 ; this is a dummy segment just to suppress an ld65 warning
 
@@ -83,18 +85,6 @@ reseth:
 	ldax ver_str
 	jsr gfx_puts
 
-	ldx #28			; print searching for boot device
-	ldy #12
-	jsr gfx_gotoxy
-	ldax msg_searching
-	jsr gfx_puts
-
-	ldx #38			; draw icon
-	ldy #14
-	jsr gfx_gotoxy
-	ldax devicon_none
-	jsr gfx_drawicon
-
 	lda #0			; flag whether we should display boot menu
 	sta entermenu
 
@@ -102,6 +92,11 @@ reseth:
 	sta bootconfig
 	bcs @default		; is holding a config key?
 
+	cmp #'S'
+	bne @checkflash
+	jmp init232boot		; download rom
+
+@checkflash:
 	cmp #'F'
 	bne @debuginit
 
@@ -119,6 +114,19 @@ reseth:
 	ctl
 	jsr debug_init		; initialize rs-232
 @configdone:
+
+
+	ldx #28			; print searching for boot device
+	ldy #12
+	jsr gfx_gotoxy
+	ldax msg_searching
+	jsr gfx_puts
+
+	ldx #38			; draw icon
+	ldy #14
+	jsr gfx_gotoxy
+	ldax devicon_none
+	jsr gfx_drawicon
 
 
 	ldax msg_init1		; print version number
