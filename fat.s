@@ -912,6 +912,12 @@ fat_read_ptable:
 	cpx #4
 	bne @checktype
 
+	lda #0			; maybe it's a floppy?
+	sta part_num
+	lda #fs_fat12		; store partition type
+	sta vol_fstype
+	jmp checkvolid		; jump straight to volid check
+
 @error:
 	sec
 	rts
@@ -950,15 +956,18 @@ foundfat16:
 
 cont12:
 	jsr loadvolid
-	bcc @noerror
+	bcc checkvolid
 
 @error:
 	sec
 	rts
-@noerror:
+checkvolid:
 	jsr checkgeom
-	bne @error
-
+	beq @ok
+@error:
+	sec
+	rts
+@ok:
 	jsr findfatstart
 
 	asl sectorbuf + $16	; multiply fatsize by two
