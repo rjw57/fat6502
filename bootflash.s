@@ -131,6 +131,14 @@ programflash:
 	lda hexbuf+2
 	sta len+1
 
+	ldax warningmsg
+	jsr debug_puts
+	jsr debug_get
+	cmp #' '
+	beq :+
+	jmp restart
+:
+
 	ldax erasemsg
 	jsr debug_puts
 
@@ -552,6 +560,10 @@ exttoasc:
 
 initmsg:
 	.byte "C1 quick and dirty flash util",13,10,0
+
+warningmsg:
+	.byte "Warning: the whole 64K sector will be erased!",13,10
+	.byte "Press space to start, any other key to cancel.",13,10,0
 
 addrmsg:
 	.byte "24-bit start address: $",0
