@@ -38,11 +38,6 @@ lastkey:	.res 1
 gfxptr:	.res 3
 
 
-	.macro sam ptradr
-	.byte $f2, <ptradr, >ptradr
-	.endmacro
-
-
 	.code
 
 warmstart:
