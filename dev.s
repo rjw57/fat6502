@@ -7,6 +7,7 @@
 
 	.export dev_init
 	.export dev_read_sector
+	.export dev_write_sector
 	.export dev_set
 	.export dev_find_volume
 	.export lba
