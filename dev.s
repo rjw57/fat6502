@@ -9,7 +9,7 @@
 	.export dev_read_sector
 	.export dev_set
 	.export lba
-
+	.exportzp sectorptr
 
 	.import ide_init		; ide hard drives
 	.import ide_read_sector
@@ -32,6 +32,11 @@ dev_init_vector		= vector_table
 dev_read_sector_vector	= vector_table + 2
 
 lba:			.res 4	; 28-bit block address, set bits 28-31 to 0
+
+
+	.zeropage
+
+sectorptr:		.res 2	; pointer to where data is loaded
 
 
 	.rodata

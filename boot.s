@@ -1,7 +1,7 @@
 	.include "drivecpu.i"
 
 	.export boot
-	.export bootconfig, part_secperclus
+	.export bootconfig
 
 	.import cluster
 	.import clusterbuf
@@ -20,6 +20,7 @@
 	.import romaddr
 	.import stat_length
 	.import stat_cluster
+	.import vol_secperclus
 
 	.import debug_puts
 	.import debug_crlf
@@ -46,7 +47,6 @@ storevector:		.res 2	; jump vector for indirect store
 fpgafound:		.res 1	; flag if fpga file found
 imagenum:		.res 1	; pointer to the image table
 bootconfig:		.res 1	; selected configuration
-part_secperclus:	.res 4	; number of 512-byte sectors per cluster
 
 
 	.code
@@ -198,8 +198,8 @@ boot:
 @foundimage:
 	ldax msg_foundrom
 	jsr debug_puts
-	ldx imagenum			; convert hex filename to load address
-	ldy #5				; there is no error checking here!
+	ldx imagenum		; convert hex filename to load address
+	ldy #5			; there is no error checking here!
 @convertaddr:
 	lda romaddr,y
 	jsr asciitohex
@@ -216,7 +216,7 @@ boot:
 	inx
 	dey
 	bpl @convertaddr
-	lda #0				; msb is 0
+	lda #0			; msb is 0
 	sta imageaddress,x
 
 	lda imageaddress-1,x
@@ -230,7 +230,7 @@ boot:
 	jsr vol_stat
 
 	ldx imagenum
-	ldy #0				; copy the length and start cluster
+	ldy #0			; copy the length and start cluster
 @copylength:
 	lda stat_length,y
 	sta imagelength,x
@@ -261,7 +261,7 @@ asciitohex:
 loadfpga:
 	ldax msg_loadingfpga
 	jsr debug_puts
-	ldx #3		; copy pointers
+	ldx #3			; copy pointers
 @copy:
 	lda fpgacluster,x
 	sta cluster,x
@@ -282,7 +282,7 @@ loadfpga:
 
 ; load a memory image to system ram
 loadimage:
-	ldx #0		; address + length = end
+	ldx #0			; address + length = end
 	clc
 	php
 @add:
@@ -414,7 +414,7 @@ load:
 	bne @upload
 	inc loadptr+1
 
-	lda part_secperclus	; check for end of cluster
+	lda vol_secperclus	; check for end of cluster
 	asl
 	;clc
 	adc #>clusterbuf
@@ -436,8 +436,8 @@ load:
 
 storefpga:
 	lda (loadptr),y		; grab a byte
-	saf		; feed the fpga
-			; simple enough, eh?
+	saf			; feed the fpga
+				; simple enough, eh?
 	;dputs msg_writingbyte
 	;dputnum32 loadaddress
 	;dputs msg_crlf
@@ -445,13 +445,13 @@ storefpga:
 
 storeimage:
 	lda loadaddress		; set the 24-bit load address
-	sal		; in the system ram registers
+	sal			; in the system ram registers
 	lda loadaddress+1
 	sau
 	lda loadaddress+2
 	sab
 	lda (loadptr),y		; grab a byte
-	mst		; store it in system ram
+	mst			; store it in system ram
 	;dputs msg_writingbyte
 	;dputnum32 loadaddress
 	rts

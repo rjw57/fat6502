@@ -79,9 +79,6 @@ ctl_select:
 	ldax idemsg
 	jsr debug_puts
 
-	lda #fs_fat32		; kludge, fixme
-	jsr vol_set_fs		; gotta put fs detection in the right place
-
 	jsr ide_scan		; scan ide bus
 
 	ldx #3
@@ -278,8 +275,26 @@ ctl_select_dev:
 	bne :+
 	sec
 	rts
-:	jmp dev_set
+:	pha
+	cmp #devtype_floppy
+	beq @floppy
+	cmp #devtype_hd
+	beq @hd
 
+	lda #fs_iso9660
+	.byte $2c		; skip next
+@hd:
+	lda #fs_fat32
+	.byte $2c		; skip next
+@floppy:
+	lda #fs_fat12
+
+	jsr vol_set_fs
+	pla
+	jmp dev_set
+
+
+	.rodata
 
 sizechartab:
 	.byte " ", "k", "M", "G"

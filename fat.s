@@ -5,7 +5,6 @@
 	.export fat_dir_first, fat_dir_next
 	.export fat12_next_clust, fat16_next_clust, fat32_next_clust
 	.export fat_read_clust, fat_read_ptable
-	.export cluster
 	.export fat_endofdir
 	.export fat_isfpgabin
 	.export fat_isrom
@@ -28,9 +27,10 @@
 	.import clusterbuf
 
 	.import lba
+	.import cluster
 
 	.import vol_fstype
-	.import part_secperclus
+	.import vol_secperclus
 	.import romaddr
 
 	.import debug_puts
@@ -52,10 +52,6 @@ part_num:	.res 1	; partition number
 part_start:	.res 4	; 32-bit LBA start address of active partition
 part_rootdir:	.res 4	; 32-bit root directory address
 scount:		.res 1	; number of sectors to read
-cluster:	.res 4	; 32-bit cluster address
-			; multiply by number of sectors per cluster
-			; add start of clusters
-			; and you get the logical block address
 sectorbuf:	.res 512
 fatbuf:		.res 512
 fatcache:	.res 4	; 32-bit currently cached fat sector
@@ -314,7 +310,7 @@ fat_dir_next:
 	bcc @skip
 	inc dirptr+1
 @skip:
-	lda part_secperclus	; check if we've parsed the whole
+	lda vol_secperclus	; check if we've parsed the whole
 	asl			; cluster
 	;clc
 	adc #>clusterbuf
@@ -430,7 +426,7 @@ fat16_next_clust:
 
 fat32_next_clust:
 	lda cluster+1		; there are 4 bytes for each entry
-	sta lba		; in the FAT this gives us 128 entries
+	sta lba			; in the FAT this gives us 128 entries
 	lda cluster+2		; in every FAT sector so bits 31..7 of
 	sta lba+1		; the current cluster address gives us
 	lda cluster+3		; the FAT sector to read
@@ -589,7 +585,7 @@ fat_read_clust:
 	jmp @readsectors
 
 @notclusterzero:
-	lda part_secperclus	; multiply cluster address by number of
+	lda vol_secperclus	; multiply cluster address by number of
 @shift:
 	lsr		; sectors per cluster. this number is a
 	bcs @shifted		; power of two so we'll just shift.
@@ -616,7 +612,7 @@ fat_read_clust:
 
 	; we should now have the correct cluster in the lba address
 
-	lda part_secperclus	; number of sectors to read
+	lda vol_secperclus	; number of sectors to read
 @readsectors:
 	sta scount
 
@@ -850,7 +846,7 @@ subcluster:
 @subcluster:
 	sec		; for reserved values 0 and 1
 	lda part_cstart
-	sbc part_secperclus
+	sbc vol_secperclus
 	sta part_cstart
 	lda part_cstart+1
 	sbc #0
@@ -934,7 +930,7 @@ checkgeom:
 	bne @checkfail
 
 	lda sectorbuf + $0d	; number of sectors per cluster
-	sta part_secperclus
+	sta vol_secperclus
 	and #$80		; we can't handle 64K clusters
 @checkfail:
 	rts

@@ -22,6 +22,8 @@
 	.export stat_length
 	.export stat_cluster
 	.export vol_fstype
+	.export vol_secperclus
+	.export cluster
 	.exportzp dirptr, nameptr
 
 	.importzp fs_fat12		; fat12/16/32 support
@@ -86,6 +88,8 @@ romaddr:		.res 6
 stat_length:		.res 4
 stat_cluster:		.res 4
 vol_fstype:		.res 1
+vol_secperclus:		.res 1	; number of 512-byte sectors per cluster
+cluster:		.res 4	; 32-bit cluster address
 
 
 	.rodata

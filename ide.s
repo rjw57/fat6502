@@ -2,6 +2,7 @@
 	.include "drivecpu.i"
 
 	.import lba
+	.importzp sectorptr
 
 	.export ide_scan
 	.export ide_init
@@ -24,21 +25,18 @@
 	.export ide_drivetab
 	.export ide_modeltab
 	.export offset40
-	.exportzp sectorptr
 
 	.exportzp devtype_none
 	.exportzp devtype_hd
 	.exportzp devtype_cd
+
+	.importzp sectorptr
 
 	.import debug_puts
 	.import debug_puthex
 	.import debug_putdigit
 	.import debug_put
 	.import debug_crlf
-
-	.zeropage
-
-sectorptr:	.res 2	; pointer to where data is loaded
 
 
 	.bss
