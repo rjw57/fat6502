@@ -2,6 +2,8 @@
 ; silver surfer code based on groepaz cc65 code
 ;----------------------------------------------------------------------------------
 
+	.include "drivecpu.i"
+
 
 	.export debug_init
 	.export debug_done
@@ -132,8 +134,7 @@ debug_init:
 	beq @noss		; timeout
 
 @ready:
-	lda #<@initstr
-	ldx #>@initstr
+	ldax @initstr
 	jsr debug_puts
 
 	clc

@@ -61,17 +61,15 @@ reseth:
 
 	jsr debug_init
 
-	lda #<msg_init1
-	ldx #>msg_init1
+	ldax msg_init1
 	jsr debug_puts
-	lda #<timestamp
-	ldx #>timestamp
+	ldax timestamp
 	jsr debug_puts
-	lda #<msg_init2
-	ldx #>msg_init2
+	ldax msg_init2
 	jsr debug_puts
 
-	dputs msg_erasefpga
+	ldax msg_erasefpga
+	jsr debug_puts
 	clf			; erase FPGA
 
 	lda #0
@@ -94,15 +92,13 @@ reseth:
 	jsr dev_init		; initialize IDE routines
 	bcs @next
 
-	lda #<msg_bootingfrom
-	ldx #>msg_bootingfrom
+	ldax msg_bootingfrom
 	jsr debug_puts
 	lda currdev
 	jsr debug_putdigit
 	jsr debug_crlf
 
-	lda #<msg_readptable
-	ldx #>msg_readptable
+	ldax msg_readptable
 	jsr debug_puts
 	lda vol_fstype
 	pha
@@ -117,8 +113,7 @@ reseth:
 	jsr vol_set_fs
 @fsdidntchange:
 
-	lda #<msg_selectconfig
-	ldx #>msg_selectconfig
+	ldax msg_selectconfig
 	jsr debug_puts
 	jsr select_config	; check which config to boot (0-9)
 	bcs @nextfailed
@@ -126,14 +121,12 @@ reseth:
 	jsr debug_putdigit
 	jsr debug_crlf
 
-	lda #<msg_boot
-	ldx #>msg_boot
+	ldax msg_boot
 	jsr debug_puts
 	jsr boot		; load boot code
 	bcs @nextfailed
 
-	lda #<msg_done
-	ldx #>msg_done
+	ldax msg_done
 	jsr debug_puts
 	jsr debug_done
 	lda #%00100000		; reset 65816
@@ -147,8 +140,7 @@ reseth:
 
 
 @nextfailed:
-	lda #<msg_failed
-	ldx #>msg_failed
+	ldax msg_failed
 	jsr debug_puts
 @next:
 	inc currdev
@@ -165,8 +157,7 @@ reseth:
 	jmp @nextctl
 
 failure:
-	lda #<msg_allfailed
-	ldx #>msg_allfailed
+	ldax msg_allfailed
 	jsr debug_puts
 
 	inc $d020		; fix me

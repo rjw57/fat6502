@@ -69,14 +69,11 @@ reseth:
 	bne :-
 @donelo:
 
-	lda #<initmsg1
-	ldx #>initmsg1
+	ldax initmsg1
 	jsr debug_puts
-	lda #<timestamp
-	ldx #>timestamp
+	ldax timestamp
 	jsr debug_puts
-	lda #<initmsg2
-	ldx #>initmsg2
+	ldax initmsg2
 	jsr debug_puts
 
 	jmp rs232boot

@@ -60,8 +60,7 @@ ctl_select:
 	rts
 
 @select_floppy:
-	lda #<floppymsg
-	ldx #>floppymsg
+	ldax floppymsg
 	jsr debug_puts
 
 	lda #fs_fat12		; kludge, fixme
@@ -78,8 +77,7 @@ ctl_select:
 	rts
 
 @select_ide:
-	lda #<idemsg
-	ldx #>idemsg
+	ldax idemsg
 	jsr debug_puts
 
 	lda #fs_fat32		; kludge, fixme
@@ -103,8 +101,7 @@ ctl_select:
 
 	inc numdevs
 
-	lda #<founddevmsg
-	ldx #>founddevmsg
+	ldax founddevmsg
 	jsr debug_puts
 
 	lda currdev
@@ -114,8 +111,7 @@ ctl_select:
 	cmp #devtype_cd
 	bne @notcd
 
-	lda #<cdmsg
-	ldx #>cdmsg
+	ldax cdmsg
 	jsr debug_puts
 	jmp @printcolon
 @notcd:
@@ -134,8 +130,7 @@ ctl_select:
 	jsr printsize
 
 @printcolon:
-	lda #<colonmsg
-	ldx #>colonmsg
+	ldax colonmsg
 	jsr debug_puts
 
 	lda #<ide_modeltab
