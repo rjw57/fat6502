@@ -176,6 +176,7 @@ stat:
 	cmp #'.'
 	bne @copyname
 	iny
+	lda (dirptr),y
 	cmp #'.'
 	bne :+
 	iny
