@@ -198,8 +198,8 @@ restart:
 	ldax #mainmenumsg
 	jsr debug_puts
 @select:
-	;jsr debug_get
-	jsr kbd_get
+	jsr debug_get
+	;jsr kbd_get
 
 	cmp #'p'
 	bne :+
@@ -249,8 +249,8 @@ erasesector:
 
 	ldax #warningmsg
 	jsr debug_puts
-	;jsr debug_get
-	jsr kbd_get
+	jsr debug_get
+	;jsr kbd_get
 	cmp #' '
 	beq :+
 	jmp restart
@@ -320,8 +320,8 @@ programsector:
 
 	ldax #warningmsg
 	jsr debug_puts
-	;jsr debug_get
-	jsr kbd_get
+	jsr debug_get
+	;jsr kbd_get
 	cmp #' '
 	beq :+
 	jmp restart
@@ -336,8 +336,8 @@ flash:
 
 	ldx #0
 @getbyte:
-	;jsr debug_get
-	txa
+	jsr debug_get
+	;txa
 	sta flashbuf,x
 	inx
 	bne @getbyte
@@ -566,8 +566,8 @@ gethex:
 	lda #0
 	sta hexlen
 @getkey:
-	;jsr debug_get
-	jsr kbd_get
+	jsr debug_get
+	;jsr kbd_get
 	cmp #8
 	bne :+
 
