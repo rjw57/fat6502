@@ -1,3 +1,6 @@
+; www.t13.org for the specs
+
+
 ; IDE register map
 ide_data	= 0	; r/w
 ide_error	= 1	; r
@@ -12,6 +15,7 @@ ide_command	= 7	; w
 
 ; IDE commands
 idecmd_read_sector	= $20
+idecmd_write_sector	= $30
 idecmd_packet		= $a0
 idecmd_identify		= $ec
 idecmd_identifypacket	= $a1

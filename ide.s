@@ -320,25 +320,7 @@ timeoutmsg:
 
 ; read 512-byte sector to sectorptr
 ide_read_sector:
-	ldy #ide_lba3
-	lda #$e0		; lba addressing
-	ora ide_device
-	ora lba+3
-	jsr ide_write_reg
-
-	jsr delay_400ns		; delay after selecting device
-
-	ldy #ide_lba2
-	lda lba+2
-	jsr ide_write_reg
-
-	ldy #ide_lba1
-	lda lba+1
-	jsr ide_write_reg
-
-	ldy #ide_lba0
-	lda lba
-	jsr ide_write_reg
+	jsr setlba		; set lba registers
 
 	ldy #ide_scount		; read a single sector
 	lda #1
@@ -359,30 +341,27 @@ ide_read_256_words:
 	jsr ide_wait_drq	; wait for DRQ
 	bcs @timeout
 
-	lda #>512		; number of pages to load
+	lda #2			; number of pages to load
 	sta pagecount
 
 	ldy #0			; store data at sectorptr
-
-@nextpage:
+@next:
 	jsr ide_read_data
 	sta (sectorptr),y
 	iny
 	txa
 	sta (sectorptr),y
 	iny
-	bne @nextpage
+	bne @next
 
 	inc sectorptr+1
 
 	dec pagecount
-	bne @nextpage
+	bne @next
 
 	clc
-	rts
-
 @timeout:
-	; fall through
+	rts
 
 
 ; write sector in sectorptr to ATAPI device
@@ -393,8 +372,72 @@ atapi_write_sector:
 
 ; write 512-byte sector from sectorptr
 ide_write_sector:
-	sec
+	jsr setlba		; set lba registers
+
+	ldy #ide_scount		; write a single sector
+	lda #1
+	jsr ide_write_reg
+
+	ldy #ide_command	; send ide write command
+	lda #idecmd_write_sector
+	jsr ide_write_reg
+
+	jsr delay_400ns		; delay after sending command
+
+	jsr ide_read_error
+	bcc @write
+@timeout:
 	rts
+
+@write:
+	jsr ide_wait_drq	; wait for DRQ
+	bcs @timeout
+
+	lda #2			; number of pages to load
+	sta pagecount
+
+	ldy #0			; read data from sectorptr
+@next:
+	lda (sectorptr),y
+	pha
+	iny
+	lda (sectorptr),y
+	tax
+	pla
+	jsr ide_write_data
+	iny
+	bne @next
+
+	inc sectorptr + 1
+
+	dec pagecount
+	bne @next
+
+	clc
+	rts
+
+
+; set LBA address
+setlba:
+	ldy #ide_lba3
+	lda #$e0		; lba addressing
+	ora ide_device
+	ora lba+3
+	jsr ide_write_reg
+
+	jsr delay_400ns		; delay after selecting device
+
+	ldy #ide_lba2
+	lda lba+2
+	jsr ide_write_reg
+
+	ldy #ide_lba1
+	lda lba+1
+	jsr ide_write_reg
+
+	ldy #ide_lba0
+	lda lba
+	jmp ide_write_reg
 
 
 ; wait for DRQ, with timeout
