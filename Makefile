@@ -51,7 +51,7 @@ INCS = \
 all: bigboot.bin boot232.bin bootflash.bin testcpc.bin
 
 bigboot.bin: $(OBJS) $(INCS)
-	$(LD) -C $(CFG) -m bigboot.map -o $@ $(OBJS)
+	$(LD) -C $(CFG) -m bigboot.map --dbgfile bigboot.dbg -o $@ $(OBJS)
 
 boot232.bin: rs232boot.o rs232boot_reloc.o init232boot.o relocate.o debug.o buffers.o vectors.o version.o timestamp.o checksum.o
 	$(LD) -C $(CFG) -m boot232.map -o $@ $^
