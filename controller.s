@@ -6,6 +6,7 @@
 
 	.export ctl_select
 	.export ctl_select_dev
+	.export devmap
 
 	.import dev_set
 	.import dev_find_volume
