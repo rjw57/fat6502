@@ -49,15 +49,16 @@ baud, 8N1, and hardware flow control.
 <h2>The Drive CPU</h2>
 
 The CPU core in the 1K30 is referred to as the drive CPU. When the
-main system is up and running, the 6502 core works as a
-coprocessor. Currently the core is running at 2 MHz, but I have no
-idea if the instruction timings are identical to that of a real 6502.
-At the time of writing, the core differs from a genuine 6502 in the
-following ways:
+main system is up and running, the 6502 core works as a coprocessor.
+Currently the core is running at around 2 MHz, but I have no idea if
+the instruction timings are identical to that of a real 6502. At the
+time of writing, the core differs from a genuine 6502 in the following
+ways:
 
 <ul>
   <li> There are no IRQs
   <li> A number of custom instructions have been added.
+  <li> The lda/sta (zp,x) addressing mode has been removed (I think).
 </ul>
 
 
@@ -67,8 +68,8 @@ following ways:
 <pre>  $0000-$00ff   Zero Page RAM
   $0100-$01ff   Stack RAM
   $0200-$3eff   RAM
-  $3f00-$3f1f   Clock Port 1
-  $3f20-$3f3f   Clock Port 2 (RS-232)
+  $3f00-$3f1f   Clock Port 2
+  $3f20-$3f3f   Clock Port 1 (RS-232)
   $3f40-$3fff   reserved
   $4000-$ffff   RAM</pre>
 
@@ -76,16 +77,34 @@ following ways:
 
 <h3>Custom Instructions</h3>
 
-<h4>CSA, control and select address</h4>
+Common to all the instructions is that they don't set the processor
+flags. E.g. you can't use
 
-CSA uses the value in the accumulator to control various I/O pins:
+<pre>    lka          ; check keyboard fifo
+    beq empty    ; <b>does NOT work</b>
+</pre>
+
+You need to add a cmp #$00, and #$ff, or some other regular 6502
+instruction before you check the registers.
+
+
+<h4>CSA, select address</h4>
+
+CSA uses the value in the accumulator to the IDE address pins:
 
 <pre>  bit 0-2  IDE interface A0-A2
   bit 3    select IDE channel, 0 = primary, 1 = secondary
-  bit 4    CPU DMA control line, active low
-  bit 5    strobe 0 to erase FPGA, keep set to 1
-  bit 6    CPU RESET control line, active low
-  bit 7    unused, set to 0</pre>
+  bit 4-7  unused, set to 0</pre>
+
+
+<h4>CTL, system control</h4>
+
+CTL uses the value in the accumulator to control various I/O lines:
+
+<pre>  bit 0    CPU DMA control line, active low
+  bit 1    strobe 0 to erase FPGA, keep set to 1
+  bit 2    CPU RESET control line, active low
+  bit 3-7  unused, set to 0</pre>
 
 
 <h4>ILD, IDE load from register</h4>
@@ -127,6 +146,21 @@ SAF sends the current value in A to the config port of the 1K100.
 
 LKA loads the next byte from the PS/2 keyboard FIFO into A. 0 means
 that the FIFO is empty.
+
+
+<h4>GAX, set graphics address X</h4>
+<h4>GAY, set graphics address Y</h4>
+<h4>GAB, set graphics address bank</h4>
+<h4>GST, write pixels</h4>
+
+Set the graphics cursor address. The drive cpu can address a 640x512
+pixel screen, arranged as a monochrome planar bitmap. GAX sets the
+offset within a rasterline, 0..79. GAY sets bits 1..8 of the
+rasterline. Bit 0 is controlled by the lowest bit in GAB. This
+slightly strange arrangement is meant to accelerate text printing by
+only drawing every other rasterline. GST stores the byte in A as 8
+pixels at the location pointed to by GAX/GAY/GAB.
+
 
 </body>
 </html>
