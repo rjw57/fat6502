@@ -147,7 +147,8 @@ to these rules:
 
   <li> Each config should as a bare minium have a file named
        "xFPGA.BIN" where x is the config number. This file is sent to
-       the 1K100 as FPGA configuration data.</li>
+       the 1K100 as FPGA configuration data. This file can also be RLE
+       compressed, and is then named "xFPGA.RLE".</li>
 
   <li> Each config may also have up to 16 memory images named
        "xRaaaaaa.BIN" where x is the config number and aaaaaa is the
@@ -172,15 +173,25 @@ ignored.
 </p>
 
 <p>
-As an example, this is what the C64 mode configuration files would be
+As an example, this is what the C64 mode configuration files could be
 called if they were on an MS-DOS drive mounted as D:
 </p>
 
-<pre>
+<!--
 D:\BOOT\0FPGA.BIN
 D:\BOOT\0R01A000.BIN
 D:\BOOT\0R01E000.BIN
 D:\BOOT\0DESC.TXT
+-->
+<pre>D:\BOOT\0DESC.TXT           ; description for boot menu
+D:\BOOT\0DRIVE.BIN          ; executed in the drive cpu after booting
+D:\BOOT\0FPGA.RLE           ; RLE compressed FPGA core
+D:\BOOT\0R000000.BIN        ; the main FPGA core is loaded as a rom
+D:\BOOT\0R051000.BIN        ; char rom at $1000
+D:\BOOT\0R059000.BIN        ; char rom at $9000
+D:\BOOT\0R05A000.BIN        ; basic rom
+D:\BOOT\0R05D000.BIN        ; char rom at $d000
+D:\BOOT\0R05E000.BIN        ; kernal rom
 </pre>
 
 <p>
