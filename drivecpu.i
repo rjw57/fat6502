@@ -26,8 +26,8 @@ A16550BASE	= $3f20
 	;.endif
 	.endmacro
 
-; --- IDE ---
-	
+; --- I/O ---
+
 ; IDE register select
 ; bit 0-2  A0-A2
 ; bit 3    IDE channel
@@ -37,8 +37,14 @@ A16550BASE	= $3f20
 	.byte $5a
 	.endmacro
 
+; I/O register select
+; LSB in A, MSB in X
 
-; IDE load from register
+	.macro sca
+	.byte $7a
+	.endmacro
+
+; Load from I/O bus
 ; LSB in A, MSB in X
 ; flags are not affected!
 
@@ -46,12 +52,45 @@ A16550BASE	= $3f20
 	.byte $3a
 	.endmacro
 
-; IDE store to register
+; Store to I/O bus
 ; LSB in A, MSB in X
-; flags are not affected!
 
 	.macro ist
 	.byte $1a
+	.endmacro
+
+; convenience
+
+	.macro ldio ioaddr
+	ldx #>ioaddr
+	lda #<ioaddr
+	sca
+	ild
+	.endmacro
+
+	.macro stio ioaddr
+	pha
+	txa
+	pha
+	ldx #>ioaddr
+	lda #<ioaddr
+	sca
+	pla
+	tax
+	pla
+	ist
+	.endmacro
+
+; Load from Z80 I/O bus
+
+	.macro zin port
+	.byte $f3, <port
+	.endmacro
+
+; Store to Z80 I/O bus
+
+	.macro zout port
+	.byte $e3, <port
 	.endmacro
 
 
@@ -91,7 +130,19 @@ A16550BASE	= $3f20
 	.byte $32
 	.endmacro
 
-; util
+
+; --- misc ---
+;	.macro	ldax	arg
+;		.if (.match (.left (1, arg), #))
+;		    ; immediate mode
+;		    lda	    #<(.right (.tcount (arg)-1, arg))
+;		    ldx	    #>(.right (.tcount (arg)-1, arg))
+;		.else
+;		    ; assume absolute or zero page
+;		    lda	    arg
+;		    ldx	    1+(arg)
+;		.endif
+;	.endmacro
 	.macro ldax address
 	lda #<address
 	ldx #>address
