@@ -39,7 +39,7 @@ reseth:
 	ldx #$ff
 	txs
 
-	lda #%00000111		; initalize ctl reg
+	lda #%00000110		; initalize ctl reg
 	ctl
 
 	jsr debug_init

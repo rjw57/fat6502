@@ -25,6 +25,9 @@
 
 	.import gfx_drawlogo
 	.import gfx_cls
+	.import gfx_gotoxy
+	.import gfx_putchar
+	.import gfx_puts
 
 	.import debug_init
 	.import debug_done
@@ -51,6 +54,9 @@ reseth:
 	cld
 	ldx #$ff
 	txs
+
+	lda #%00000110
+	ctl
 
 	ldx #0			; clear zp and stack
 	txa
@@ -86,6 +92,13 @@ reseth:
 
 	jsr gfx_cls		; clear graphics screen
 	jsr gfx_drawlogo
+	ldy #0
+	ldx #65
+	jsr gfx_gotoxy
+	ldax msg_bootromv
+	jsr gfx_puts
+	ldax ver_str
+	jsr gfx_puts
 
 	lda #0
 	sta currctl
@@ -254,3 +267,5 @@ msg_allfailed:
 	.byte "  of failure",13,10
 	.byte 0
 
+msg_bootromv:
+	.byte "BOOT ROM V",0
