@@ -1,4 +1,4 @@
 	.export clusterbuf
 
 
-clusterbuf	= $8000
+clusterbuf	= $4000
