@@ -374,11 +374,6 @@ _debug_put:
 	lda #fifo_txd
 	sca			; set A[4..0] and Csel[3..0]
 	pla
-	pha
-	.byte 00
-	.byte 09
-	.byte $c0
-	pla
 
 ;	sta fifo_txd
 	ist			;write to silversurfer
