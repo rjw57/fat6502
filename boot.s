@@ -504,31 +504,10 @@ loadfpga:
 	ctl
 
 @nextcluster:
-	sec			; update progress bar display
-	lda fpgalength
-	sbc loadleft
-	sta bar_curr
-	lda fpgalength + 1
-	sbc loadleft + 1
-	sta bar_curr + 1
-	lda fpgalength + 2
-	sbc loadleft + 2
-	sta bar_curr + 2
-	lda #0			; 24-bit for now
-	sta bar_curr
-	jsr bar_update
-
-	ldax #clusterbuf
-	stax clusterptr
-	jsr vol_read_clust	; read the first cluster
+	jsr @donextclust
 	bcc :+
 	jmp @error
 :
-	lda #<clusterbuf	; point to the buffer
-	sta loadptr
-	lda #>clusterbuf
-	sta loadptr+1
-
 	bit fpgarle		; check if core is rle compressed
 	bpl @upload
 
@@ -548,14 +527,14 @@ loadfpga:
 @rle:
 	jsr @rle_read		; read byte count
 	tax
-	beq @end		; 0 = end of stream
-	lda lastbyte
+	bne :+
+	jmp @done		; 0 = end of stream
+:	lda lastbyte
 @read:
 	saf			; store X bytes
 	dex
 	bne @read
 	beq @unpack		; next
-@end:
 
 @rle_read:
 	dec loadleft
@@ -563,6 +542,7 @@ loadfpga:
 	cmp #$ff
 	bne @checkend
 	dec loadleft + 1
+	lda loadleft + 1
 	cmp #$ff
 	bne @checkend
 	dec loadleft + 2
@@ -574,7 +554,11 @@ loadfpga:
 	adc #>clusterbuf
 	cmp loadptr+1
 	bne @getbyte
-	jmp @nextclust
+
+	jsr vol_next_clust	; find next cluster in chain
+	bcs @error
+	jsr @donextclust
+	bcs @error
 
 @getbyte:
 	lda (loadptr),y
@@ -643,6 +627,38 @@ loadfpga:
 	clc			; all done
 	rts
 
+@donextclust:
+	sec			; update progress bar display
+	lda fpgalength
+	sbc loadleft
+	sta bar_curr
+
+	lda fpgalength + 1
+	sbc loadleft + 1
+	sta bar_curr + 1
+
+	lda fpgalength + 2
+	sbc loadleft + 2
+	sta bar_curr + 2
+
+	lda #0			; 24-bit for now
+	sta bar_curr + 3
+
+	jsr bar_update
+
+	ldax #clusterbuf
+	stax clusterptr
+	jsr vol_read_clust	; read the first cluster
+	bcc :+
+	rts
+:
+	lda #<clusterbuf	; point to the buffer
+	sta loadptr
+	lda #>clusterbuf
+	sta loadptr+1
+
+	clc
+	rts
 
 
 ; load a memory image to system ram
