@@ -164,6 +164,15 @@ cpuspeed	= 2
 	plp
 	.endmacro
 
+; print cr+lf
+	.macro dputcrlf
+	php
+	pha
+	jsr debug_crlf
+	pla
+	plp
+	.endmacro
+
 ; print 32-bit number
 	.macro dputnum32 address
 	php
