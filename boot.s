@@ -467,6 +467,11 @@ loadfpga:
 	dex
 	bpl @copy
 
+	lda #%00000100		; halt 65816 and erase FPGA
+	ctl
+	;ldx #$ff
+:	dex
+	bne :-
 	lda #%00000110		; halt 65816
 	ctl
 
@@ -654,14 +659,8 @@ loadimage:
 
 	ldy #0
 @upload:
-	lda loadaddress		; set the 24-bit load address
-	sal			; in the system ram registers
-	lda loadaddress+1
-	sau
-	lda loadaddress+2
-	sab
 	lda (loadptr),y		; grab a byte
-	mst			; store it in system ram
+	sam loadaddress		; store it in system ram
 
 	inc loadaddress		; increment our byte counter
 	bne @skip3
