@@ -1,6 +1,7 @@
 	.include "drivecpu.i"
 
 	.export reseth
+	.export warmstart
 	.export devicon
 
 	.import bootconfig
@@ -45,6 +46,7 @@
 	.import debug_crlf
 
 	.import relocate
+	.import checkaltrom
 
 	.import init232boot
 
@@ -78,7 +80,9 @@ reseth:
 	jsr clrbss		; clear BSS segment
 
 	jsr relocate
+	jsr checkaltrom		; see if there's a valid rom in bank 5
 
+warmstart:
 	jsr gfx_cls		; clear graphics screen
 	jsr gfx_drawlogo	; print C-ONE logo
 	ldy #29

@@ -1,21 +1,16 @@
-	.export irqvector
 	.export resetvector
-	.export nmivector
+	.export warmstartvector
 
 	.import reseth
-
-	.code
-
-irqh:
-nmih:	rti
+	.import warmstart
 
 	.segment "CPUVECTORS"
 
 	; reset and irq vectors
 
 irqvector:
-	.addr irqh
+	.addr 0
 resetvector:
 	.addr reseth
-nmivector:
-	.addr nmih
+warmstartvector:
+	.addr warmstart
