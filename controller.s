@@ -21,6 +21,11 @@
 	.importzp devtype_cd
 	.importzp devtype_floppy
 
+	.import vol_set_fs
+	.importzp fs_fat12
+	.importzp fs_fat32
+	.importzp fs_iso9660
+
 	.import debug_puts
 	.import debug_puthex
 	.import debug_putdigit
@@ -59,6 +64,9 @@ ctl_select:
 	ldx #>floppymsg
 	jsr debug_puts
 
+	lda #fs_fat12		; kludge, fixme
+	jsr vol_set_fs		; gotta put fs detection in the right place
+
 	lda #devtype_floppy	; a single floppy drive
 	sta devmap
 	lda #0
@@ -73,6 +81,9 @@ ctl_select:
 	lda #<idemsg
 	ldx #>idemsg
 	jsr debug_puts
+
+	lda #fs_fat32		; kludge, fixme
+	jsr vol_set_fs		; gotta put fs detection in the right place
 
 	jsr ide_scan		; scan ide bus
 

@@ -13,9 +13,7 @@
 	.import ctl_select
 	.import ctl_select_dev
 
-	.importzp fs_fat12
-	.importzp fs_fat16
-	.importzp fs_fat32
+	.import vol_fstype
 	.import vol_set_fs
 	.import vol_read_ptable
 
@@ -71,9 +69,6 @@ reseth:
 	dputs msg_erasefpga
 	clf			; erase FPGA
 
-	lda #fs_fat32		; kludge, fixme
-	jsr vol_set_fs		; gotta put fs detection in the right place
-
 	lda #0
 	sta currctl
 @nextctl:
@@ -104,8 +99,18 @@ reseth:
 	lda #<msg_readptable
 	ldx #>msg_readptable
 	jsr debug_puts
+	lda vol_fstype
+	pha
 	jsr vol_read_ptable	; find the boot partition
+	pla
 	bcs @nextfailed
+
+	cmp vol_fstype
+	beq @fsdidntchange
+
+	lda vol_fstype
+	jsr vol_set_fs
+@fsdidntchange:
 
 	lda #<msg_selectconfig
 	ldx #>msg_selectconfig

@@ -1,10 +1,16 @@
 	.include "drivecpu.i"
 
 	.export fat12_cdroot, fat16_cdroot, fat32_cdroot
-	.export fat_cd, fat_dir_first, fat_dir_next
+	.export fat_cdboot
+	.export fat_dir_first, fat_dir_next
 	.export fat12_next_clust, fat16_next_clust, fat32_next_clust
 	.export fat_read_clust, fat_read_ptable
 	.export cluster
+	.export fat_endofdir
+	.export fat_isfpgabin
+	.export fat_isrom
+	.export fat12_stat, fat16_stat, fat32_stat
+	.export fat_firstnamechar
 	.exportzp fs_fat12
 	.exportzp fs_fat16
 	.exportzp fs_fat32
@@ -14,15 +20,18 @@
 	.importzp ptr
 	.importzp sectorptr
 
+	.import stat_cluster
+	.import stat_length
+
 	.import dev_read_sector
-	.import comparedirname
 
 	.import clusterbuf
 
 	.import lba
 
-	.import part_fstype
+	.import vol_fstype
 	.import part_secperclus
+	.import romaddr
 
 	.import debug_put
 	.import debug_puts
@@ -59,6 +68,14 @@ fatbuf:		.res 512
 fatcache:	.res 4	; 32-bit currently cached fat sector
 
 
+	.rodata
+
+bootdirname:
+	.byte "BOOT    ","   "
+fpganame:
+	.byte "xFPGA   ","BIN"
+
+
 	.code
 
 ; load the root directory
@@ -85,11 +102,109 @@ fat32_cdroot:
 	rts
 
 
+; return the first char of the filename
+fat_firstnamechar:
+	; w00t, same code as below
+
+
+; 0 if dirptr points to end of dir
+fat_endofdir:
+	ldy #0			; check for end of dir
+	lda (dirptr),y
+	rts
+
+
+; copy start cluster and length from dirptr entry
+fat12_stat:
+fat16_stat:
+	lda #0			; upper half is 0
+	sta stat_cluster+2
+	sta stat_cluster+3
+	jmp stat
+
+fat32_stat:
+	ldy #$14		; copy the start cluster
+	lda (dirptr),y
+	sta stat_cluster+2
+	iny
+	lda (dirptr),y
+	sta stat_cluster+3
+
+stat:
+	ldy #$1a
+	lda (dirptr),y
+	sta stat_cluster
+	iny
+	lda (dirptr),y
+	sta stat_cluster+1
+
+	ldy #$1f		; copy the length
+	ldx #3
+@copylength:
+	lda (dirptr),y
+	sta stat_length,x
+	dey
+	dex
+	bpl @copylength
+
+	clc
+	rts
+
+
+; check if the dir entry pointed to by dirptr is an FPGA config file
+; return config number in A
+; does NOT verify that the first char is a digit!
+fat_isfpgabin:
+	ldax fpganame
+	stax nameptr
+	ldy #10
+	jsr comparedirname
+	cpy #0
+	beq @yes
+@no:
+	sec
+	rts
+@yes:
+returnconfig:
+	lda (dirptr),y
+	and #$0f
+	clc
+	rts
+
+
+; check if the dir entry pointed to by dirptr is a ROM image file
+; copy ascii image address to romaddr and return config number in A
+; does NOT verify that the first char is a digit!
+fat_isrom:
+	jsr checkdotbin		; check if it ends with .BIN
+	bne @no
+	ldy #1			; check if it's an image file
+	lda (dirptr),y
+	cmp #'R'	
+	beq @yes
+@no:
+	sec
+	rts
+@yes:
+	ldy #7
+	ldx #5
+@copy:
+	lda (dirptr),y
+	sta romaddr,x
+	dey
+	dex
+	bpl @copy
+	dey
+	beq returnconfig
+
+
 ; change directory
 ; needs the first cluster of the current dir in cluster
 ; and the name of the dir to change to in nameptr
 ; returns the new dir address in cluster or carry set on error
-fat_cd:
+fat_cdboot:
+	ldax bootdirname
+	stax nameptr
 	jsr fat_dir_first
 	bcs @error
 
@@ -126,7 +241,7 @@ fat_cd:
 	lda (dirptr),y
 	sta cluster+1
 
-	lda part_fstype
+	lda vol_fstype
 	cmp #fs_fat32
 	bne @fat16or12
 
@@ -144,6 +259,36 @@ fat_cd:
 	sta cluster+2
 	sta cluster+3
 	clc
+	rts
+
+
+; compare two strings at dirptr and nameptr
+comparedirname:
+@compare:
+	lda (dirptr),y
+	cmp (nameptr),y
+	bne @exit
+	dey
+	bpl @compare
+	lda #0
+@exit:
+	rts
+
+
+; check if the dir entry pointed to by dirptr ends with .BIN
+checkdotbin:
+	ldy #8
+	lda (dirptr),y
+	cmp #'B'
+	bne @done
+	iny
+	lda (dirptr),y
+	cmp #'I'
+	bne @done
+	iny
+	lda (dirptr),y
+	cmp #'N'
+@done:
 	rts
 
 
@@ -214,7 +359,7 @@ fat12_next_clust:
 
 
 fat_next_clust:
-	lda part_fstype
+	lda vol_fstype
 	cmp #fs_fat12
 	beq fat12_next_clust
 	cmp #fs_fat32
@@ -438,7 +583,7 @@ fat_read_clust:
 	ora rctemp
 	bne @notclusterzero
 
-	lda part_fstype
+	lda vol_fstype
 	cmp #fs_fat32
 	beq @notclusterzero
 
@@ -582,7 +727,7 @@ foundfat12:
 	dputs dstr_crlf
 
 	lda #fs_fat12		; store partition type
-	sta part_fstype
+	sta vol_fstype
 
 	jmp cont12		; continue as if FAT16
 
@@ -596,7 +741,7 @@ foundfat16:
 	dputs dstr_crlf
 
 	lda #fs_fat16		; store partition type
-	sta part_fstype
+	sta vol_fstype
 
 cont12:
 	jsr loadvolid
@@ -664,7 +809,7 @@ foundfat32:
 	dputs dstr_crlf
 
 	lda #fs_fat32		; store partition type
-	sta part_fstype
+	sta vol_fstype
 
 	jsr loadvolid
 	bcc @noerror

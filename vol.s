@@ -6,109 +6,159 @@
 
 	.export vol_set_fs
 	.export vol_read_ptable
-	.export vol_cd
+	.export vol_cdboot
 	.export vol_cdroot
 	.export vol_dir_first
 	.export vol_dir_next
 	.export vol_next_clust
 	.export vol_read_clust
+	.export vol_endofdir
+	.export vol_isfpgabin
+	.export vol_isrom
+	.export vol_stat
+	.export vol_firstnamechar
 
+	.export romaddr
+	.export stat_length
+	.export stat_cluster
+	.export vol_fstype
 
 	.importzp fs_fat12		; fat12/16/32 support
 	.importzp fs_fat16
 	.importzp fs_fat32
 
 	.import fat_read_ptable
-	.import fat_cd
-	.import fat12_cdroot
-	.import fat16_cdroot
-	.import fat32_cdroot
+	.import fat_cdboot
+	.import fat12_cdroot, fat16_cdroot, fat32_cdroot
 	.import fat_dir_first
 	.import fat_dir_next
-	.import fat12_next_clust
-	.import fat16_next_clust
-	.import fat32_next_clust
+	.import fat12_next_clust, fat16_next_clust, fat32_next_clust
 	.import fat_read_clust
+	.import fat_endofdir
+	.import fat_isfpgabin
+	.import fat_isrom
+	.import fat12_stat, fat16_stat, fat32_stat
+	.import fat_firstnamechar
 
 
 	.importzp fs_iso9660		; iso9660 support
 
 	.import iso_read_ptable
-	.import iso_cd
+	.import iso_cdboot
 	.import iso_cdroot
 	.import iso_dir_first
 	.import iso_dir_next
 	.import iso_next_clust
 	.import iso_read_clust
+	.import iso_endofdir
+	.import iso_isfpgabin
+	.import iso_isrom
+	.import iso_stat
+	.import iso_firstnamechar
 
 
 	.bss
 
-vectablesize	= 7
-
+	.align 2
+vectablesize		= 12
 vector_table:		.res vectablesize * 2
-
 vol_read_ptable_vector	= vector_table
-vol_cd_vector		= vector_table + 2
+vol_cdboot_vector	= vector_table + 2
 vol_cdroot_vector	= vector_table + 4
 vol_dir_first_vector	= vector_table + 6
 vol_dir_next_vector	= vector_table + 8
 vol_next_clust_vector	= vector_table + 10
 vol_read_clust_vector	= vector_table + 12
+vol_endofdir_vector	= vector_table + 14
+vol_isfpgabin_vector	= vector_table + 16
+vol_isrom_vector	= vector_table + 18
+vol_stat_vector		= vector_table + 20
+vol_firstnamechar_vector= vector_table + 22
+
+romaddr:		.res 6
+stat_length:		.res 4
+stat_cluster:		.res 4
+vol_fstype:		.res 1
 
 
 	.rodata
 
 fat12_vectors:
 	.word fat_read_ptable
-	.word fat_cd
+	.word fat_cdboot
 	.word fat12_cdroot
 	.word fat_dir_first
 	.word fat_dir_next
 	.word fat12_next_clust
 	.word fat_read_clust
+	.word fat_endofdir
+	.word fat_isfpgabin
+	.word fat_isrom
+	.word fat12_stat
+	.word fat_firstnamechar
 
 fat16_vectors:
 	.word fat_read_ptable
-	.word fat_cd
+	.word fat_cdboot
 	.word fat16_cdroot
 	.word fat_dir_first
 	.word fat_dir_next
 	.word fat16_next_clust
 	.word fat_read_clust
+	.word fat_endofdir
+	.word fat_isfpgabin
+	.word fat_isrom
+	.word fat16_stat
+	.word fat_firstnamechar
 
 fat32_vectors:
 	.word fat_read_ptable
-	.word fat_cd
+	.word fat_cdboot
 	.word fat32_cdroot
 	.word fat_dir_first
 	.word fat_dir_next
 	.word fat32_next_clust
 	.word fat_read_clust
+	.word fat_endofdir
+	.word fat_isfpgabin
+	.word fat_isrom
+	.word fat32_stat
+	.word fat_firstnamechar
 
 iso_vectors:
 	.word iso_read_ptable
-	.word iso_cd
+	.word iso_cdboot
 	.word iso_cdroot
 	.word iso_dir_first
 	.word iso_dir_next
 	.word iso_next_clust
 	.word iso_read_clust
+	.word iso_endofdir
+	.word iso_isfpgabin
+	.word iso_isrom
+	.word iso_stat
+	.word iso_firstnamechar
 
 
 	.code
 
 vol_read_ptable:	jmp (vol_read_ptable_vector)
-vol_cd:			jmp (vol_cd_vector)
+vol_cdboot:		jmp (vol_cdboot_vector)
 vol_cdroot:		jmp (vol_cdroot_vector)
 vol_dir_first:		jmp (vol_dir_first_vector)
 vol_dir_next:		jmp (vol_dir_next_vector)
 vol_next_clust:		jmp (vol_next_clust_vector)
 vol_read_clust:		jmp (vol_read_clust_vector)
+vol_endofdir:		jmp (vol_endofdir_vector)
+vol_isfpgabin:		jmp (vol_isfpgabin_vector)
+vol_isrom:		jmp (vol_isrom_vector)
+vol_stat:		jmp (vol_stat_vector)
+vol_firstnamechar:	jmp (vol_firstnamechar_vector)
 
 
 ; call with filesystem identifier in A
 vol_set_fs:
+	sta vol_fstype
 	cmp #fs_fat12
 	beq fat12
 	cmp #fs_fat16

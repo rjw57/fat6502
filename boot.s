@@ -1,20 +1,27 @@
 	.include "drivecpu.i"
 
-	.export boot, comparedirname, part_fstype
+	.export boot
 	.export bootconfig, part_secperclus
 
-	.importzp dirptr, loadptr, nameptr
-	.importzp fs_fat16
-	.importzp fs_fat32
+	.importzp dirptr, loadptr
 
 	.import cluster
 	.import clusterbuf
-	.import vol_cd
+	.import vol_cdboot
 	.import vol_cdroot
 	.import vol_dir_first
 	.import vol_dir_next
 	.import vol_next_clust
 	.import vol_read_clust
+	.import vol_stat
+	.import vol_isrom
+	.import vol_isfpgabin
+	.import vol_firstnamechar
+	.import vol_endofdir
+
+	.import romaddr
+	.import stat_length
+	.import stat_cluster
 
 	.import debug_puts
 	.import debug_puthex
@@ -41,20 +48,19 @@
 
 	.bss
 
-	.align 256
-imagecluster:	.res 64	; 16 * 32-bit image cluster addresses
-imageaddress:	.res 64	; 16 * 32-bit load addresses
-imagelength:	.res 64	; 16 * 32-bit image lengths
-fpgacluster:	.res 4	; 32-bit fpga cluster address
-fpgalength:	.res 4	; 32-bit fpga length
-loadaddress:	.res 4	; 32-bit load address
-loadlength:	.res 4	; 32-bit file length
-loadend:	.res 4	; 32-bit load address + file length
-storevector:	.res 2	; jump vector for indirect store
-fpgafound:	.res 1	; flag if fpga file found
-imagenum:	.res 1	; pointer to the image table
-part_fstype:	.res 1	; file system type
-bootconfig:	.res 1	; selected configuration
+	.align 64
+imagecluster:		.res 64	; 16 * 32-bit image cluster addresses
+imageaddress:		.res 64	; 16 * 32-bit load addresses
+imagelength:		.res 64	; 16 * 32-bit image lengths
+fpgacluster:		.res 4	; 32-bit fpga cluster address
+fpgalength:		.res 4	; 32-bit fpga length
+loadaddress:		.res 4	; 32-bit load address
+loadlength:		.res 4	; 32-bit file length
+loadend:		.res 4	; 32-bit load address + file length
+storevector:		.res 2	; jump vector for indirect store
+fpgafound:		.res 1	; flag if fpga file found
+imagenum:		.res 1	; pointer to the image table
+bootconfig:		.res 1	; selected configuration
 part_secperclus:	.res 4	; number of 512-byte sectors per cluster
 
 
@@ -103,49 +109,30 @@ boot:
 	dputs dstr_cdroot
 	jsr vol_cdroot		; start in the root dir
 
-	lda #<bootdirname	; the name to look for
-	sta nameptr
-	lda #>bootdirname
-	sta nameptr+1
-
 	dputs dstr_cdboot
-	jsr vol_cd		; change directory
+	jsr vol_cdboot		; change directory
 	bcs @error		; no boot directory? fux0red
 
-	lda #<fpganame		; the name to look for
-	sta nameptr
-	lda #>fpganame
-	sta nameptr+1
-
-	;dputs dstr_readingdir
 	jsr vol_dir_first	; find the first dir entry
 
 @checkentry:
-	ldy #0			; check for end of dir
-	lda (dirptr),y
+	jsr vol_endofdir	; check for end of dir
 	beq @foundlast
 
-	lda bootconfig		; check if it starts with the right number
-	ora #$30
-	ldy #0
-	cmp (dirptr),y
+	jsr vol_firstnamechar	; check if it starts with the right number
+	sec
+	sbc #$30
+	cmp bootconfig
 	bne @next
 
-	jsr checkdotbin		; check if it ends with .BIN
-	bne @next
-
-	ldy #10			; check if it's xFPGA.BIN
-	jsr comparedirname
-	cpy #0			; we know this fails, but check where
-	bne @notfpgabin
+	jsr vol_isfpgabin	; check if it's xFPGA.BIN
+	bcs @notfpgabin
 	jsr @foundfpgabin
 	jmp @next
 @notfpgabin:
 
-	ldy #1			; check if it's an image file
-	lda (dirptr),y
-	cmp #'R'
-	bne @next
+	jsr vol_isrom		; check if it's an image file
+	bcs @next
 	jsr @foundimage
 	;jmp @next
 
@@ -206,67 +193,28 @@ boot:
 
 @foundfpgabin:
 	dputs dstr_foundfpgabin
-	lda part_fstype
-	cmp #fs_fat32
-	bne @fat16
-
-	ldy #$14		; copy the start cluster
-	lda (dirptr),y
-	sta fpgacluster+2
-	iny
-	lda (dirptr),y
-	sta fpgacluster+3
-	jmp @skip1
-
-@fat16:
-	cmp #fs_fat16
-	bne @error
-
-	lda #0
-	sta fpgacluster+2
-	sta fpgacluster+3
-
-@skip1:
-	ldy #$1a
-	lda (dirptr),y
-	sta fpgacluster
-	iny
-	lda (dirptr),y
-	sta fpgacluster+1
-
-	iny			; copy the file length
-	lda (dirptr),y		; we should make sure that the length
-	sta fpgalength		; is $00028c35...
-	iny
-	lda (dirptr),y
-	sta fpgalength+1
-	iny
-	lda (dirptr),y
-	sta fpgalength+2
-	iny
-	lda (dirptr),y
-	sta fpgalength+3
-
-	;lda #16			; fake filesize of 16
-	;sta fpgalength
-	;lda #0
-	;sta fpgalength+1
-	;sta fpgalength+2
-	;sta fpgalength+3
-
+	jsr vol_stat
+	ldx #3
+:	lda stat_cluster,x
+	sta fpgacluster,x
+	lda stat_length,x
+	sta fpgalength,x
+	dex
+	bpl :-
 	inc fpgafound		; mark it as found
 	rts
 
+
 @foundimage:
 	dputs dstr_foundrom
-	ldx imagenum		; convert hex filename to load address
-	ldy #7			; there is no error checking here!
+	ldx imagenum			; convert hex filename to load address
+	ldy #5				; there is no error checking here!
 @convertaddr:
-	lda (dirptr),y
+	lda romaddr,y
 	jsr asciitohex
 	sta imageaddress,x
 	dey
-	lda (dirptr),y
+	lda romaddr,y
 	jsr asciitohex
 	asl
 	asl
@@ -276,9 +224,8 @@ boot:
 	sta imageaddress,x
 	inx
 	dey
-	cpy #1			; 6 digits
-	bne @convertaddr
-	lda #0			; msb is 0
+	bpl @convertaddr
+	lda #0				; msb is 0
 	sta imageaddress,x
 
 	lda imageaddress-1,x
@@ -289,69 +236,22 @@ boot:
 	dputnum
 	dputs dstr_crlf
 
-	ldy #$1f
+	jsr vol_stat
+
+	ldx imagenum
+	ldy #0				; copy the length and start cluster
 @copylength:
-	lda (dirptr),y
+	lda stat_length,y
 	sta imagelength,x
-	dex
-	dey
-	cpy #$1b
+	lda stat_cluster,y
+	sta imagecluster,x
+	inx
+	iny
+	cpy #4
 	bne @copylength
 
-	inx			; copy the start cluster
-
-	;lda #16			; fake filesize of 16
-	;sta imagelength,x
-	;lda #0
-	;sta imagelength+1,x
-	;sta imagelength+2,x
-	;sta imagelength+3,x
-
-	ldy #$1a
-
-	lda (dirptr),y
-	sta imagecluster,x
-	inx
-	iny
-	lda (dirptr),y
-	sta imagecluster,x
-	inx
-
-	lda part_fstype
-	cmp #fs_fat32
-	beq @fat32i
-
-	lda #0
-	sta imagecluster,x
-	inx
-	lda #0
-	sta imagecluster,x
-	jmp @donecopying
-
-@fat32i:
-	ldy #$14
-	lda (dirptr),y
-	sta imagecluster,x
-	inx
-	iny
-	lda (dirptr),y
-	sta imagecluster,x
-
-@donecopying:
-	inx
 	stx imagenum
-
-	;dputs dstr_imagenum
-	;lda imagenum
-	;dputnum
-	;dputs dstr_crlf
-
 	rts
-
-bootdirname:
-	.byte "BOOT    ","   "
-fpganame:
-	.byte "xFPGA   ","BIN"
 
 
 ; convert ascii to hex digit
@@ -363,26 +263,6 @@ asciitohex:
 	;sec
 	sbc #7
 @skip:
-	rts
-
-
-; check if the dir entry pointed to by dirptr ends with .BIN
-checkdotbin:
-	ldy #8
-	lda (dirptr),y
-	cmp #'B'
-	bne @done
-
-	iny
-	lda (dirptr),y
-	cmp #'I'
-	bne @done
-
-	iny
-	lda (dirptr),y
-	cmp #'N'
-
-@done:
 	rts
 
 
@@ -579,17 +459,4 @@ storeimage:
 	mst		; store it in system ram
 	;dputs dstr_writingbyte
 	;dputnum32 loadaddress
-	rts
-
-
-; compare two strings at dirptr and nameptr
-comparedirname:
-@compare:
-	lda (dirptr),y
-	cmp (nameptr),y
-	bne @exit
-	dey
-	bpl @compare
-	lda #0
-@exit:
 	rts
