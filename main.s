@@ -165,7 +165,6 @@ failure:
 	ldax msg_allfailed
 	jsr debug_puts
 
-	trc $fe			; fail
 	inc $d020		; fix me
 	jmp *-3
 
@@ -218,7 +217,7 @@ msg_selectconfig:
 msg_boot:
 	.byte "Booting",13,10,0
 msg_done:
-	.byte "Success, starting 65816",13,10,0
+	.byte "Success, starting main CPU",13,10,0
 msg_failed:
 	.byte "Failure",13,10,0
 msg_bootingfrom:

@@ -102,11 +102,11 @@ probingmsg:
 failedmsg:
 	.byte "failed",13,10,0
 foundhdmsg:
-	.byte "found HD",13,10,0
+	.byte 0,"found HD",13,10,0
 foundcdmsg:
-	.byte "found CD",13,10,0
+	.byte 0,"found CD",13,10,0
 initedmsg:
-	.byte "initialized",13,10,0
+	.byte 0,"initialized",13,10,0
 
 ; identify the drives on the bus and get their names
 ide_identify:
