@@ -212,7 +212,7 @@ copyline:
 	rts
 
 
-menuypos	= 8
+menuypos	= 7
 menuxpos	= 26
 
 drawmenu:
