@@ -38,6 +38,102 @@ hexlen:	.res 1
 hexbuf:	.res 6
 ctr1:	.res 1
 ctr2: 	.res 1
+xtemp:	.res 1
+atemp:	.res 1
+
+
+	.macro bit_flash_clear
+	pha
+	txa
+	pha
+	ldx #dev_clk2
+	lda #flash_clear
+	sca
+	ild
+	pla
+	tax
+	pla
+	.endmacro
+
+	.macro bit_flash_inc
+	pha
+	txa
+	pha
+	ldx #dev_clk2
+	lda #flash_inc
+	sca
+	ild
+	pla
+	tax
+	pla
+	.endmacro
+
+	.macro bit_flash_shift
+	pha
+	txa
+	pha
+	ldx #dev_clk2
+	lda #flash_shift
+	sca
+	ild
+	pla
+	tax
+	pla
+	.endmacro
+
+	.macro lda_flash_data
+	stx xtemp
+	ldx #dev_clk2
+	lda #flash_data
+	sca
+	ild
+	pha
+	ldx xtemp
+	pla
+	.endmacro
+
+	.macro lda_flash_data_y
+	stx xtemp
+	ldx #dev_clk2
+	tya
+	php
+	clc
+	adc #flash_data
+	plp
+	sca
+	ild
+	pha
+	ldx xtemp
+	pla
+	.endmacro
+
+	.macro sta_flash_data
+	php
+	pha
+	stx xtemp
+	ldx #dev_clk2
+	lda #flash_data
+	sca
+	pla
+	ist
+	ldx xtemp
+	plp
+	.endmacro
+
+	.macro sta_flash_data_y
+	php
+	pha
+	stx xtemp
+	ldx #dev_clk2
+	tya
+	clc
+	adc #flash_data
+	sca
+	pla
+	ist
+	ldx xtemp
+	plp
+	.endmacro
 
 
 	.code
@@ -49,8 +145,8 @@ warmstart:
 	ldx #$ff
 	txs
 
-	lda #%00000110		; initalize ctl reg
-	ctl
+;	lda #%00000110		; initalize ctl reg
+;	ctl
 
 	jsr debug_init
 
@@ -65,11 +161,11 @@ warmstart:
 	jsr write2aaaquick
 	lda #$90
 	jsr write5555quick
-	bit flash_clear
-	lda flash_data
+	bit_flash_clear
+	lda_flash_data
 	jsr debug_puthex
-	bit flash_inc
-	lda flash_data
+	bit_flash_inc
+	lda_flash_data
 	jsr debug_puthex
 	jsr debug_crlf
 	lda #$aa
@@ -138,24 +234,24 @@ programflash:
 	jsr write5555quick
 	lda #$aa
 	;jsr write5555
-	sta flash_data
+	sta_flash_data
 	lda #$55
 	jsr write2aaaquick
-	bit flash_clear
+	bit_flash_clear
 	lda addr+2
 	lsr
 	bcc :+
-	bit flash_inc
+	bit_flash_inc
 :	ldx #16
-:	bit flash_shift
+:	bit_flash_shift
 	dex
 	bne :-
 	ldy bank
 	lda #$30
-	sta flash_data,y
+	sta_flash_data_y
 
-	lda #$ff
-:	cmp flash_data,y
+:	lda_flash_data_y
+	cmp #$ff
 	bne :-
 
 	ldax #waitmsg
@@ -217,38 +313,38 @@ programpage:
 	lda #$a0
 	jsr write5555quick
 
-	bit flash_clear		; pgm address
+	bit_flash_clear		; pgm address
 
 	lda addr+2		; 17th bit
 	lsr
 	bcc :+
-	bit flash_inc
+	bit_flash_inc
 :
 	ldy #8
 	lda addr+1
 @hiaddr:
-	bit flash_shift
+	bit_flash_shift
 	asl
 	bcc :+
-	bit flash_inc
+	bit_flash_inc
 :	dey
 	bne @hiaddr
 
 	ldy #8
 	txa
 @loaddr:
-	bit flash_shift
+	bit_flash_shift
 	asl
 	bcc :+
-	bit flash_inc
+	bit_flash_inc
 :	dey
 	bne @loaddr
 
 	lda flashbuf,x
 	ldy bank
-	sta flash_data,y
+	sta_flash_data_y
 
-:	lda flash_data,y
+:	lda_flash_data_y
 	cmp flashbuf,x
 	bne :-
 
@@ -261,73 +357,73 @@ programpage:
 
 
 write5555:
-	bit flash_clear
-	bit flash_inc
+	bit_flash_clear
+	bit_flash_inc
 
-	bit flash_shift
-	bit flash_shift
-	bit flash_inc
+	bit_flash_shift
+	bit_flash_shift
+	bit_flash_inc
 
-	bit flash_shift
-	bit flash_shift
-	bit flash_inc
+	bit_flash_shift
+	bit_flash_shift
+	bit_flash_inc
 
-	bit flash_shift
-	bit flash_shift
-	bit flash_inc
+	bit_flash_shift
+	bit_flash_shift
+	bit_flash_inc
 
-	bit flash_shift
-	bit flash_shift
-	bit flash_inc
+	bit_flash_shift
+	bit_flash_shift
+	bit_flash_inc
 
-	bit flash_shift
-	bit flash_shift
-	bit flash_inc
+	bit_flash_shift
+	bit_flash_shift
+	bit_flash_inc
 
-	bit flash_shift
-	bit flash_shift
-	bit flash_inc
+	bit_flash_shift
+	bit_flash_shift
+	bit_flash_inc
 
-	bit flash_shift
+	bit_flash_shift
 write5555quick:
-	bit flash_shift
-	bit flash_inc
+	bit_flash_shift
+	bit_flash_inc
 
-	sta flash_data
+	sta_flash_data
 	rts
 
 
 write2aaa:
-	bit flash_clear
-	bit flash_inc
-	bit flash_shift
+	bit_flash_clear
+	bit_flash_inc
+	bit_flash_shift
 
-	bit flash_shift
-	bit flash_inc
-	bit flash_shift
+	bit_flash_shift
+	bit_flash_inc
+	bit_flash_shift
 
-	bit flash_shift
-	bit flash_inc
-	bit flash_shift
+	bit_flash_shift
+	bit_flash_inc
+	bit_flash_shift
 
-	bit flash_shift
-	bit flash_inc
-	bit flash_shift
+	bit_flash_shift
+	bit_flash_inc
+	bit_flash_shift
 
-	bit flash_shift
-	bit flash_inc
-	bit flash_shift
+	bit_flash_shift
+	bit_flash_inc
+	bit_flash_shift
 
-	bit flash_shift
-	bit flash_inc
-	bit flash_shift
+	bit_flash_shift
+	bit_flash_inc
+	bit_flash_shift
 
-	bit flash_shift
-	bit flash_inc
+	bit_flash_shift
+	bit_flash_inc
 write2aaaquick:
-	bit flash_shift
+	bit_flash_shift
 
-	sta flash_data
+	sta_flash_data
 	rts
 
 
@@ -453,30 +549,30 @@ viewflash:
 	lsr
 	sta bank
 
-	bit flash_clear		; pgm address
+	bit_flash_clear		; pgm address
 
 	lda addr+2		; 17th bit
 	lsr
 	bcc :+
-	bit flash_inc
+	bit_flash_inc
 :
 	ldy #8
 	lda addr+1
 @hiaddr:
-	bit flash_shift
+	bit_flash_shift
 	asl
 	bcc :+
-	bit flash_inc
+	bit_flash_inc
 :	dey
 	bne @hiaddr
 
 	ldy #8
 	lda addr
 @loaddr:
-	bit flash_shift
+	bit_flash_shift
 	asl
 	bcc :+
-	bit flash_inc
+	bit_flash_inc
 :	dey
 	bne @loaddr
 
@@ -501,9 +597,9 @@ viewflash:
 	ldx #4
 	ldy bank
 
-:	lda flash_data,y
+:	lda_flash_data_y
 	jsr debug_puthex
-	bit flash_inc
+	bit_flash_inc
 	dex
 	bne :-
 
