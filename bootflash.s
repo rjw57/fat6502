@@ -49,6 +49,8 @@ bank:	.res 1
 maxlen:	.res 1
 hexlen:	.res 1
 hexbuf:	.res 6
+ctr1:	.res 1
+ctr2: 	.res 1
 
 
 	.code
@@ -64,7 +66,6 @@ reseth:
 
 	jsr debug_init
 
-restart:
 	ldax initmsg
 	jsr debug_puts
 
@@ -90,6 +91,22 @@ restart:
 	lda #$f0
 	jsr write5555quick
 
+restart:
+	ldax flashormemmsg
+	jsr debug_puts
+@select:
+	jsr debug_get
+	cmp #'f'
+	beq programflash
+	cmp #'F'
+	beq programflash
+	cmp #'m'
+	bne @select
+
+	jmp viewflash
+
+
+programflash:
 	ldax addrmsg
 	jsr debug_puts
 	lda #6
@@ -425,18 +442,107 @@ kbd_get:
 	rts
 
 
+viewflash:
+	ldax addrmsg
+	jsr debug_puts
+	lda #6
+	jsr gethex
+	jsr debug_crlf
+	ldx #2
+:	lda hexbuf,x
+	sta addr,x
+	dex
+	bpl :-
+	lda addr+2
+	lsr
+	sta bank
+
+	bit flash_clear		; pgm address
+
+	lda addr+2		; 17th bit
+	lsr
+	bcc :+
+	bit flash_inc
+:
+	ldy #8
+	lda addr+1
+@hiaddr:
+	bit flash_shift
+	asl
+	bcc :+
+	bit flash_inc
+:	dey
+	bne @hiaddr
+
+	ldy #8
+	lda addr
+@loaddr:
+	bit flash_shift
+	asl
+	bcc :+
+	bit flash_inc
+:	dey
+	bne @loaddr
+
+	lda #16
+	sta ctr1
+
+@nextline:
+	lda addr+2
+	jsr debug_puthex
+	lda addr+1
+	jsr debug_puthex
+	lda addr
+	jsr debug_puthex
+	lda #':'
+	jsr debug_put
+
+	lda #4
+	sta ctr2
+@next:
+	lda #' '
+	jsr debug_put
+	ldx #4
+	ldy bank
+
+:	lda flash_data,y
+	jsr debug_puthex
+	bit flash_inc
+	dex
+	bne :-
+
+	dec ctr2
+	bne @next
+
+	jsr debug_crlf
+
+	lda addr
+	clc
+	adc #16
+	sta addr
+	bcc :+
+	inc addr+1
+	bne :+
+	inc addr+2
+:
+	dec ctr1
+	bne @nextline
+
+	jmp restart
+
+
 	.rodata
 
 scantable:
 	.byte 0
 	.byte $45,$16,$1e,$26,$25,$2e,$36,$3d,$3e,$46
 	.byte $1c,$32,$21,$23,$24,$2b
-	.byte $2d,$1d
+	.byte $2d,$1d,$2b,$3a
 	.byte $66,$5a
 scantoasc:
 	.byte 0,"0123456789"
 	.byte "abcdef"
-	.byte "rw"
+	.byte "rwfm"
 	.byte 8,10
 exttable:
 	.byte 0
@@ -470,3 +576,6 @@ errormsg:
 
 flashidmsg:
 	.byte "Flash ID: ",0
+
+flashormemmsg:
+	.byte "F to program a flash, M to view flash contents",13,10,0
