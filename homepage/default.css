@@ -43,3 +43,6 @@ th {
 	vertical-align: top;
 	font-family: monospace;
 }
+.invert {
+	text-decoration: overline;
+}
