@@ -220,7 +220,7 @@ _dev_find_volume:
 	lda (ptr),y		; check file system type
 	cmp #$01
 	beq @foundfat12		; fat12 uses $01
-	cmp #$04		; fat16 uses $04, $06, or $0e
+	cmp #$04		; fat16 uses $04, $06, or $0e (or fat12, damn ms!)
 	beq @foundfat16
 	cmp #$06
 	beq @foundfat16
@@ -254,7 +254,47 @@ _dev_find_volume:
 	cpy #12
 	bne :-
 
+	cpx #$16
+	bne :+
+	jsr @testfat		; test for fat12 fs in fat16 partiton
+	bcs @exit
+:
 	txa			; happy camper
+	clc
+@exit:
+	rts
+
+; for some stupid reason, MS sometimes puts FAT12 filesystems inside FAT16
+; partitons, which crashes the boot code
+@testfat:
+	ldx #3
+:	lda volsector,x
+	sta lba,x
+	dex
+	bpl :-
+	jsr readsector
+	bcs @exit		; spaghetti!
+
+	ldx #3
+:	lda clusterbuf + 54,x	; check for 'FAT1'
+	cmp fat_str,x
+	bne @assumefat16	; no? assume partiton id is correct
+	dex
+	bpl :-
+
+	lda clusterbuf + 54 + 4	; check for '12' or '16'
+	cmp #'2'
+	beq @damnmsitsfat12
+;	cmp #'6'		; ignore any other chars
+;	bne @error
+
+@assumefat16:
+	ldx #$16
+	clc
+	rts
+
+@damnmsitsfat12:
+	ldx #$12
 	clc
 	rts
 
@@ -265,9 +305,13 @@ readsector0:
 :	sta lba,x
 	dex
 	bpl :-
+	; jsr readsector
+	; rts
+
+readsector:
 	ldax #clusterbuf	; load data into clusterbuf
 	stax sectorptr
-	jsr dev_read_sector	; read sector 0
+	jsr dev_read_sector	; read sector
 	bcc @check
 @error:
 	sec
@@ -283,3 +327,9 @@ readsector0:
 
 	clc
 	rts
+
+
+	.data
+
+fat_str:
+	.byte "FAT1"
