@@ -418,10 +418,7 @@ fat_dir_next:
 	bcc @skip
 	inc dirptr+1
 @skip:
-	lda vol_secperclus	; check if we've parsed the whole
-	asl			; cluster
-	;clc
-	adc #>clusterbuf
+	lda clusterptr+1	; check if we've parsed the whole cluster
 	cmp dirptr+1
 	bne fat_dir_return
 
