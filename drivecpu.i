@@ -83,32 +83,47 @@ A16550BASE	= $3f20
 
 ; system ram memory bank select
 	.macro sab
-	.byte $52
+	nop
+	;.byte $52
 	.endmacro
 
 ; system ram memory address msb
 	.macro sau
-	.byte $72
+	nop
+	;.byte $72
 	.endmacro
 
 ; system ram memory address lsb
 	.macro sal
-	.byte $92
+	nop
+	;.byte $92
 	.endmacro
 
 ; read from system ram pointed to by sab/sau/sal
 	.macro mld
-	.byte $d2
+	nop
+	;.byte $d2
 	.endmacro
 
 ; write to system ram pointed to by sab/sau/sal
 	.macro mst
-	.byte $f2
+	nop
+	;.byte $f2
 	.endmacro
 
 ; store accumulator in FPGA config
 	.macro saf
 	.byte $12
+	.endmacro
+
+; load accumulator indirect from memory
+	.macro lam addr
+	.byte $d2, <addr, >addr
+	.endmacro
+
+; store accumulator indirect from memory
+	.macro sam addr
+	.byte $f2, <addr, >addr
 	.endmacro
 
 
@@ -208,32 +223,25 @@ A16550BASE	= $3f20
 ; gay => addr(18..11)
 ; gab(5..1) => addr(23..19)
 
+; 7-sept-2004 macros for CPC gfx hack:
+; add .import gfx_x or they won't work
+
 ; set graphics cursor x position
-	.macro gax
-	.byte $02
-	.endmacro
+        .macro gax
+;       .byte $02
+        stx gfx_x       ;!!!!!!!
+	;stx $3f00
+        .endmacro
 
 ; set graphics cursor y position, bits 1..8
-	.macro gay
-	.byte $03
-	.endmacro
-
-; set graphics bank and bit 0 of cursor y position
-	.macro gab
-	.byte $07
-	.endmacro
-
-	.macro gab_even
-	lda #$02
-	gab
-	.endmacro
-
-	.macro gab_odd
-	lda #$03
-	gab
-	.endmacro
+        .macro gay
+;       .byte $03
+        sty gfx_x+1     ;!!!!!!!
+	;sty $3f01
+        .endmacro
 
 ; write to graphics ram
-	.macro gst
-	.byte $04
-	.endmacro
+        .macro gst
+;       .byte $04
+        jsr gfx_x+8 ;didn't want to export another label
+        .endmacro
