@@ -1,12 +1,15 @@
 	.include "drivecpu.i"
 
 	.export select_config
+	.export mrt, pong
 
 	.import debug_puthex
 	.import debug_crlf
 
+	.import reseth
+
 	.import clusterbuf
-	.importzp ptr
+	.importzp ptr, ptr3
 
 	.import gfx_putchar
 	.import gfx_gotoxy
@@ -50,6 +53,46 @@ asciicodes:
 	.byte '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'S', 'F'
 
 
+	.code
+
+mrt:
+	ldax #clusterbuf
+	stax ptr
+	lda #0
+	sta ptr3
+	lda #$c0
+	sta ptr3 + 1
+	lda #$0b
+	sta ptr3 + 2
+
+	ldy #0
+	ldx #$40
+@next:
+	lda (ptr),y
+	sam ptr3
+
+	inc ptr3
+	bne :+
+	inc ptr3 + 1
+:
+	iny
+	bne @next
+
+	inc ptr
+	dex
+	bne @next
+
+@waitspace:
+	lka
+	bcs @waitspace
+	bvs @waitspace
+	bmi @waitspace
+	cmp #$29
+	bne @waitspace
+
+	jmp reseth
+
+
 ; 7-sept-2004 macros for CPC gfx hack:
 
 ; set graphics cursor x position
@@ -66,40 +109,6 @@ asciicodes:
         .macro gst
         jsr gfx_gst
         .endmacro
-
-
-	.code
-
-mrt:
-	ldax #clusterbuf + 64 * 512 - 130
-	stax ptr
-	ldy #0
-	sty line
-@nextline:
-	gay
-
-	ldy #63
-	ldx #63
-:	lda (ptr),y
-	eor #$ff
-	gax
-	gst
-	dey
-	dex
-	bpl :-
-
-	lda ptr
-	sec
-	sbc #128
-	sta ptr
-	bcs :+
-	dec ptr+1
-:
-	inc line
-	ldy line
-	bne @nextline
-
-	jmp *
 
 
 	.code
@@ -144,7 +153,7 @@ pongmain:
 	beq @p1bounce
 @checky:
 	lda by
-	cmp #241
+	cmp #185
 	bcc :+
 	jsr bouncey
 	jmp @draw
@@ -214,6 +223,8 @@ delay:
 checkspace:
 	lka
 	bcs @notspace
+	bvs @notspace
+	bmi @notspace
 	cmp #space
 	rts
 @notspace:
@@ -278,7 +289,7 @@ moveplayers:
 	beq @p2ckup
 
 	lda p1e
-	cmp #248
+	cmp #192
 	beq @p2ckup
 	ldy p1s
 	gay
@@ -317,7 +328,7 @@ moveplayers:
 	beq @ckdone
 
 	lda p2e
-	cmp #248
+	cmp #192
 	beq @ckdone
 	ldy p2s
 	gay
@@ -351,7 +362,7 @@ drawboard:
 	cpy #24
 	bne @nexttop
 
-	ldy #248
+	ldy #192
 	sty line
 @nextbot:
 	gay
@@ -363,6 +374,7 @@ drawboard:
 	bpl :-
 	inc line
 	ldy line
+	cpy #200
 	bne @nextbot
 
 	rts
@@ -373,10 +385,10 @@ resetgame:
 	sta p1
 	sta p2
 
-	lda #120
+	lda #96
 	sta p1s
 	sta p2s
-	lda #120 + 32
+	lda #96 + 32
 	sta p1e
 	sta p2e
 
@@ -384,7 +396,7 @@ resetgame:
 	sta keys
 
 resetball:
-	lda #112 + 24 - 4
+	lda #88 + 24 - 4
 	sta by
 	lda #79
 	sta bx
@@ -403,7 +415,7 @@ setballdelta:
 
 
 drawbats:
-	ldy #120
+	ldy #96
 	lda #$ff
 @draw:
 	gay
@@ -414,7 +426,7 @@ drawbats:
 	gax
 	gst
 	iny
-	cpy #120 + 32
+	cpy #96 + 32
 	bne @draw
 
 	rts
@@ -557,13 +569,13 @@ drawscore:
 checkkbd:
 	lka
 	bcs @done
+	bvs @done
+	bmi @break
 	cmp #space
 	bne :+
 	inc spacectr
 	rts
-:	cmp #$f0
-	beq @break
-
+:
 	ldx #3
 :	cmp keytab,x
 	beq @made
@@ -578,8 +590,6 @@ checkkbd:
 	rts
 
 @break:
-	lka
-	bcs @break
 	ldx #3
 :	cmp keytab,x
 	beq @broke
