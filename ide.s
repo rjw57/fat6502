@@ -170,6 +170,7 @@ ide_identify:
 	jsr ide_read_256_words
 	bcs @failed
 
+	jsr swapendian
 	jsr copymodel
 	jsr setdrivesize
 
@@ -192,6 +193,30 @@ ide_identify:
 	jmp @done
 
 
+swapendian:
+	ldx #0
+:
+	lda identbuf,x
+	tay
+	lda identbuf+1,x
+	sta identbuf,x
+	tya
+	sta identbuf+1,x
+
+	lda identbuf+256,x
+	tay
+	lda identbuf+257,x
+	sta identbuf+256,x
+	tya
+	sta identbuf+257,x
+
+	inx
+	inx
+	bne :-
+
+	rts
+
+
 ; copy drive model number
 copymodel:
 	ldx currdrive
@@ -199,19 +224,12 @@ copymodel:
 	tax
 	ldy #0
 @copymodel:
-	lda identbuf+55,y	; offset for drive model in identify result
-	sta ide_modeltab,x
-	jsr debug_put
 	lda identbuf+54,y	; offset for drive model in identify result
-	sta ide_modeltab+1,x
-	jsr debug_put
+	sta ide_modeltab,x
 	inx
-	inx
-	iny
 	iny
 	cpy #40
 	bne @copymodel
-	jsr debug_crlf
 	rts
 
 

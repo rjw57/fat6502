@@ -42,9 +42,12 @@ devmap:		.res 4	; list of devices on current controller
 numdevs:	.res 1	; number of devices on controller
 currdev:	.res 1
 currtype:	.res 1
-size:		.res 4
-sizechar:	.res 1
-sizestr:	.res 5
+size:		.res 6
+prefixIndex:	.res 1
+digitCount:	.res 1
+decimalPlaces:	.res 1
+
+
 
 
 	.segment "CTLVECTORS"
@@ -169,110 +172,250 @@ _ctl_select:
 	rts
 
 
-; print size as a friendly number
-printsize:
-	lda #' '
-	jsr debug_put
-	lda #'('
-	jsr debug_put
+;------------------------------------------------------------------------------
+;
+; printsize
+;
+; function
+;   print size as a friendly number
+;
+; before calling
+;   on entry, write the size in 512 byte sectors to the first four bytes
+;   of 'size', lsb first.  Anything from zero to 0xffffffff is valid
+;
+; requires
+;
+;	debug_put     - prints the char given in A
+;	debug_putdigit     - prints the digit given in A
+;   printsz(addr) - macro that calls a function to
+;                   print the null terminated string at addr
+;
+; on return
+;	a,x,y and size all trashed.
+;
+; RAM required
+;   9 bytes for size, _prefixIndex, _digitCount, _decimalPlaces
+;   the rest should be ROMable
+;
+; stack required
+;   ~6 bytes for internal function calls,
+;   +4 bytes for integral part of digits
+;   + whatever debug_putdigit or printsz() requires
+;
+;------------------------------------------------------------------------------
 
+
+;
+; Implementation notes
+;
+; Most of the code treats size as a 16.32 fixed point number (lsb first)
+; scaleAndSetPrefix starts by doubling the number to get a fixed-point size
+; in Terabytes, then repeatedly shifts left by 10 and decrements the 
+; unit index until the size is >= 1.0 units
+;
+; Note that all text is currently in petscii - easier to test that way ;)
+;
+
+
+	.code
+
+printsize:
+	ldax preamble
+	jsr debug_puts
+	lda size
+	ora size+1
+	ora size+2
+	ora size+3
+	bne @nz
+	jsr debug_putdigit
+	ldx #0
+	jmp @pp
+
+@nz:
+	jsr @scaleAndSetPrefix
+	jsr @printScaledSize
+	ldx prefixIndex
+@pp:
+	lda #32
+	jsr debug_put
+	lda prefixes,x
+	jsr debug_put
+	ldax postamble
+	jmp debug_puts
+
+
+@scaleAndSetPrefix:
+        ; don't call this with a size of zero or it will never terminate!!
+
+	; set prefix to T
+	lda #3
+	sta prefixIndex
+	lda #0
+	sta size+5
 	asl size
 	rol size+1
 	rol size+2
 	rol size+3
-
-	lda #3
-	sta sizechar
-
-@check10zero:
-	lda size+3
-	bne @nope
-	lda size+2
-	and #$c0
-@nope:
-	bne @print
-
-	jsr shift10bits
-
-	dec sizechar
-	bne @check10zero
-
-@print:
-	lda size+3
-	sta size
-	lda #0
-	asl size+2
-	rol size
 	rol
-	asl size+2
-	rol size
-	rol
-	sta size+1
+	and #1
+	sta size+4
+	lda size+4
+	; size now contains fixed point size in Terabytes
+	bne @scaleDone
+@asl10:
+	jsr @asl8size
+	jsr @asl1size
+	jsr @asl1size
+	dec prefixIndex
+	lda prefixIndex
+	beq @scaleDone   ; print 1 sector as 0.5kB
+	lda size+4
+	ora size+5
+	beq @asl10
+@scaleDone:
+	rts
+	
 
-	ldx #3
-@loop:
-	jsr div16
-	sta sizestr,x
-	dex
-	bpl @loop
 
-	ldx #0			; eliminate leading 0s
-:	lda sizestr,x
-	bne @foundnumber
+@printScaledSize:
+
+	; first add 0.5, 0.05 or 0.005 units to size to round to nearest
+	ldx #0
+	lda size+5
+	bne @addRound
+	lda size+4
+	cmp #100
+	bcs @addRound
 	inx
-	cpx #3
-	bne :-
-
-@foundnumber:
-:	lda sizestr,x
-	jsr debug_putdigit
-	inx
-	cpx #4
-	bne :-
-
-	lda #' '
-	jsr debug_put
-	ldx sizechar
-	lda sizechartab,x
-	jsr debug_put
-	lda #'B'
-	jsr debug_put
-	lda #')'
-	jmp debug_put
-
-
-; divide a 16-bit number (in size) by the 10. result -> size,
-; remainder in a. modified version of Steve Judd's 32-bit divide.
-div16:
- 	lda #00
-	ldy #$10
-@loop: 	asl size
-	rol size+1
-	rol
 	cmp #10
-	bcc :+
-	sbc #10
-	inc size
-: 	dey
-	bne @loop
+	bcs @addRound
+	inx
+@addRound:
+	stx decimalPlaces
+	clc
+	lda roundLo,x
+	adc size+2
+	sta size+2
+	lda roundHi,x
+	adc size+3
+	sta size+3
+	bcc @ni
+	inc size+4
+	bne @ni
+	inc size+5
+@ni:
+	; end of rounding
+
+
+	; push digits onto stack
+
+	lda #0
+	sta digitCount
+@convertMore:
+	jsr @div16by10
+	pha
+	inc digitCount
+	lda size+5
+	ora size+4
+	bne @convertMore
+
+	; only need these lines if the rounding code above is ditched
+	; lda #3
+	; sec
+	; sbc digitCount
+	; sta decimalPlaces
+
+	; pop digits and print them
+@more:
+	pla
+	jsr debug_putdigit
+	dec digitCount
+	bne @more
+
+	; stuff after this point is for fractions of whatever the selected unit is
+
+	dec decimalPlaces
+	bmi @printDone
+	lda #46
+	jsr debug_put
+
+@dplp:
+	jsr @multSizeBy10
+
+	lda size+4
+	jsr debug_putdigit
+	lda #0
+	sta size+4
+
+	dec decimalPlaces
+	bpl @dplp
+@printDone:
 	rts
 
 
-shift10bits:
+@asl8size:
+	lda size+4
+	sta size+5
+
+	lda size+3
+	sta size+4
+
 	lda size+2
 	sta size+3
+
 	lda size+1
 	sta size+2
+
 	lda size
 	sta size+1
 	lda #0
 	sta size
-	asl size+1
+	rts
+
+@asl1size:
+	asl size
+	rol size+1
 	rol size+2
 	rol size+3
-	asl size+1
-	rol size+2
-	rol size+3
+	rol size+4
+	rol size+5
+	rts
+
+
+; divide a 16-bit number (in size+4,size+5) by the 10. result -> size,
+; remainder in a. modified version of Steve Judd's 32-bit divide.
+@div16by10:
+	lda #00
+	ldy #$10
+@loop:
+	asl size+4
+	rol size+5
+	rol
+	cmp #10
+	bcc @sk10
+	sbc #10
+	inc size+4
+@sk10:
+	dey
+	bne @loop
+	rts
+
+
+@multSizeBy10:
+	; just operates on bytes 3 and 4
+	lda size+3
+	asl
+	rol size+4
+	asl
+	rol size+4
+	adc size+3
+	sta size+3
+	bcc @ni2
+	inc size+4
+@ni2:
+	; have now multiplied by 5
+	asl size+3
+	rol size+4
 	rts
 
 
@@ -304,8 +447,20 @@ _ctl_select_dev:
 
 	.rodata
 
-sizechartab:
-	.byte " ", "k", "M", "G"
+roundLo:
+	.byt   0,<(3276),<(327)
+roundHi:
+	.byt 128,>(3276),>(327)
+
+preamble:
+	.byte " (",0
+postamble:
+	.byte "B)",0
+
+prefixes:
+	.byte "k", "M", "G", "T"
+
+
 founddevmsg:
 	.byte "Found device ",0
 colonmsg:
