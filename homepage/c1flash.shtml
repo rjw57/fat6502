@@ -22,6 +22,7 @@
 
 <ul>
   <li> August 16th 2003: Initial release
+  <li> August 17th 2003: Added AMD notes
 </ul>
 
 
@@ -169,6 +170,36 @@ use a C64 compatible core if the CBM80 string is detected:
   $3f60   Clockport2 (RTC select, real-time clock and flash rom address)
   $3f70   SID2 (not enough registers, SID cannot be used!)
 </pre>
+
+
+<h2>AMD notes</h2>
+
+<p>
+From my experience from the Retro Replay and Kickflash, I know that
+AMD flash roms do not always behave as described in the
+datasheets. The different versions of the flash roms are not easily to
+identify, usually not by software. The big problems began on the Retro
+Replay when we started to use 29F010B flash roms. They would program
+properly, but would not erase. We worked out a lot, even contacted AMD
+for assistance and did literally everything what they suggested:
+Tested for spikes on the select/oe/write lines, made scope shots and
+sent them to the AMD engineers, and even got hold of an internal AMD
+document that describes a few changes from 29F010 to 29F010B. But
+still, the "multiple sector erase" command did not work!
+</p>
+
+<p>
+Count 0's findings, as well as my findings prove that AMD f*cked up on
+that command with the die-shrink that they obviously made moving
+towards the B version of the chip. They might have done the same on
+the 29F040 (blank, A or B suffix), and this is a warning to you
+programmers: if one command of the flash chip works (such as chip
+identify and sector protection status read), <b>all</b> other commands
+should work as well. If multiple sector erase does not work, try
+erasing single sectors. That's what we did on the Retro Replay, and
+it'll save you a lot of time, and only cost a few seconds on the user
+end.
+</p>
 
 
 </body>
