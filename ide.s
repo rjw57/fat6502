@@ -97,86 +97,8 @@ ide_scan:
 	bpl @clear
 
 	jmp ide_identify
-	ldx #2
-	lda #devtype_hd
-	sta ide_drivetab,x
-	lda #0
-	sta ide_sizetab+8
-	sta ide_sizetab+9
-	sta ide_sizetab+11
-	lda #$ff
-	sta ide_sizetab+10
-	clc
-	rts
 
 
-	lda #0
-	sta currdrive
-
-@nextdrive:
-	lda currdrive
-	jsr debug_putdigit
-	jsr debug_crlf
-	jsr ide_init
-
-	lda #$e0		; select device
-	ora ide_device
-	ldy #ide_lba3
-	jsr ide_write_reg
-
-	jsr delay_400ns		; delay after selecting
-
-
-	lda #0			; copy drive regs
-	sta presence
-
-	ldy #7
-@nextreg:
-	tya
-	ora ide_channel
-	csa
- 	ild			; grab A/X
-
-	dputnum
-	sta regmap,y
-	ora presence		; and all regs for detection
-	sta presence
-
-	dey
-	bne @nextreg		; skip data reg
-
-	dputcrlf
-	cmp #$7f
-	beq @done		; nothing to see here
-
-	ldx currdrive		; default to hard disk
-	lda #devtype_hd
-	sta ide_drivetab,x
-
-	;lda #1
-	;cmp regmap+2
-	;bne @done
-	;cmp regmap+3
-	;bne @done
-	;lda #$14
-	;cmp regmap+4
-	;bne @done
-	;lda #$eb
-	;cmp regmap+5
-	;bne @done
-
-	;lda #devtype_cd		; we found an ATAPI drive
-	;sta ide_drivetab,x
-
-@done:
-	inc currdrive
-	lda currdrive
-	cmp #4
-	bne @nextdrive
-
-	; fall through
-
-	jmp ide_identify
 probingmsg:
 	.byte "probing device ",0
 failedmsg:
