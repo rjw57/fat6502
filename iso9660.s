@@ -2,7 +2,7 @@
 
 	.exportzp fs_iso9660
 
-	.export iso_read_ptable
+	.export iso_read_volid
 	.export iso_cdboot
 	.export iso_cdroot
 	.export iso_dir_first
@@ -17,6 +17,7 @@
 	.export iso_stat
 	.export iso_firstnamechar
 	.export iso_isdesc
+	.export iso_volname
 
 	.import lba
 	.import cluster
@@ -47,12 +48,22 @@ fs_iso9660	= $96
 	.bss
 
 rootdir:	.res 4		; first sector of root directory
+volnamelen:	.res 1		; length of volume name
+volname:	.res 33		; volume name
 
 
 	.code
 
+; return pointer and length to volume name
+iso_volname:
+	ldy volnamelen
+	ldax volname
+	rts
+
+
+
 ; read volume information
-iso_read_ptable:
+iso_read_volid:
 	ldax msg_reading_pvd
 	jsr debug_puts
 
@@ -88,11 +99,25 @@ iso_read_ptable:
 	ldx #0			; print volume name
 @printvolname:
 	lda clusterbuf+40,x
+	sta volname,x		; save volume name
 	jsr debug_put
 	inx
 	cpx #32
 	bne @printvolname
+	stx volnamelen		; save length
 	jsr debug_crlf
+
+	ldx #31			; trim trailing spaces
+:	lda volname,x
+	cmp #' '
+	bne @done
+	dec volnamelen
+	dex
+	bpl :-
+@done:
+	ldx volnamelen		; terminating 0
+	lda #0
+	sta volname,x
 
 	lda clusterbuf + 128	; check sector size
 	bne @fail		; should be 2048
