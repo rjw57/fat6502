@@ -120,27 +120,12 @@ ide_identify:
 	jsr debug_putdigit
 	jsr debug_crlf
 
-;	ldx currdrive
-;	lda ide_drivetab,x
-;	beq @done
-;	sta currtype
-;	txa
 	lda currdrive
 	jsr ide_init
-	bcs @failed		; not ready
+	bcs @failed			; not ready
 
 	ldax initedmsg
 	jsr debug_puts
-
-	;lda #$e0		; select device
-	;ora ide_device
-	;ldy #ide_lba3
-	;jsr ide_write_reg
-
-	;jsr delay_400ns		; delay after selecting
-
-	;jsr ide_wait_ready	; wait for RDY, with timeout
-	;bcs @done		; ignore timeout
 
 	lda #idecmd_identify		; identify HD
 	ldy #ide_command
