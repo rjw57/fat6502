@@ -46,3 +46,4 @@ relocate:
 	dex
 	bne :-
 @donelo:
+	rts
