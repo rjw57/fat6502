@@ -78,9 +78,9 @@ clean:
 	$(RM) *.o \
 		timestamp.s \
 		rs232boot.o rs232boot_reloc.o \
-		bigboot.bin bigboot.map \
+		bigboot.bin bigboot.map bigboot.dbg \
 		boot232.bin boot232.map \
-		bootflash.bin testflash.map \
+		bootflash.bin bootflash.map \
 		testcpc.bin testcpc.map \
 
 distclean: clean
