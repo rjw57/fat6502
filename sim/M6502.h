@@ -19,6 +19,20 @@
 /* #define DEBUG */            /* Compile debugging version  */
 /* #define LSB_FIRST */        /* Compile for low-endian CPU */
 
+#ifndef LSB_FIRST
+# ifndef MSB_FIRST
+#  ifdef __BIG_ENDIAN__
+#   define MSB_FIRST
+#  else
+#   ifdef __sparc__
+#    define MSB_FIRST
+#   else
+#    define LSB_FIRST
+#   endif
+#  endif
+# endif
+#endif
+
                                /* Loop6502() returns:        */
 #define INT_NONE  0            /* No interrupt required      */
 #define INT_IRQ	  1            /* Standard IRQ interrupt     */
