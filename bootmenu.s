@@ -7,6 +7,10 @@
 	.import bootconfig
 	.import entermenu
 
+	.import init232boot
+
+	.import mrt, pong
+
 	.import cluster
 	.import clusterbuf
 	.import vol_dir_first
@@ -70,7 +74,7 @@ bootmenu:
 	adc #$30
 	sta bootconfig		; and store
 
-	jmp gfx_quickcls	; clear screen
+	jmp gfx_quickcls	; clear screen and return
 
 
 checkentry:
@@ -90,7 +94,7 @@ checkentry:
 	beq @foundlast
 
 	jsr vol_isdesc		; check if it's ?DESC.TXT
-	bcs @next
+	bcc @next
 
 	jsr vol_firstnamechar	; yes, grab first char
 	sec			; assume it's a number
@@ -354,31 +358,30 @@ selectconfig:
 @checkkey:
 	jsr waitvbl
 	lka
-	bcs @update
+	bcs @update		; no key
+	bmi @update		; break code
 
 	ldx #$ff		; disable timer
 	stx seconds
 
+	bvs @extended		; extended
+
 	cmp #$5a		; enter
 	beq @enter
+	cmp #$1b		; S
+	beq @rs232
+	cmp #$2b		; F
+	beq @flash
+	cmp #$2c		; T
+	beq @mrt
+	cmp #$4d		; P
+	beq @pong
 
-	cmp #$f0
-	bne @make
-@break:
-:	lka			; eat next key
-	bcs :-
-	bcc @checkkey
-@make:
-	cmp #$e0		; cursor keys are extended codes
-	bne @checkkey
-:	lka			; eat next key
-	bcs :-
-	cmp #$f0
-	beq @break
-
-	cmp #$75
+	bne @update
+@extended:
+	cmp #$75		; up
 	beq @up
-	cmp #$72
+	cmp #$72		; down
 	beq @down
 
 @update:
@@ -394,6 +397,20 @@ selectconfig:
 	bpl @checkkey
 @return:
 	rts			; timeout
+
+@flash:
+	lda #'F' - $30
+	sta currdesc
+	rts
+
+@rs232:
+	jmp init232boot		; download rom
+
+@mrt:
+	jmp mrt
+
+@pong:
+	jmp pong
 
 @up:
 	lda currdesc
@@ -415,13 +432,15 @@ selectconfig:
 @enter:
 	ldx currdesc
 	lda desc,x
-	beq @checkkey
-	rts
+	bne :+
+	jmp @checkkey
+:	rts
 
 @erasemsg:
 	lda erased
-	beq @checkkey
-
+	bne :+
+	jmp @checkkey
+:
 	ldx #menuxpos - 1
 	ldy #menuypos + 14
 	jsr gfx_gotoxy
@@ -436,12 +455,12 @@ selectconfig:
 
 ; wait a little while
 waitvbl:
-	ldy #33
-	ldx #0
-:	inx
+:	zin $f5			; wait for visible area
+	and #$01
 	bne :-
-	dey
-	bne :-
+:	zin $f5			; wait for blanking area
+	and #$01
+	beq :-
 	rts
 
 
