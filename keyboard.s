@@ -58,7 +58,7 @@ numbercodes:
 	.code
 
 mrt:
-	ldax (clusterbuf + 80 * 512 - 162)
+	ldax (clusterbuf + 64 * 512 - 130)
 	stax ptr
 	ldy #0
 	sty line
@@ -67,8 +67,8 @@ mrt:
 
 	gab_odd
 
-	ldy #79
-	ldx #79
+	ldy #63
+	ldx #63
 :	lda (ptr),y
 	eor #$ff
 	gax
@@ -79,8 +79,8 @@ mrt:
 
 	gab_even
 
-	ldy #159
-	ldx #79
+	ldy #127
+	ldx #63
 :	lda (ptr),y
 	eor #$ff
 	gax
@@ -91,7 +91,7 @@ mrt:
 
 	lda ptr
 	sec
-	sbc #160
+	sbc #128
 	sta ptr
 	bcs :+
 	dec ptr+1

@@ -1,6 +1,4 @@
 	.export clusterbuf
 
 
-	.segment "BUFFERS"
-
-clusterbuf:	.res $8000
+clusterbuf	= $8000
