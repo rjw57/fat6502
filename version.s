@@ -6,9 +6,9 @@
 
 	.segment "VERSION"
 
-ver_major:	.byte 0
-ver_minor:	.byte 9
-ver_rev:	.byte 2
+ver_major:	.byte 1
+ver_minor:	.byte 1
+ver_rev:	.byte 0
 
 ver_str:
-	.byte "0.9.2", 0
+	.byte "1.1a", 0
