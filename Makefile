@@ -30,7 +30,8 @@ OBJS = \
 	vol.o \
 	dev.o \
 	controller.o \
-	version.o
+	version.o \
+	graphics.o
 
 INCS = \
 	drivecpu.i \

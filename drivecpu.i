@@ -18,23 +18,6 @@ cpuspeed	= 2
 	;.endif
 	.endmacro
 
-; Display a 32-bit hex number at absolute address
-
-	.macro tra number, id
-	;.ifdef DEBUG
-	.byte $f3
-	.word number+3
-	.byte $f4
-	.word number+2
-	.byte $fa
-	.word number+1
-	.byte $fb
-	.word number
-	trc id
-	;.endif
-	.endmacro
-
-
 ; --- IDE ---
 	
 ; IDE register select
@@ -200,3 +183,25 @@ cpuspeed	= 2
 	stx dest+1
 	.endmacro
 
+
+; --- Graphics ---
+
+; set graphics cursor x position
+	.macro gax
+	.byte $02
+	.endmacro
+
+; set graphics cursor y position, bits 1..8
+	.macro gay
+	.byte $03
+	.endmacro
+
+; set graphics cursor y position, bit 0
+	.macro gab
+	.byte $07
+	.endmacro
+
+; write to graphics ram
+	.macro gst
+	.byte $04
+	.endmacro

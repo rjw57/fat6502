@@ -19,6 +19,8 @@
 
 	.import timestamp
 
+	.import gfx_cls
+
 	.import debug_init
 	.import debug_done
 	.import debug_puts
@@ -72,6 +74,8 @@ reseth:
 	ldax msg_erasefpga
 	jsr debug_puts
 	clf			; erase FPGA
+
+	jsr gfx_cls		; clear graphics screen
 
 	lda #0
 	sta currctl
