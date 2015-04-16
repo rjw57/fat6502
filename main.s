@@ -25,7 +25,6 @@
 	.import vol_set_fs
 	.import vol_read_volid
 
-	.import timestamp
 	.import ver_str
 	.import ver_major
 	.import ver_minor
@@ -45,7 +44,6 @@
 	.import debug_putdigit
 	.import debug_crlf
 
-	.import relocate
 	.import checkaltrom
 
 	;.import init232boot
@@ -77,9 +75,6 @@ reseth:
 	sta $0100,x
 	inx
 	bne :-
-
-	jsr relocate
-	;jsr checkaltrom		; see if there's a valid rom in bank 5
 
 warmstart:
 	lda bootconfig		; save bootconfig, ugly ugly
@@ -150,8 +145,6 @@ warmstart:
 	ldax #ver_str
 	jsr debug_puts
 	ldax #msg_init2
-	jsr debug_puts
-	ldax #timestamp
 	jsr debug_puts
 	ldax #msg_init3
 	jsr debug_puts
